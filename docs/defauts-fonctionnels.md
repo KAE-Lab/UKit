@@ -19,6 +19,45 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Un titre qui contient un nom de groupe se coupe comme un code d'UE — constaté le 2026-11-11, à la relecture du lot 3
+
+`CODE_UE` ([`PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts)) n'est pas
+ancré en tête : « Anglais 2A - Oral » se lit comme l'UE `2A` intitulée « Oral » (« - Oral » avant le
+2026-11-11, quand le tiret de Montaigne n'était pas retiré). Aucun cas réel observé au banc ; à mesurer
+sur les titres d'ADE et de PRONOTE avant d'ancrer le motif, qui sert aussi les filtres d'UE.
+
+### ~~Après un mot de passe refusé, chaque nouvelle tentative s'annonce « portail lent »~~ — constaté le 2026-11-11, corrigé le même jour
+
+Vu au banc en jouant le mot de passe faux de Bordeaux Montaigne, puis reproduit à Bordeaux INP : le
+premier refus se dit bien, mais toute tentative suivante reste 30 s sur sa première navigation et cède
+en `PORTAIL_LENT`, sans rien soumettre. Un étudiant qui se trompe une fois ne pouvait plus se connecter
+avant de relancer l'application. La cause est dans le moteur embarqué : il recharge au lieu de charger
+quand l'adresse demandée est celle du document affiché, et le formulaire refusé est posté sur cette
+adresse même, donc il recharge une page de POST ; `ukit.portail.verification` 4 la contourne par un détour
+([scolarite.md](features/scolarite.md#prouver-un-couple-didentifiants-ne-se-déduit-pas-ça-se-demande)).
+À publier : il corrige aussi les binaires installés. Reste à corriger dans Aetherius : ne jamais
+recharger un document issu d'un POST.
+
+### ~~Chez Bordeaux Montaigne, un motif d'annulation porte l'épingle d'une salle, et le titre commence par un tiret~~ — constaté le 2026-11-11, corrigé le même jour
+
+Vu au banc (`ukit`, compte prêté), sur les cours du 12 novembre. « Fermeture des bâtiments », le motif
+d'annulation de PRONOTE, prenait l'icône et le gras d'une salle ; « Dupont Marie », un enseignant écrit
+sans capitales, l'icône d'un groupe ; le titre se lisait « - Cartographie ». La projection
+transmet désormais la nature des lignes qu'elle a lues par leur nom (`PlanningEvent.natures`), et
+`separerCodeUE` retire le tiret séparateur. Deux cas de test, et la vue jour rejouée au banc, en clair
+et en sombre ([planning.md](features/planning.md#licône-dune-ligne-se-déduit-de-son-contenu-pas-de-son-rang)).
+
+### ~~Un tiers des cours de Bordeaux Montaigne gardent l'intitulé empilé~~ — constaté le 2026-11-11, corrigé le même jour
+
+Vu en lisant l'export PRONOTE de Bordeaux Montaigne sur son compte prêté (lot 3) : 45 cours sur 132
+prenaient le `SUMMARY` empilé en titre, enseignant compris, 45 portaient une ligne finie par « : »,
+22 répétaient une valeur (`TD : CM01, CM01…`, trente-neuf fois). La reconnaissance des champs nommés,
+réglée sur l'IUT, exigeait une clé de 24 caractères au plus et une valeur : les annulations s'écrivent
+`Rattrapage (Annulation du ven. 09/10/2026 10h00) :`, sans valeur. Corrigé à la source
+([`IcsChampsNommes.ts`](../src/features/Planning/services/IcsChampsNommes.ts), deux cas dans
+`IcsMapping.test.ts`) : rejouée sur l'export, la projection ne laisse aucun des trois. Détail dans
+[planning.md](features/planning.md#ce-que-licalendar-donne-et-ce-quil-ne-donne-pas).
+
 ### ~~L'identifiant ADE d'un étudiant s'écrit dans le journal de l'appareil~~ — constaté le 2026-11-10, corrigé le même jour
 
 Vu au banc en jouant l'INP (passe d'avant Montaigne) : la trace de lecture du dossier écrivait

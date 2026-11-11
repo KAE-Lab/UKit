@@ -177,7 +177,7 @@ export function CourseRow({ data, theme, navigation, carouselMode = false, minut
     const encre = encreDeCours(couleur, theme.eventBackground);
     // Les semaines du cours ne se lisent que dans la fiche : sur la carte, elles ne disaient rien de
     // la journee affichee.
-    const lignes: (LigneDeCreneau | { texte: string; icone: 'code' })[] = lignesDuCreneau(data.description, data.lieu)
+    const lignes: (LigneDeCreneau | { texte: string; icone: 'code' })[] = lignesDuCreneau(data.description, data.lieu, data.natures)
         .filter((ligne) => ligne.icone !== 'date-range');
     if (data.UE) lignes.push({ texte: data.UE, icone: 'code' });
 

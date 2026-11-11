@@ -1,0 +1,117 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-montaigne.messagerie",
+  "description": "Le WIDGET messagerie de l'UNIVERSITE BORDEAUX MONTAIGNE : le nombre de messages non lus de la boite de reception. La messagerie est CARBONIO (carbonio.u-bordeaux-montaigne.fr), l'interface qui succede a Zimbra : le selecteur des deux autres portails (#zti__main_Mail__2_textCell) n'y existe pas. Mesures du 2026-11-11 sur le compte prete, sans ouvrir aucun message. (1) Carbonio rebondit sur le CAS de Montaigne par son propre service (carb-cas.u-bordeaux-montaigne.fr), puis atterrit sur /carbonio/mails/folder/2 : 2 est l'identifiant de la boite de reception dans tout Zimbra et Carbonio. (2) Chaque dossier est un `[data-testid=\"accordion-folder-item-<id>\"]` dont le texte est le nom puis, s'il y en a, le nombre de non lus (« Reception 12 »). Le `badge-counter` de la page n'est PAS celui de la reception : il vit ailleurs dans l'interface. (3) `as: number` rend le premier nombre du texte, et `null` sans lever quand il n'y en a pas : une reception sans non lus rend « Reception » et null, que l'application lit comme zero puisque le repere est la. Lire la reception ne marque rien comme lu : aucun message n'est ouvert. Les sorties portent les noms du contrat de widget (repere / nombre) ET les noms historiques (boite_de_reception / non_lus), comme les deux autres messageries.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "messagerie": "https://carbonio.u-bordeaux-montaigne.fr/carbonio/mails/folder/2"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.messagerie }}"
+    },
+    {
+      "action": "wait",
+      "ms": 4000,
+      "note": "La pause d'un `navigate` qui rebondit (docs/blueprints.md, « Attendre ») : sans session, Carbonio renvoie au CAS."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, [data-testid=\"accordion-folder-item-2\"]",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:MESSAGERIE_INDISPONIBLE",
+      "note": "Le formulaire, ou la reception. 30 s et non 20 : Carbonio est une application qui se construit apres le document, mesuree a 12,6 s au poste en filaire depuis une session ouverte."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#submitBtn"
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 5000,
+      "note": "La cascade d'authentification, plus le demarrage de Carbonio."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    {
+      "action": "wait_for",
+      "selector": "[data-testid=\"accordion-folder-item-2\"]",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:MESSAGERIE_INDISPONIBLE"
+    },
+    {
+      "action": "emit",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "event": "LOGIN_SUCCESS",
+      "note": "Meme garde que les autres portails : sans formulaire, le CAS ne s'est prononce sur rien."
+    },
+    {
+      "id": "messagerie",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "boite": {
+          "selector": "[data-testid=\"accordion-folder-item-2\"]",
+          "as": "text"
+        },
+        "non_lus": {
+          "selector": "[data-testid=\"accordion-folder-item-2\"]",
+          "as": "number"
+        }
+      },
+      "note": "Lue des que le dossier est la : son compteur parait dans le meme rendu (mesure du 2026-11-11, 0,6 a 0,7 s apres la navigation pour les deux, deux essais), donc aucune marge n'est payee ici."
+    }
+  ],
+  "outputs": {
+    "boite_de_reception": "{{ steps.messagerie.boite }}",
+    "non_lus": "{{ steps.messagerie.non_lus }}",
+    "repere": "{{ steps.messagerie.boite }}",
+    "nombre": "{{ steps.messagerie.non_lus }}"
+  }
+}

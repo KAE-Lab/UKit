@@ -12,7 +12,7 @@ le sache, et Moodle a cassé le soir de la sortie de la 6.0. Voir [docs/pilotage
 | Source | Sonde | Ce qu'elle prouve, sans identifiant |
 |---|---|---|
 | `celcat` | [`ukit.celcat.groupes`](../blueprints/ukit-celcat-groupes.blueprint.json), le Blueprint de l'application | la liste des groupes rend plus de zéro entrée |
-| `cas-bordeaux`, `cas-bordeaux-inp` | [`ukit.sonde.cas`](cas.blueprint.json) | la page de connexion sert son formulaire (`renew=true` le garantit) |
+| `cas-bordeaux`, `cas-bordeaux-inp`, `cas-bordeaux-montaigne` | [`ukit.sonde.cas`](cas.blueprint.json) | la page de connexion sert son formulaire (`renew=true` le garantit) ; à Montaigne, tous les services de l'étudiant, PRONOTE compris, sont derrière ce CAS |
 | `moodle-bordeaux` | [`ukit.sonde.moodle`](moodle.blueprint.json) | la chaîne SSO initiée par l'IdP atteint le formulaire du CAS |
 | `ade-bordeaux-inp` | [`ukit.portail.bordeaux-inp.edt`](../blueprints/portails/ukit-portail-bordeaux-inp-edt.blueprint.json), le Blueprint de l'application | l'export d'une ressource se lit comme un calendrier |
 | `pronote-bordeaux-iut` | [`ukit.sonde.pronote`](pronote.blueprint.json) | la page publique mène à l'espace Étudiants ; l'export, derrière le CAS, ne se sonde pas sans compte |

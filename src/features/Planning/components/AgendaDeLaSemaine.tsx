@@ -42,7 +42,7 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
     largeurDesHeures: number;
 }) {
     const enfoncement = useEnfoncement();
-    const salle = lignesDuCreneau(cours.description, cours.lieu).find((ligne) => ligne.icone === 'room')?.texte;
+    const salle = lignesDuCreneau(cours.description, cours.lieu, cours.natures).find((ligne) => ligne.icone === 'room')?.texte;
     const type = cours.category !== '' && cours.category !== cours.subject ? cours.category : null;
     const ouvrir = () => {
         if (navigation === undefined) return;

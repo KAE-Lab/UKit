@@ -1,0 +1,110 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-montaigne.documents",
+  "description": "Le certificat de scolarite de l'UNIVERSITE BORDEAUX MONTAIGNE, rapporte depuis l'espace des certificats (intranet.u-bordeaux-montaigne.fr/certificats_etudiant). Mesures du 2026-11-11 sur le compte prete. (1) La page publique « Certificat de scolarite » de l'espace etudiant nomme cette adresse, qui rebondit sur le CAS de Montaigne et revient. (2) L'espace ne porte qu'un lien, « Cliquez ici pour imprimer votre page de certificats », vers `certificat.php` dans le meme dossier : une adresse FIXE, sans parametre, l'identite venant de la session — comme ReNARD a Bordeaux, et contrairement aux liens regeneres de l'INP. (3) Le lien rend 200, `application/pdf`, environ 80 Ko, signature %PDF : un vrai PDF, sous la borne de 4 Mo du pont. (4) L'annee n'est ecrite ni dans le lien ni dans la page : le libelle reste « Certificat de scolarite », stable, et c'est lui qui nomme le fichier range (CertificatProjection). Le script lit le lien dans le DOM plutot que de composer l'adresse, pour suivre la page si elle le deplace, et verifie la signature ICI : une session expiree rendrait une page HTML en 200, rangee sinon sous le nom d'un certificat. Il rend `null` quand aucune piece n'est listee et `{ erreur }` quand la reponse n'est pas le PDF attendu : dans les deux cas le run reussit, et l'application decide.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "certificats": "https://intranet.u-bordeaux-montaigne.fr/certificats_etudiant/"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.certificats }}"
+    },
+    {
+      "action": "wait",
+      "ms": 4000,
+      "note": "La pause d'un `navigate` qui rebondit (docs/blueprints.md, « Attendre »)."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, a[href*=\"certificat.php\"]",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:DOCUMENTS_INDISPONIBLES"
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#submitBtn"
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 4000
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    {
+      "action": "wait_for",
+      "selector": "a[href*=\"certificat.php\"]",
+      "state": "attached",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:DOCUMENTS_INDISPONIBLES",
+      "note": "Le lien est la page entiere : sans lui, c'est l'espace qui n'a pas rendu."
+    },
+    {
+      "id": "liste",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "nombre": {
+          "selector": "a[href*=\"certificat.php\"]",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "id": "fichier",
+      "action": "evaluate",
+      "script": "async () => { var lien = document.querySelector('a[href*=\"certificat.php\"]'); if (lien === null) return null; var r; try { r = await fetch(lien.href, { credentials: 'include' }); } catch (e) { return { erreur: 'reseau' }; } if (!r.ok) return { erreur: 'statut-' + r.status }; var o = new Uint8Array(await r.arrayBuffer()); if (o.length > 4194304) return { erreur: 'trop-gros' }; if (o.length < 5 || o[0] !== 37 || o[1] !== 80 || o[2] !== 68 || o[3] !== 70) return { erreur: 'pas-un-pdf' }; var s = ''; for (var i = 0; i < o.length; i += 8192) { s += String.fromCharCode.apply(null, o.subarray(i, i + 8192)); } return { libelle: 'Certificat de scolarit\\u00e9', annee: -1, octets: o.length, contenu: btoa(s) }; }",
+      "note": "La meme forme de resultat que les deux autres portails. `annee` a -1 : la page ne la dit pas, et une annee devinee sur le calendrier serait fausse precisement pour un etudiant pas encore reinscrit."
+    }
+  ],
+  "outputs": {
+    "nombre": "{{ steps.liste.nombre }}",
+    "fichier": "{{ steps.fichier.result }}"
+  }
+}

@@ -269,6 +269,53 @@ export const SOCLE: Readonly<Record<string, Etablissement>> = {
         campus: 'Gradignan',
         alias: ['IUT', 'IUT Bordeaux', 'IUT de Bordeaux', 'BUT', 'DUT', 'Gradignan', 'Bastide', 'Bordeaux-Bastide', 'Agen', 'Périgueux'],
     },
+    // L'Universite Bordeaux Montaigne (lot 3 de la prochaine version) : un etablissement entier, son
+    // propre CAS, Carbonio, e-campus et PRONOTE Campus lu par abonnement. Les raisons de chaque valeur
+    // sont dans supabase/etablissements.sql et docs/campus/bordeaux-montaigne.md.
+    'bordeaux-montaigne': {
+        code: 'bordeaux-montaigne',
+        nom: 'Bordeaux Montaigne',
+        nomCourt: 'Montaigne',
+        ville: 'Pessac',
+        logo: null,
+        portailDossier: 'ukit.portail.bordeaux-montaigne.dossier',
+        portailMessagerie: 'ukit.portail.bordeaux-montaigne.messagerie',
+        portailDocuments: 'ukit.portail.bordeaux-montaigne.documents',
+        portailWidgets: {
+            messagerie: { blueprint: 'ukit.portail.bordeaux-montaigne.messagerie', peremptionMin: null },
+            moodle: { blueprint: 'ukit.portail.bordeaux-montaigne.moodle', peremptionMin: null },
+        },
+        celcatDomaine: null,
+        celcatResTypes: RES_TYPES_PAR_DEFAUT,
+        edt: null,
+        edtAbonnement: {
+            aide: 'PRONOTE, espace Étudiants : le bouton iCal du bandeau, puis l’adresse d’abonnement',
+            blueprintLien: 'ukit.portail.bordeaux-montaigne.edt.lien',
+        },
+        salles: {
+            separateurs: [', '],
+            motif: '(?:^|[\\s(])(MOD(?= ?\\d{3})|[BC]\\d{3}(?=\\))|CIROT\\b|[A-K](?= ?\\d{3}))',
+            depuis: 0,
+        },
+        sallesLibres: null,
+        bibliothequesPoints: POINTS_BORDEAUX,
+        crousRegion: REGION_CROUS_BORDEAUX,
+        services: {
+            ent: 'https://etu.u-bordeaux-montaigne.fr',
+            email: 'https://carbonio.u-bordeaux-montaigne.fr',
+            cas: 'https://sso.u-bordeaux-montaigne.fr/cas',
+            moodle: 'https://e-campus.u-bordeaux-montaigne.fr/my/',
+            notes: 'https://intranet.u-bordeaux-montaigne.fr/relevesDeNotesEtudiant/',
+            adaptation: 'https://forms.gle/c8vpwBu1QpowkAKC8',
+            formulaire: FORMULAIRE_PASTILLE,
+            formulaire_campus: FORMULAIRE_CAMPUS,
+        },
+        libelles: { moodle: 'e-campus' },
+        ordre: 3,
+        credits: [],
+        campus: 'Pessac',
+        alias: ['Montaigne', 'Bordeaux Montaigne', 'Université Bordeaux Montaigne', 'UBM', 'Bordeaux 3', 'Bordeaux III', 'Pessac', 'Lettres', 'Langues'],
+    },
     // « Mon universite n'est pas dans la liste » : l'absence d'universite portee, rendue utilisable
     // par un lien d'abonnement colle a la main (jalon 6-J). Les colonnes de campus sont celles du
     // secteur bordelais, qui est le perimetre du produit.

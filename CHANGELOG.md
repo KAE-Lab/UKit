@@ -81,8 +81,20 @@ une application qui donne l'heure des choses d'un regard.
   UKit lit son lien d'abonnement dans son espace PRONOTE et le range comme un lien collé ; sans compte,
   le Planning invite à se connecter plutôt qu'à coller. Le mécanisme sert tout campus dont le catalogue
   sait lire le lien (`edt.abonnement.blueprint_lien`).
+- **L'Université Bordeaux Montaigne**, cinquième établissement et premier écrit de zéro depuis l'INP :
+  son propre service de connexion, la plateforme e-campus (échéances), la messagerie Carbonio (non
+  lus), le certificat de scolarité, un profil lu sur e-campus faute de dossier de scolarité en ligne
+  (prénom, INE, adresse universitaire, formation), l'emploi du temps PRONOTE lu sur le compte, et la
+  carte du bâtiment d'un cours (`G 306`, `Amphi Pina Bausch (C200)`).
 
 ### Corrigé
+
+- **Une nouvelle tentative après un mot de passe refusé aboutit** : elle s'annonçait « portail lent » à
+  chaque essai, chez tous les établissements, jusqu'à la relance de l'application.
+- **Les cours PRONOTE annulés, déplacés ou rattrapés gardent leur titre** : une annulation écrite sans
+  valeur faisait retomber le cours sur l'intitulé empilé. Un groupe répété ne s'affiche qu'une fois, un
+  motif d'annulation porte l'icône d'une information et non celle d'une salle, un enseignant écrit sans
+  capitales celle d'une personne, et le titre ne commence plus par un tiret.
 
 - **La première connexion universitaire passe**, même quand l'intranet met dix secondes à charger :
   la vérification des identifiants se lit sur la page du service de connexion, et ne suit plus

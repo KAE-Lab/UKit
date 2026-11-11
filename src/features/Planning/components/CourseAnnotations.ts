@@ -18,6 +18,7 @@
  */
 
 import { getLocations } from '../../../shared/locations/salles';
+import type { NatureDeLigne } from '../services/PlanningAssembly';
 
 export type IconeAnnotation = 'info-outline' | 'date-range' | 'room' | 'group' | 'person';
 
@@ -118,21 +119,36 @@ export interface LigneDeCreneau {
     readonly icone: IconeAnnotation;
 }
 
+/** L'icone d'une ligne dont la source a dit la nature. */
+const ICONE_DE_NATURE: Readonly<Record<NatureDeLigne, IconeAnnotation>> = {
+    salle: 'room',
+    enseignant: 'person',
+    information: 'info-outline',
+};
+
 /**
  * Les lignes d'un cours, rangees par importance et sans doublon.
  *
  * Le lieu d'un rendez-vous du telephone d'abord, s'il en a un : c'est un lieu, quoi qu'il dise. Une
  * ligne servie deux fois par la source — Celcat repete l'enseignant quand il est aussi le
  * responsable — ne s'affiche qu'une fois. A priorite egale, l'ordre de la source tient.
+ *
+ * `natures` vient de la projection quand la source nomme ses champs (PRONOTE) : une ligne qu'elle
+ * couvre prend l'icone de sa nature, les autres se devinent comme avant.
  */
-export function lignesDuCreneau(description: string | undefined, lieu?: string): LigneDeCreneau[] {
+export function lignesDuCreneau(
+    description: string | undefined,
+    lieu?: string,
+    natures?: Readonly<Record<string, NatureDeLigne>>,
+): LigneDeCreneau[] {
     const vues = new Set<string>();
     const lignes: { texte: string; icone: IconeAnnotation; rang: number }[] = [];
     const ajouter = (brut: string, icone?: IconeAnnotation) => {
         const texte = brut.trim();
         if (texte === '' || vues.has(texte)) return;
         vues.add(texte);
-        lignes.push({ texte, icone: icone ?? iconeDAnnotation(texte), rang: lignes.length });
+        const nature = natures?.[texte];
+        lignes.push({ texte, icone: icone ?? (nature === undefined ? iconeDAnnotation(texte) : ICONE_DE_NATURE[nature]), rang: lignes.length });
     };
     if (lieu !== undefined) ajouter(lieu, 'room');
     for (const ligne of (description ?? '').split('\n')) ajouter(ligne);

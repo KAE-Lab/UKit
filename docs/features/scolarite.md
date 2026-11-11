@@ -1643,6 +1643,19 @@ et les deux gardes en moins de 25 ms ; un identifiant inconnu rend toujours `LOG
 moteur laisse passer une entrée non déclarée : un binaire qui passe encore `service` joue la version 3
 sans erreur.
 
+**Une nouvelle tentative après un refus ne se perd plus** (version 4, 2026-11-11). Le moteur embarqué
+(`@aetherius/react-native` 0.5.10, `BridgedHost.navigate`) recharge la vue au lieu de la charger quand
+l'adresse demandée est celle du document affiché. Après un refus, le document affiché est la réponse du
+formulaire, posté sur l'adresse même que la tentative suivante demande (`…/login?renew=true`) : le moteur
+rechargeait une page de POST, Android ne la recharge pas, et l'attente expirait en « portail lent » à
+chaque essai. Mesuré au banc à Bordeaux Montaigne puis à Bordeaux INP,
+avec un identifiant inexistant : refus en 15 s, puis 30 s perdues, deux fois de suite. Le fichier passe
+d'abord par `{cas}/login`, sans `renew`, ce qui garantit que la navigation suivante change d'adresse
+(1 à 1,8 s de plus) ; rejoué au banc, le second refus arrive en 10 s. Limite : un CAS qui laisserait le
+document refusé sur `{cas}/login` nu ferait recharger le détour lui-même ; aucun des trois CAS du
+catalogue ne le fait. La correction de fond appartient au moteur : ne jamais recharger un document issu
+d'un POST, charger à la place.
+
 ### Le pendant obligatoire : la déconnexion ferme la session distante
 
 Persister une session sans savoir la fermer serait une régression, pas une fonctionnalité : « se

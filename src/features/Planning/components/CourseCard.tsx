@@ -1,3 +1,5 @@
+import type { NatureDeLigne } from '../services/PlanningAssembly';
+
 export interface CourseData {
 	/** L'identifiant de la source ; la fiche y retrouve la seance dans l'annee lue (seancesRestantes.ts). */
 	id?: string;
@@ -27,6 +29,8 @@ export interface CourseData {
 	idTelephone?: string;
 	/** Le lieu d'un rendez-vous du telephone, tel quel ; jamais pose par une source de cours (PlanningAssembly.ts). */
 	lieu?: string;
+	/** Ce qu'est chaque ligne de la description, quand la source le dit (PlanningAssembly.ts). */
+	natures?: Readonly<Record<string, NatureDeLigne>>;
 }
 
 export * from './CourseRow';

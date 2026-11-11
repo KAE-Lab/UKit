@@ -86,7 +86,16 @@ export interface PlanningEvent {
      * l'attend. `id` est composite — les occurrences d'un evenement recurrent partagent le sien.
      */
     idTelephone?: string;
+    /**
+     * Ce qu'est chaque ligne de `description` quand la source le **dit** (PRONOTE nomme ses champs),
+     * pour que l'icone ne se devine plus au contenu : chez Bordeaux Montaigne, un motif d'annulation
+     * prenait l'epingle d'une salle (2026-11-11). Absent pour Celcat, ADE et les anciens caches.
+     */
+    natures?: Readonly<Record<string, NatureDeLigne>>;
 }
+
+/** La nature d'une ligne de description que la source a nommee. */
+export type NatureDeLigne = 'salle' | 'enseignant' | 'information';
 
 export interface PlanningWeekDay {
     dayNumber: string;
@@ -133,8 +142,9 @@ export function estUnCodeDUE(valeur: string): boolean {
 export function separerCodeUE(sujet: string): { code: string; reste: string } | null {
     const trouve = CODE_UE.exec(sujet);
     // `trim` : Celcat sert parfois deux espaces apres le code (`4TIN606U  Histoire…`), et le titre du
-    // cours commencait alors par une espace a l'ecran (audit du lot 1, 2026-11-10).
-    return trouve !== null && trouve.length === 3 ? { code: trouve[1], reste: trouve[2].trim() } : null;
+    // cours commencait alors par une espace a l'ecran (audit du lot 1, 2026-11-10). Le tiret : PRONOTE
+    // chez Bordeaux Montaigne ecrit `3ABCU22 - Cartographie`, et le titre commencait par « - » (2026-11-11).
+    return trouve !== null && trouve.length === 3 ? { code: trouve[1], reste: trouve[2].trim().replace(/^[-–]\s+/, '') } : null;
 }
 
 /** Une unite d'enseignement rencontree dans un planning : son code, et son intitule. */

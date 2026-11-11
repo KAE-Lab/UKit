@@ -85,7 +85,7 @@ export interface FicheDuCoursProps {
 }
 
 export function FicheDuCours({ data, theme, couleur, encre, actions }: FicheDuCoursProps) {
-    const lignes: LigneDeFiche[] = lignesDuCreneau(data.description, data.lieu);
+    const lignes: LigneDeFiche[] = lignesDuCreneau(data.description, data.lieu, data.natures);
     if (data.UE) lignes.push({ texte: data.UE, icone: 'code' });
     const badge = data.category !== '' && data.category !== data.subject;
 

@@ -465,7 +465,11 @@ savent pas d'où elle vient.
 Le mécanisme ne connaît aucun produit : seul le Blueprint sait où l'adresse se trouve. Celui de l'IUT
 ([`ukit.portail.bordeaux-iut.edt.lien`](../../blueprints/portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json))
 porte dans sa description les mesures qui l'expliquent — un clic synthétique que PRONOTE ignore, une
-adresse posée en propriété et non en attribut — et ce qu'un second campus PRONOTE en réutilise.
+adresse posée en propriété et non en attribut — et ce qu'un second campus PRONOTE en réutilise. Celui
+de Bordeaux Montaigne ([`ukit.portail.bordeaux-montaigne.edt.lien`](../../blueprints/portails/ukit-portail-bordeaux-montaigne-edt-lien.blueprint.json))
+en est la copie : seuls l'hôte et le bouton de son CAS changent, et son adresse a la même forme
+`Edt_<NOM>.ics`, que `lienDuMemeCompte` contrôle tel quel. Chez lui, PRONOTE est le **seul** service qui
+redemande le CAS après une déconnexion (mesure du 2026-11-11).
 
 ### Deux prédicats, et les confondre casserait le Campus
 
@@ -537,6 +541,18 @@ enseignant par ligne, et les autres champs avec leur clé. Une seule ligne sans 
 la projection d'ADE, qui ne change pas. Les salles de l'IUT n'ont pas de code de bâtiment : pas de
 carte, et c'est voulu (`salles: null`).
 
+**L'export de Bordeaux Montaigne a élargi la forme** (mesure du 2026-11-11, 143 événements, même
+produit en 2026.5). Il écrit ses annulations en clé seule et longue —
+`Rattrapage (Annulation du ven. 09/10/2026 10h00) :` —, et une seule de ces lignes faisait retomber le
+cours sur l'intitulé empilé, enseignant en titre : 45 cours sur 132. La clé va donc jusqu'à soixante
+caractères, la valeur peut manquer, et une clé sans valeur s'affiche seule. Il répète aussi un groupe
+de CM autant de fois qu'il réunit de TD (`TD : CM01, CM01…`, trente-neuf fois) et ouvre ses notes de
+déplacement par un tiret : une valeur se dédoublonne et perd ce tiret. Ses « salles » `A distance_Synchrone`
+et `Hors UBM` se disent sans le mot « Salle ». Il n'écrit **aucun `Type`** : ni pastille ni « il reste
+N séances » chez lui, puisque compter par matière seule mêlerait le CM et les TD d'une même UE. La
+lecture des champs nommés vit dans [`IcsChampsNommes.ts`](../../src/features/Planning/services/IcsChampsNommes.ts),
+celle des journées entières dans [`IcsJourneesEntieres.ts`](../../src/features/Planning/services/IcsJourneesEntieres.ts).
+
 ### L'icône d'une ligne se déduit de son contenu, pas de son rang
 
 C'était une règle positionnelle — première ligne un groupe, deuxième un enseignant, troisième une
@@ -555,6 +571,16 @@ vrai bâtiment.
 Deux formes s'y sont ajoutées avec PRONOTE : l'enseignant nommé par sa civilité (`M. DUPONT`,
 `Mme MARTIN`), et le champ nommé que la projection n'interprète pas (`Mémo : …`), qui prend l'icône
 d'information — testé avant la salle, pour qu'un mémo qui parle d'une salle n'en devienne pas une.
+
+**Quand la source dit ce qu'est une ligne, on ne le devine plus.** Une description PRONOTE nomme ses
+champs : la projection sait quelle ligne est la salle, lesquelles sont des enseignants, et que le reste
+est une information. Elle le transmet dans `PlanningEvent.natures`, et `lignesDuCreneau` le suit avant
+toute heuristique. Mesuré chez Bordeaux Montaigne le 2026-11-11 : le motif d'annulation « Fermeture
+des bâtiments » prenait l'épingle d'une salle (le mot « bâtiments »), et un enseignant écrit
+« Dupont Marie », sans capitales, l'icône d'un groupe. Celcat et ADE ne nomment rien : rien ne change
+pour eux. Le même jour, le titre d'un cours de Montaigne commençait par un tiret : `3ABCU22 - Cartographie`
+se coupe en code et intitulé, et l'intitulé perd le tiret qui le séparait du code
+([`separerCodeUE`](../../src/features/Planning/services/PlanningAssembly.ts)).
 
 Les dates, elles, sont **en UTC honnête** : le même créneau hebdomadaire est servi `07:30Z` en
 septembre et `08:30Z` en novembre, soit 09:30 à Paris les deux fois. Il n'y a pas de `VTIMEZONE` à
@@ -934,6 +960,8 @@ Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 | [`services/PlanningApiMapping.ts`](../../src/features/Planning/services/PlanningApiMapping.ts) | la projection **Celcat** : sujet, description, filtre `Vacances`, refiltrage sur la date |
 | [`services/PlanningApiMapping.test.ts`](../../src/features/Planning/services/PlanningApiMapping.test.ts) | ses tests, joués par `npm test` |
 | [`services/IcsMapping.ts`](../../src/features/Planning/services/IcsMapping.ts) | la projection **iCalendar** : type ancré sur le code de module, ou lu dans une description à champs nommés (PRONOTE) ; salle en tête, couleur dérivée |
+| [`services/IcsChampsNommes.ts`](../../src/features/Planning/services/IcsChampsNommes.ts) | la description à champs nommés de PRONOTE, lue par ses clés |
+| [`services/IcsJourneesEntieres.ts`](../../src/features/Planning/services/IcsJourneesEntieres.ts) | la journée entière reconnue, puis étalée sur chacun de ses jours |
 | [`services/IcsMapping.test.ts`](../../src/features/Planning/services/IcsMapping.test.ts) | ses tests, sur des corps mesurés contre ADE et à la forme de PRONOTE |
 | [`services/TelephoneMapping.ts`](../../src/features/Planning/services/TelephoneMapping.ts) | la projection des **calendriers du téléphone** : la journée locale, minuit, la journée entière selon la plateforme, les exclusions — pure, sans `expo-calendar` |
 | [`services/TelephoneMapping.test.ts`](../../src/features/Planning/services/TelephoneMapping.test.ts) | ses tests, sur les formes que le type d'expo-calendar annonce et que ses sources natives produisent |

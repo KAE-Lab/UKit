@@ -37,6 +37,11 @@ import portailBordeauxInpEdt from './portails/ukit-portail-bordeaux-inp-edt.blue
 import portailBordeauxInpEdtAnnee from './portails/ukit-portail-bordeaux-inp-edt-annee.blueprint.json';
 import portailBordeauxInpMessagerie from './portails/ukit-portail-bordeaux-inp-messagerie.blueprint.json';
 import portailBordeauxIutEdtLien from './portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json';
+import portailBordeauxMontaigneDocuments from './portails/ukit-portail-bordeaux-montaigne-documents.blueprint.json';
+import portailBordeauxMontaigneDossier from './portails/ukit-portail-bordeaux-montaigne-dossier.blueprint.json';
+import portailBordeauxMontaigneEdtLien from './portails/ukit-portail-bordeaux-montaigne-edt-lien.blueprint.json';
+import portailBordeauxMontaigneMessagerie from './portails/ukit-portail-bordeaux-montaigne-messagerie.blueprint.json';
+import portailBordeauxMontaigneMoodle from './portails/ukit-portail-bordeaux-montaigne-moodle.blueprint.json';
 import portailDeconnexion from './ukit-portail-deconnexion.blueprint.json';
 import portailVerification from './ukit-portail-verification.blueprint.json';
 import versions from './versions.json';
@@ -89,6 +94,15 @@ export const BLUEPRINT = {
     // que l'etudiant n'ait rien a coller (edt.abonnement.blueprint_lien, docs/campus/bordeaux-iut.md).
     // Embarque des la release qui embarque la ligne, par la regle du depot.
     PORTAIL_BORDEAUX_IUT_EDT_LIEN: 'ukit.portail.bordeaux-iut.edt.lien',
+    // L'Universite Bordeaux Montaigne : un etablissement entier, ecrit de zero (docs/campus/bordeaux-
+    // montaigne.md). Son CAS est un Apereo au theme de l'INP : la verification et la deconnexion
+    // generiques le servent, et ces cinq fichiers portent le reste. Embarques des la release qui
+    // embarque la ligne, par la regle du depot.
+    PORTAIL_BORDEAUX_MONTAIGNE_DOSSIER: 'ukit.portail.bordeaux-montaigne.dossier',
+    PORTAIL_BORDEAUX_MONTAIGNE_MESSAGERIE: 'ukit.portail.bordeaux-montaigne.messagerie',
+    PORTAIL_BORDEAUX_MONTAIGNE_MOODLE: 'ukit.portail.bordeaux-montaigne.moodle',
+    PORTAIL_BORDEAUX_MONTAIGNE_DOCUMENTS: 'ukit.portail.bordeaux-montaigne.documents',
+    PORTAIL_BORDEAUX_MONTAIGNE_EDT_LIEN: 'ukit.portail.bordeaux-montaigne.edt.lien',
     // Le premier Blueprint du depot qui rapporte un FICHIER et non une donnee. Embarque pour la meme
     // raison que les autres : Bordeaux est l'etablissement du socle, et le binaire n'embarque un
     // etablissement que s'il embarque de quoi le jouer.
@@ -221,6 +235,26 @@ export const BUNDLED: Readonly<Record<BlueprintName, BundledBlueprint>> = {
     [BLUEPRINT.PORTAIL_BORDEAUX_IUT_EDT_LIEN]: {
         version: versions[BLUEPRINT.PORTAIL_BORDEAUX_IUT_EDT_LIEN].version,
         document: portailBordeauxIutEdtLien,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_DOSSIER]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_DOSSIER].version,
+        document: portailBordeauxMontaigneDossier,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_MESSAGERIE]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_MESSAGERIE].version,
+        document: portailBordeauxMontaigneMessagerie,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_MOODLE]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_MOODLE].version,
+        document: portailBordeauxMontaigneMoodle,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_DOCUMENTS]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_DOCUMENTS].version,
+        document: portailBordeauxMontaigneDocuments,
+    },
+    [BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_EDT_LIEN]: {
+        version: versions[BLUEPRINT.PORTAIL_BORDEAUX_MONTAIGNE_EDT_LIEN].version,
+        document: portailBordeauxMontaigneEdtLien,
     },
     [BLUEPRINT.PORTAIL_DECONNEXION]: {
         version: versions[BLUEPRINT.PORTAIL_DECONNEXION].version,

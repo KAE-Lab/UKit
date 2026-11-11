@@ -13,7 +13,7 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 |---|---|---|
 | 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison ; les quatre parcours restants joués au lot 2, le même jour (liste ci-dessous) |
 | 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | joué le 2026-11-10 : « il reste N TD » livré, Appliphase reporté (raison ci-dessous), 7 entrées corrigées au registre (11 défauts croisés en jouant l'audit), 1 consignée |
-| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publication préparée, non publiée ([fiche](campus/bordeaux-iut.md)) ; passe de corrections jouée le même soir ([ci-dessous](#la-passe-de-corrections-davant-montaigne)) ; Montaigne à ouvrir |
+| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publication préparée, non publiée ([fiche](campus/bordeaux-iut.md)) ; passe de corrections jouée le même soir ([ci-dessous](#la-passe-de-corrections-davant-montaigne)) ; Montaigne joué le 2026-11-11 : vérifié au banc, publication préparée, non publiée ([ci-dessous](#bordeaux-montaigne-joué-le-2026-11-11)) |
 
 ## Ce que « zéro défaut » veut dire ici
 
@@ -194,8 +194,8 @@ ce Blueprint dans `edt.abonnement.blueprint_lien` de sa ligne.
    le commit qui les ajoute : un manifeste se publie depuis `main`
    ([blueprints.md](blueprints.md#ce-que-le-manifeste-annonce)) ;
 3. depuis `main`, `npm run blueprints:publish -- --dry-run`, qui doit annoncer
-   `ukit.portail.bordeaux-iut.edt.lien` 1 (hors socle) et `ukit.portail.verification` 3, puis
-   `npm run blueprints:publish` ;
+   `ukit.portail.bordeaux-iut.edt.lien` 1 (hors socle) et `ukit.portail.verification` **4** (la 3 est
+   dépassée depuis Montaigne, ci-dessous), puis `npm run blueprints:publish` ;
 4. la ligne de catalogue **seule**, jamais le fichier entier, qui réécrirait les trois autres lignes
    et ce que la console y a changé :
    ```bash
@@ -208,3 +208,45 @@ ce Blueprint dans `edt.abonnement.blueprint_lien` de sa ligne.
 Les binaires installés liront la ligne sans lire le lien (`blueprint_lien` leur est inconnu) : ils
 proposeront de coller, avec l'aide du catalogue, et afficheront les intitulés PRONOTE empilés. La
 lecture du lien, les intitulés et les journées entières arrivent avec la release qui suit.
+
+### Bordeaux Montaigne, joué le 2026-11-11
+
+Mesures, vérification au banc, verdict « avec ou sans compte » et ce qui reste :
+[la fiche](campus/bordeaux-montaigne.md). Le premier établissement entier depuis l'INP : cinq Blueprints
+écrits de zéro (`ukit.portail.bordeaux-montaigne.dossier`, `.messagerie`, `.moodle`, `.documents`,
+`.edt.lien`), la ligne entière au catalogue et au socle, quatorze bâtiments, une sonde.
+
+Ce que le banc a fait corriger, pour Montaigne et au-delà :
+
+- **une nouvelle tentative après un mot de passe refusé cédait en « portail lent »**, chez tous les
+  établissements : `ukit.portail.verification` 4 contourne la navigation du moteur, qui rechargeait au
+  lieu de charger. À publier, elle corrige aussi les binaires installés ;
+- un tiers des cours PRONOTE de Montaigne prenaient l'intitulé empilé ; un motif d'annulation portait
+  l'épingle d'une salle ; le titre commençait par un tiret ([planning.md](features/planning.md#ce-que-licalendar-donne-et-ce-quil-ne-donne-pas)).
+
+**À juger sur l'iPhone** : la touche Entrée dans WKWebView sur PRONOTE ; Carbonio dans la vue cachée et
+dans le navigateur intégré ; le détour de la vérification 4 ; le certificat dans le lecteur iOS.
+
+**La publication, préparée et non faite**, après celle de l'IUT ou avec elle, dans cet ordre :
+
+1. juger sur l'iPhone la liste ci-dessus ;
+2. amener sur `main` les cinq fichiers de `blueprints/portails/ukit-portail-bordeaux-montaigne-*`,
+   `ukit-portail-verification.blueprint.json` et `versions.json` — la fusion de cette branche ;
+3. depuis `main`, `npm run blueprints:publish -- --dry-run`, qui doit annoncer les cinq
+   `ukit.portail.bordeaux-montaigne.*` en version 1 (hors socle) et `ukit.portail.verification` 4, puis
+   `npm run blueprints:publish` ;
+4. **le jour même**, la ligne seule — la sonde `cas-bordeaux-montaigne`, partie avec `main`, la lit
+   dans la base et finirait sinon en erreur de sonde :
+   ```bash
+   awk '/^-- Universite Bordeaux Montaigne/{f=1} f; f && /alias *= excluded.alias;/{exit}' supabase/etablissements.sql > /tmp/bordeaux-montaigne.sql
+   psql -h aws-0-eu-west-2.pooler.supabase.com -p 5432 -U postgres.$REF -d postgres -v ON_ERROR_STOP=1 -f /tmp/bordeaux-montaigne.sql
+   ```
+5. les bâtiments, après la ligne : `psql … -v ON_ERROR_STOP=1 -f supabase/batiments-bordeaux-montaigne.sql` ;
+6. vérifier la lecture : `select code, edt, salles from etablissements where code = 'bordeaux-montaigne';`
+   puis `select count(*) from batiments where code in ('A','B','C','D','E','F','G','I','J','K','MOD','B400','C200','CIROT');`
+   (14 attendus).
+
+Les binaires installés liront la ligne sans lire le lien, comme pour l'IUT : ils proposeront de coller,
+afficheront la Scolarité par les Blueprints publiés, les bâtiments par la surcouche, et les intitulés
+PRONOTE empilés. La lecture du lien, le dossier sans numéro étudiant mais avec formation, les intitulés
+et les icônes justes arrivent avec la release qui suit.

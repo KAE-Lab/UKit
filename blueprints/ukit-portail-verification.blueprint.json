@@ -27,6 +27,11 @@
   "steps": [
     {
       "action": "navigate",
+      "url": "{{ inputs.cas }}/login",
+      "note": "Version 4, 2026-11-11 : un detour, et il contourne une limite du moteur embarque (@aetherius/react-native 0.5.10). Son `navigate` recharge la vue au lieu de la charger quand l'adresse demandee est celle du document affiche. Apres un refus d'identifiants, le document affiche est la reponse du formulaire, poste sur l'adresse meme que la tentative suivante demande (`…/login?renew=true`) : le moteur rechargeait donc une page de POST, Android ne la recharge pas, aucun document ne s'annonce, et l'attente expirait en `PORTAIL_LENT` a chaque nouvel essai. Mesure au banc le 2026-11-11, a Bordeaux Montaigne puis a Bordeaux INP (identifiant inexistant) : refus en 15 s, puis 30 s de navigation perdue, deux fois de suite. Passer d'abord par `/login`, sans `renew`, garantit que la navigation suivante change d'adresse ; cette page-la est le formulaire, ou « connexion reussie » si un ticket vit, et rien n'y est lu ni saisi. Limite : un CAS dont le formulaire refuse laisserait le document sur `/login` nu ferait recharger ce detour-ci ; aucun des trois CAS du catalogue ne le fait (releve du lot)."
+    },
+    {
+      "action": "navigate",
       "url": "{{ inputs.cas }}/login?renew=true",
       "note": "Sans `service` : la page de succes est celle du CAS lui-meme, servie en quelques centaines de millisecondes, et non l'ENT de l'etablissement. Mesure du 2026-11-10 : avec `service`, l'intranet de Bordeaux mettait 9,8 a 12 s a charger apres le CAS dans une WebView froide, et la premiere connexion echouait a chaque fois. Les deux CAS servent leur formulaire sans `service` (mesure le meme jour, 200 et `#username`)."
     },

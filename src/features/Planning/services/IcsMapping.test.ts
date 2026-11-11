@@ -212,6 +212,34 @@ const COURS_PRONOTE_SALLES = [
     'END:VEVENT',
 ].join('\r\n');
 
+/**
+ * Un cours a la forme de l'export de Bordeaux Montaigne, mesuree le 2026-11-11 (memes produit et
+ * champs que l'IUT, intitules et noms fabriques) : aucun `Type`, une annulation ecrite en cle seule et
+ * longue, un groupe de CM repete pour chaque TD reuni, une note qui s'ouvre sur un tiret.
+ */
+const COURS_MONTAIGNE = [
+    'BEGIN:VEVENT',
+    'CATEGORIES;LANGUAGE=fr:HYPERPLANNING',
+    'DTSTART:20261120T130000Z',
+    'DTEND:20261120T150000Z',
+    'SUMMARY;LANGUAGE=fr:3ABCU11 - Cartographie - M. DUPONT - 3ABCD1M - CM01\\, CM01\\, CM01 - Report du 09/10',
+    'LOCATION;LANGUAGE=fr:Amphi Exemple (C200)',
+    'DESCRIPTION;LANGUAGE=fr:Rattrapage (Annulation du ven. 09/10/2026 10h00) : \\nCours déplacé :  - Rattrapage le jeu. 07/01/2027 10h00\\nMatière : 3ABCU11 - Cartographie\\nSalle : Amphi Exemple (C200)\\nEnseignant : M. DUPONT\\nRegroupement : 3ABCD1M\\nTD : CM01\\, CM01\\, CM01\\nMémo : Report du 09/10\\n',
+    'UID:Cours-333333-0-FR-Index-Education.fr',
+    'END:VEVENT',
+].join('\r\n');
+
+/** Une salle qui n'en est pas une : le cours a distance de Bordeaux Montaigne. */
+const COURS_A_DISTANCE = [
+    'BEGIN:VEVENT',
+    'DTSTART:20261121T080000Z',
+    'DTEND:20261121T100000Z',
+    'SUMMARY;LANGUAGE=fr:3ABCU12 - Statistique - Mme MARTIN - GRP03',
+    'DESCRIPTION;LANGUAGE=fr:Matière : 3ABCU12 - Statistique\\nSalle : A distance_Synchrone\\nEnseignant : Mme MARTIN\\nTD : GRP03\\n',
+    'UID:Cours-444444-0-FR-Index-Education.fr',
+    'END:VEVENT',
+].join('\r\n');
+
 /** Une journee de vacances : ni description ni salle. Le `SUMMARY` reste le titre. */
 const VACANCES_PRONOTE = [
     'BEGIN:VEVENT',
@@ -278,6 +306,57 @@ describe('description a champs nommes (PRONOTE)', () => {
     it('garde un evenement unique dans la plage annuelle, celle de la synchronisation', () => {
         const annee = projeterAnneeIcs(calendrier(VACANCES_PRONOTE), 'lien');
         expect(annee).toHaveLength(1);
+    });
+
+    it('lit les champs d une annulation en cle seule, sans retomber sur l intitule empile', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_MONTAIGNE), 'lien');
+        expect(cours.subject).toBe('3ABCU11 - Cartographie');
+        // Sans `Type`, aucune pastille : un type devine serait faux pour un CM comme pour un TD.
+        expect(cours.category).toBe('');
+        expect(cours.description.split('\n')).toEqual([
+            'Amphi Exemple (C200)',
+            'M. DUPONT',
+            'Rattrapage (Annulation du ven. 09/10/2026 10h00)',
+            'Cours déplacé : Rattrapage le jeu. 07/01/2027 10h00',
+            'Regroupement : 3ABCD1M',
+            'TD : CM01',
+            'Mémo : Report du 09/10',
+        ]);
+    });
+
+    it('dit la nature de chaque ligne nommee, pour que l icone ne se devine plus', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_MONTAIGNE), 'lien');
+        expect(cours.natures).toEqual({
+            'Amphi Exemple (C200)': 'salle',
+            'M. DUPONT': 'enseignant',
+            'Rattrapage (Annulation du ven. 09/10/2026 10h00)': 'information',
+            'Cours déplacé : Rattrapage le jeu. 07/01/2027 10h00': 'information',
+            'Regroupement : 3ABCD1M': 'information',
+            'TD : CM01': 'information',
+            'Mémo : Report du 09/10': 'information',
+        });
+        // Une description ADE ne nomme rien : l'heuristique reste seule juge.
+        const [ade] = lireCalendrier(calendrier(COURS), '2A GR1');
+        expect(ade.natures).toBeUndefined();
+    });
+
+    it('ne touche ni aux decimales ni au signe d un memo, et ne fait pas de ligne pour une salle vide', () => {
+        const ics = calendrier([
+            'BEGIN:VEVENT',
+            'DTSTART:20261123T080000Z',
+            'DTEND:20261123T100000Z',
+            'SUMMARY;LANGUAGE=fr:3ABCU13 - Statistique',
+            'DESCRIPTION;LANGUAGE=fr:Matière : 3ABCU13 - Statistique\\nSalle : \\nMémo : -2 points si retard\\, coef 1\\,5\\n',
+            'UID:Cours-555555-0-FR-Index-Education.fr',
+            'END:VEVENT',
+        ].join('\r\n'));
+        const [cours] = lireCalendrier(ics, 'lien');
+        expect(cours.description.split('\n')).toEqual(['Mémo : -2 points si retard, coef 1,5']);
+    });
+
+    it('dit une salle a distance sans le mot salle, et sans tiret bas', () => {
+        const [cours] = lireCalendrier(calendrier(COURS_A_DISTANCE), 'lien');
+        expect(cours.description.split('\n')[0]).toBe('A distance Synchrone');
     });
 
     it('ne change rien a une description ADE', () => {

@@ -447,6 +447,103 @@ insert into public.etablissements (
     alias                = excluded.alias;
 
 -- =============================================================================
+-- Universite Bordeaux Montaigne — un etablissement entier, ecrit de zero
+-- =============================================================================
+--
+-- Lot 3 de la prochaine version, mesure le 2026-11-11 sur un compte prete
+-- (docs/campus/bordeaux-montaigne.md). **A publier apres ses cinq Blueprints**
+-- (`ukit.portail.bordeaux-montaigne.*`), puis supabase/batiments-bordeaux-montaigne.sql.
+--
+-- Rien n'est partage avec l'Universite de Bordeaux : CAS (`sso.u-bordeaux-montaigne.fr`, un Apereo au
+-- theme de Bordeaux INP, donc la verification et la deconnexion generiques), messagerie Carbonio,
+-- plateforme pedagogique e-campus, emploi du temps PRONOTE Campus. Il n'y a PAS de dossier de
+-- scolarite en ligne : le dossier se lit sur le profil d'e-campus (nom, adresse, INE), sans numero
+-- etudiant ni date de naissance, qu'aucune page ne porte.
+--
+-- Deux `null` qui sont des decisions :
+--
+--   * `celcat_domaine` — aucun Celcat : l'emploi du temps arrive par l'abonnement PRONOTE, lu sur le
+--     compte (`blueprint_lien`) ;
+--   * `salles_libres` — aucun inventaire d'occupation public, et celui du College ST montrerait des
+--     salles de Talence.
+--
+-- `salles` porte un motif, contrairement a l'IUT : PRONOTE ecrit ici la lettre du batiment (`G 306`,
+-- `MOD 002`) ou le code d'un amphitheatre entre parentheses (`Amphi Pina Bausch (C200)`). Le motif
+-- cherche le code apres une espace ou une parenthese parce que la fiche recoit `Salle G 306`, et il
+-- exige trois chiffres pour ne jamais lire « A distance » comme le batiment A. Les codes sont dans le
+-- socle (assets/locations.json) et dans supabase/batiments-bordeaux-montaigne.sql.
+--
+-- `services` : `ent` est l'espace etudiant public, qui sert de portail (la racine de l'intranet n'en
+-- est pas un) ; `notes` ouvre les releves en ligne ; pas d'`examens` (aucune porte mesuree) ni
+-- d'`apogee`. `libelles.moodle` nomme la plateforme comme l'etablissement la nomme. Points de balayage
+-- de Bordeaux : celui de Talence / Pessac couvre la bibliotheque Rigoberta Menchu. `logo_url` attend
+-- l'accord du service communication ; `credits` attend la reponse du preteur.
+insert into public.etablissements (
+    code, nom, nom_court, ville, logo_url, actif,
+    portail_dossier, portail_messagerie, portail_widgets, portail_documents,
+    celcat_domaine, celcat_res_types, edt, salles, salles_libres,
+    bibliotheques_points, services, libelles, crous_region, ordre,
+    credits, campus, alias
+) values (
+    'bordeaux-montaigne',
+    'Bordeaux Montaigne',
+    'Montaigne',
+    'Pessac',
+    null,
+    true,
+    'ukit.portail.bordeaux-montaigne.dossier',
+    'ukit.portail.bordeaux-montaigne.messagerie',
+    '{"messagerie": {"blueprint": "ukit.portail.bordeaux-montaigne.messagerie"},
+      "moodle":     {"blueprint": "ukit.portail.bordeaux-montaigne.moodle"}}'::jsonb,
+    'ukit.portail.bordeaux-montaigne.documents',
+    null,
+    null,
+    '{"abonnement": {"aide": "PRONOTE, espace Étudiants : le bouton iCal du bandeau, puis l’adresse d’abonnement",
+                     "blueprint_lien": "ukit.portail.bordeaux-montaigne.edt.lien"}}'::jsonb,
+    '{"separateurs": [", "], "motif": "(?:^|[\\s(])(MOD(?= ?\\d{3})|[BC]\\d{3}(?=\\))|CIROT\\b|[A-K](?= ?\\d{3}))", "depuis": 0}'::jsonb,
+    null,
+    '[{"lat": 44.8377, "lng": -0.5791},
+      {"lat": 44.7963, "lng": -0.6277}]'::jsonb,
+    '{"ent":     "https://etu.u-bordeaux-montaigne.fr",
+      "email":   "https://carbonio.u-bordeaux-montaigne.fr",
+      "cas":     "https://sso.u-bordeaux-montaigne.fr/cas",
+      "moodle":  "https://e-campus.u-bordeaux-montaigne.fr/my/",
+      "notes":   "https://intranet.u-bordeaux-montaigne.fr/relevesDeNotesEtudiant/",
+      "adaptation": "https://forms.gle/c8vpwBu1QpowkAKC8",
+      "formulaire": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.408146347={onglet}&entry.403643659={appareil}&entry.558675343={systeme}&entry.1090115049={version}&entry.278485196={etablissement}",
+      "formulaire_campus": "https://docs.google.com/forms/d/e/1FAIpQLScLRZZ5VD3__Zq8pIXuezfacCvSzBHAALHyKq98iM2LzQ6rUg/viewform?usp=pp_url&entry.82564016=Demander%20un%20campus"}'::jsonb,
+    '{"moodle": "e-campus"}'::jsonb,
+    -- Le Crous de Bordeaux : les restaurants du domaine universitaire de Pessac sont dans la region 1.
+    '1',
+    3,
+    null,
+    'Pessac',
+    '{"Montaigne","Bordeaux Montaigne","Université Bordeaux Montaigne","UBM","Bordeaux 3","Bordeaux III","Pessac","Lettres","Langues"}'::text[]
+) on conflict (code) do update set
+    nom                  = excluded.nom,
+    nom_court            = excluded.nom_court,
+    ville                = excluded.ville,
+    logo_url             = excluded.logo_url,
+    actif                = excluded.actif,
+    portail_dossier      = excluded.portail_dossier,
+    portail_messagerie   = excluded.portail_messagerie,
+    portail_widgets      = excluded.portail_widgets,
+    portail_documents    = excluded.portail_documents,
+    celcat_domaine       = excluded.celcat_domaine,
+    celcat_res_types     = excluded.celcat_res_types,
+    edt                  = excluded.edt,
+    salles               = excluded.salles,
+    salles_libres        = excluded.salles_libres,
+    bibliotheques_points = excluded.bibliotheques_points,
+    services             = excluded.services,
+    libelles             = excluded.libelles,
+    crous_region         = excluded.crous_region,
+    ordre                = excluded.ordre,
+    credits              = excluded.credits,
+    campus               = excluded.campus,
+    alias                = excluded.alias;
+
+-- =============================================================================
 -- « Mon universite n'est pas dans la liste » — l'etablissement ouvert (jalon 6-J)
 -- =============================================================================
 --

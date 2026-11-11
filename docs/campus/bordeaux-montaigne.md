@@ -1,118 +1,141 @@
 # Université Bordeaux Montaigne
 
-> Fiche ouverte le 2026-09-16, par le relevé public du lot 1 de
-> [7-B](../phase-7/7-b-nouveaux-campus.md). Compte prêté : annoncé le 2026-09-14, **pas encore reçu**.
-> Volontaire crédité : à demander.
+> Fiche ouverte le 2026-09-16 par le relevé public du lot 1 de [7-B](../phase-7/7-b-nouveaux-campus.md) ;
+> moitié authentifiée mesurée le 2026-11-11 sur le compte prêté (`.env`), au lot 3 de la
+> [prochaine version](../prochaine-version.md). Volontaire crédité : à demander (`credits` reste vide).
 >
-> **Verdict : sans code pour l'emploi du temps — vérifié de bout en bout le 2026-09-16.** L'adresse
-> d'abonnement iCalendar de PRONOTE Campus, collée dans « Mon université n'est pas dans la liste »
-> ([6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)), **affiche les cours dans le
-> Planning**, sur l'appareil. Aucune release, aucune ligne de code. Le **portail** (dossier,
-> messagerie), lui, reste à écrire de zéro : c'est le seul **établissement entier** des trois.
+> **Verdict : un établissement entier, servi sans rien coller, par cinq Blueprints écrits pour lui et
+> les deux génériques du CAS.** Publiée seule, la ligne sert déjà les versions installées en lien collé ; la
+> lecture du lien, le dossier sans dossier de scolarité et les intitulés PRONOTE propres viennent avec
+> la release qui suit. Le compte prêté était indispensable à tout ce qui fait la différence.
 
 ## Identité
-- Nom complet : **Université Bordeaux Montaigne**
-- Nom court : **Montaigne**
-- Commune : **Pessac** (Domaine universitaire, 19 esplanade des Antilles)
-- Logo : à demander au service communication
-- Mots des étudiants : *à collecter* — proposés : « Montaigne », « Bordeaux 3 », « UBM », « lettres »
-- Code proposé : **`bordeaux-montaigne`** — **confirmé**, aucun conflit avec le catalogue publié
+- Nom : **Bordeaux Montaigne** (nom officiel court, règle du [README](README.md#comment-se-nomme-un-campus)) ;
+  nom court : **Montaigne** ; code **`bordeaux-montaigne`**, définitif
+- Commune : **Pessac** (domaine universitaire, esplanade des Antilles) ; campus de regroupement : `Pessac`
+- Alias : Montaigne, Bordeaux Montaigne, Université Bordeaux Montaigne, UBM, Bordeaux 3, Bordeaux III,
+  Pessac, Lettres, Langues — proposés, pas encore confrontés à des étudiants
+- Logo : à demander au service communication (`logo_url` nul : l'écran prend son repli)
+
+## Ce que l'étudiant a, et où cela vit
+
+Rien n'est partagé avec l'Université de Bordeaux. Tout passe par un seul CAS, et c'est la seule surface
+publique : la sonde `cas-bordeaux-montaigne` la surveille. Détail des hôtes et des sélecteurs :
+[sources-externes.md](../sources-externes.md#11-université-bordeaux-montaigne--le-troisième-portail).
+
+| Service | Hôte, produit | Dans UKit |
+|---|---|---|
+| Connexion | `sso.u-bordeaux-montaigne.fr/cas`, Apereo au thème MDC (`#submitBtn`, `#loginErrorsPanel`), comme l'INP | `ukit.portail.verification` et `.deconnexion`, génériques |
+| Dossier | **aucun dossier de scolarité en ligne** : le profil d'e-campus porte le nom, l'adresse `etu.` et l'INE ; la page des relevés, l'inscription | `ukit.portail.bordeaux-montaigne.dossier` |
+| Plateforme pédagogique | **e-campus**, un Moodle authentifié par le CAS en direct | `.moodle`, widget « Rien à rendre » |
+| Messagerie | **Carbonio** (`carbonio.`, par `carb-cas.`) | `.messagerie`, widget des non lus |
+| Documents | le certificat de scolarité, un PDF à adresse fixe (`intranet/certificats_etudiant/certificat.php`) | `.documents` |
+| Notes | les relevés en ligne (`intranet/relevesDeNotesEtudiant`) | une porte, rangée « Bientôt disponible » comme au Collège ST |
+| Examens | aucune porte trouvée | rangée « Bientôt disponible », sans porte |
+| ENT | aucun portail à rangées : l'espace étudiant public `etu.` en tient lieu, la racine de l'intranet est une page de test du serveur | la rangée ENT ouvre `etu.` |
+| Emploi du temps | PRONOTE Campus 2026.5 (`flaubert2.`, alias `hyperplanning.`) | `.edt.lien`, puis le repli universel |
+
+**Ce qu'aucune page ne donne** : le numéro étudiant (seulement dans le PDF du certificat) et la date
+de naissance. La fiche du compte les dit « — ».
+
+**La déconnexion du CAS ne ferme que PRONOTE.** Mesuré : après `/cas/logout`, e-campus, Carbonio et les
+certificats gardent leur session de service ; PRONOTE redemande le CAS. C'est la limite déjà écrite pour
+`mondossierweb` ([scolarite.md](../features/scolarite.md#le-pendant-obligatoire--la-déconnexion-ferme-la-session-distante)),
+et c'est ce qui garde entier le contrôle `lienDuMemeCompte` du lien.
 
 ## Emploi du temps
-- Page publique : **aucune**
-- Logiciel : **PRONOTE Campus** (Index Éducation) — servi par l'hôte
-  `flaubert2.u-bordeaux-montaigne.fr`, qui s'annonce « Université Bordeaux Montaigne - PRONOTE
-  Campus » sur sa propre page d'erreur
-- Adresse d'entrée : `https://hyperplanning.u-bordeaux-montaigne.fr` — **un CNAME vers `flaubert2`**,
-  résidu d'un changement de logiciel, exactement comme côté [IUT](bordeaux-iut.md). Le nom de l'hôte
-  ne dit donc **pas** le produit : seule la page le dit
-- Export iCalendar public : **non** — mais **l'export existe pour l'étudiant connecté**, voir plus bas
-
-**Tout est derrière le CAS, y compris l'espace invité.** Mesuré : la racine **et** `/invite`
-redirigent l'une comme l'autre vers
-`https://sso.u-bordeaux-montaigne.fr/cas/login?service=…` — page « Authentification - Université
-Bordeaux Montaigne ». Les chemins d'export rendent une page d'erreur constante de 2 359 octets tant
-qu'on n'est pas connecté : **aucune surface publique**.
-
-### L'export iCalendar existe, et il change le verdict
-
-**Vérifié le 2026-09-16 sur le compte prêté.** La connexion au CAS aboutit sur l'espace étudiant
-`…/etudiant?identifiant=<16 caractères>`, titre « PRONOTE Campus - Université Bordeaux Montaigne ».
-PRONOTE y propose une boîte **« Export au format iCal »** offrant deux choses :
-
-- un **téléchargement ponctuel** de l'emploi du temps, non mis à jour ;
-- une **adresse d'abonnement** — « Synchroniser l'emploi du temps avec le gestionnaire d'agenda »,
-  *« l'emploi du temps sera mis à jour en temps réel »* — de la forme
-  `https://flaubert2.u-bordeaux-montaigne.fr/Telechargements/ical/<jeton>`, copiable et doublée d'un
-  QR Code.
-
-C'est exactement ce que l'application sait déjà jouer : le **lien d'abonnement collé**
-([6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)), un seul Blueprint embarqué, aucune
-écriture par établissement.
-
-**Et ça a été joué, pas seulement supposé.** Le 2026-09-16, l'adresse collée dans « Mon université
-n'est pas dans la liste » rend le Planning **rempli et correct** sur l'appareil.
-
-> **Une réserve, relevée à cette occasion et volontairement non corrigée ici** : certains **intitulés
-> de cours s'affichent bizarrement**. PRONOTE n'écrit pas son `SUMMARY` comme l'export ADE de Bordeaux
-> INP, sur lequel la projection a été réglée ([6-I](../phase-6/6-i-planning-universel.md)). Ce n'est
-> pas un défaut du campus mais de l'**adaptation d'un nouvel émetteur d'iCalendar** : il s'inscrit au
-> [registre des défauts](../defauts-fonctionnels.md) et se traite à part, avec des exemples réels sous
-> les yeux — pas au passage d'un relevé.
-
-> **L'adresse d'abonnement est un secret personnel.** Elle donne l'emploi du temps de son porteur à
-> quiconque la détient, sans authentification — c'est la règle que le
-> [kit d'adaptation](kit-d-adaptation.md#les-règles-avant-tout) énonce déjà. Elle ne s'écrit donc
-> **jamais** dans ce dépôt, ni dans une capture : seule sa **forme** est documentée ci-dessus.
+- L'adresse d'abonnement se lit après la connexion, par la touche Entrée sur `i.icon_ical`, comme à
+  l'IUT. Forme : `https://flaubert2.u-bordeaux-montaigne.fr/Telechargements/ical/Edt_<NOM>.ics?version=…&icalsecurise=<96>&param=<36>`.
+  Elle ne s'écrit nulle part, seule sa forme.
+- L'export (mesuré sur 143 événements, du 2 septembre au 24 juillet) diffère de celui de l'IUT : aucun
+  `Type`, une clé `TD` qui porte le groupe, des annulations en clé seule et longue
+  (`Rattrapage (Annulation du …) :`), des motifs d'annulation (`Fermeture des bâtiments`, `Cours
+  déplacé`), un groupe de CM répété autant de fois que de TD réunis, un `X-WR-CALNAME` qui porte le
+  nom, la date de naissance et les groupes du porteur (aucun écran ne le lit). Ce que la projection en
+  fait : [planning.md](../features/planning.md#ce-que-licalendar-donne-et-ce-quil-ne-donne-pas).
+- Sans `Type`, ni pastille ni « il reste N séances » : compter par matière seule mêlerait CM et TD.
 
 ## Bâtiments
+PRONOTE écrit le bâtiment : `G 306`, `F 011`, `E 208 informatique`, `MOD 002`, ou un amphithéâtre avec
+son code (`Amphi Pina Bausch (C200)`, `Amphi Olympe de Gouges (B400)`), ou son seul nom (`Amphi CIROT`,
+`Amphi N°1`). La ligne porte un motif qui en tire le code, et quatorze bâtiments relevés sur OpenStreetMap
+(A à G, I, J, K, `MOD`, `B400`, `C200`, `CIROT`) sont dans le socle des lieux et dans
+[`batiments-bordeaux-montaigne.sql`](../../supabase/batiments-bordeaux-montaigne.sql), qui dit les sources
+et les limites : **H** est écarté (deux bâtiments d'OSM portent ce nom), `Amphi N°1` n'a pas de carte.
+Pas de salles libres : aucun inventaire d'occupation public.
 
-*Non collectés : sans emploi du temps lisible, on ne sait pas comment une salle s'écrit.*
+## Bibliothèques et restaurants
+- Les deux points de balayage de Bordeaux : celui de Talence / Pessac couvre la **BU Rigoberta Menchú**
+  et la **BU Droit-Lettres**, toutes deux sur Affluences (vérifié au banc, fiche complète).
+- Restaurants : Croustillant, région CROUS **1**.
 
-| Code | Nom | Latitude | Longitude | Accès libre | Horaires | Photo |
-|---|---|---|---|---|---|---|
-| | Campus (point central) | 44.79494 | -0.61737 | | | |
+## Vérifié au banc
 
-Trois noms de salle copiés de l'emploi du temps :
-- *à relever avec le compte prêté*
+Le 2026-11-11, sur `ukit` (Android 15), compte prêté, sans rien publier (la ligne est au socle) :
 
-## Bibliothèques
-- Point central : **44.79494, -0.61737**
-- Sur Affluences : **oui** — **Bibliothèque Rigoberta Menchú**, déclarée « Université Bordeaux
-  Montaigne », identifiant `e86a556a-b808-4b9c-ab78-b49487c63fef`. La **BU Droit-Lettres**
-  (`9e418833-a68a-42d7-8447-133761a8ca48`), sur le même domaine universitaire de Pessac, y figure
-  aussi
-- Absentes d'Affluences : *à confirmer sur place*
+| Parcours | Résultat |
+|---|---|
+| Accueil | Bordeaux Montaigne, Pessac, à sa place ; groupé sous « Pessac » dans les Réglages |
+| Mot de passe faux (identifiant inexistant) | « Vérifie le nom d'utilisateur et le mot de passe. », en 15 s ; une **seconde** tentative cédait en « portail lent » : corrigé (vérification 4), voir plus bas |
+| Connexion à l'accueil | vérification 9,9 s, dossier 9,3 s, lien lu 25,9 s et accepté ; la fin montre les cours du lendemain |
+| Planning | jour, semaine, férié en bandeau, motif d'annulation en information, enseignants en personne, salle en épingle, titre sans code ni tiret |
+| Fiche d'un cours | une salle du bâtiment G et son marqueur **G** sur le bâtiment ; pas de séances restantes (pas de type) |
+| Scolarité | prénom, e-campus « Rien à rendre », messagerie au compte mesuré à la source, « 1 document », Notes et Examens « Bientôt disponible », ENT |
+| Portes | Carbonio et e-campus s'ouvrent connectés ; le certificat s'affiche dans le lecteur ; Notes ouvre les relevés |
+| Fiche du compte | prénom, formation (lecture bonus), INE, adresse ; numéro étudiant et naissance « — » ; Actualiser ne soumet aucun mot de passe |
+| Campus | annonces, restaurants, bibliothèques ; pas de salles libres (teaser) |
+| Bascule Montaigne → Collège ST → Montaigne | compte et lien cloisonnés, retrouvés sans ressaisie ni run de portail |
+| Déconnexion | session CAS fermée (4,6 s) ; compte et lien « Non connecté » ; le Planning réinvite à se connecter |
+| Hors ligne | jour en cache avec son bandeau daté ; semaine jamais lue « Service indisponible » et Réessayer ; Scolarité en cache |
+| Thèmes, langues | sombre et clair ; français, anglais, espagnol |
 
-## Restaurants
-- Sur Croustillant : **oui**
-- Région CROUS : **1 (Bordeaux)**
+Rejoués ensuite sans régression, compte réel de chacun : l'IUT (vérification 4, lien PRONOTE relu,
+pastilles et « Il reste 11 séances de TD » inchangés), Bordeaux INP (connexion, emploi du temps
+personnel proposé, carte `EB`), le Collège ST (connexion, `INF501A1`, carte `A21`).
 
-## Services de l'ENT
-- ENT : `https://intranet.u-bordeaux-montaigne.fr` (hôte `durthang`), et le portail étudiant
-  **`https://etu.u-bordeaux-montaigne.fr`**
-- Messagerie : **`https://carbonio.u-bordeaux-montaigne.fr`** — un **Carbonio**, pas un webmail
-  d'Université de Bordeaux
-- Page de connexion : **`https://sso.u-bordeaux-montaigne.fr/cas`** (hôte `utumno`) — **un CAS
-  distinct** de celui de l'Université de Bordeaux
-- Moodle : **aucun sous-domaine `moodle.` ne résout** ; la plateforme pédagogique est à identifier
-  depuis l'ENT
-- Scolarité, notes, examens : à identifier depuis l'ENT
-- Offre de formation : `https://formations.u-bordeaux-montaigne.fr`
+**Corrigé en chemin**, chacun avec son test et sa trace au [registre](../defauts-fonctionnels.md) : un tiers
+des cours PRONOTE de Montaigne sur l'intitulé empilé ; l'icône d'un motif d'annulation et d'un
+enseignant sans capitales ; le tiret en tête du titre ; et, pour **tous** les établissements, la
+tentative qui suit un mot de passe refusé.
 
-**Rien n'est partagé avec `bordeaux`** : CAS, ENT, messagerie et emploi du temps sont tous propres à
-l'établissement. C'est ce qui en fait le lot le plus lourd des trois, et ce qui justifie qu'il passe
-en dernier.
+**À juger sur l'iPhone** : la touche Entrée dans WKWebView sur PRONOTE (même geste qu'à l'IUT) ; Carbonio,
+application lourde, dans la vue cachée et dans le navigateur intégré ; le détour de la vérification 4
+dans WKWebView ; le PDF du certificat dans le lecteur iOS.
 
-## Ce qui reste (rempli par le développeur)
+## Ce qui se fait sans compte, et ce qui ne se fait pas
 
-1. **Trancher la voie**, comme pour l'IUT : l'adresse ICS personnelle qu'HyperPlanning donne à un
-   étudiant rendrait le campus utilisable par le **lien collé** déjà livré
-   ([6-J](../phase-6/6-j-compte-et-sources-par-etablissement.md)), sans une ligne de code. Sinon,
-   HyperPlanning est un troisième type de source et exige une release
-   ([README](README.md#ce-qui-exige-une-release)).
-2. Écrire les Blueprints du portail **de zéro**, sous le préfixe `ukit.portail.`, et les vérifier sur
-   le compte prêté **et sur les deux appareils** — c'est là que Bordeaux INP avait trouvé ses huit
-   défauts.
-3. Identifier la plateforme pédagogique et les services de scolarité depuis l'ENT.
-4. Relever les bâtiments, leurs codes et le motif de reconnaissance des salles.
+| Élément | Sans compte ? | Pourquoi |
+|---|---|---|
+| Nom, code, commune, alias, bibliothèques, restaurants | oui | site de l'université, Affluences, Croustillant |
+| Le CAS et son thème, le refus d'un mot de passe | oui | la page est publique ; un identifiant inexistant montre le panneau d'erreur |
+| La carte des services et leurs adresses | **en partie** | le site public nomme certificats, relevés, Carbonio, e-campus, PRONOTE ; qu'il n'existe **aucun** dossier de scolarité, non |
+| Les bâtiments | **en partie** | OSM les place ; seul l'export dit qu'une salle s'écrit `G 306` et que l'amphi donne son code |
+| Le logiciel d'emploi du temps | oui | la page d'erreur de `flaubert2` se nomme |
+| La lecture du lien PRONOTE | **réutilisée**, pas devinée | la mécanique de l'IUT tient ; vérifier qu'elle tient ici demandait le compte |
+| Le dossier | non | où se lisent un nom et un INE, dans quel ordre le prénom, que l'adresse du profil est la bonne |
+| Les widgets et le certificat | non | sélecteurs de Carbonio, chronologie d'e-campus, forme du PDF |
+| La forme du calendrier | non | annulations, motifs, absence de `Type` : trois défauts d'affichage qu'aucune mesure publique ne montrait |
+| Ce que ferme la déconnexion | non | il faut une session pour voir qui la garde |
+
+**Comparé à l'IUT.** L'IUT partageait le portail de l'université : le compte y servait surtout à
+**vérifier**, et à percer un seul mécanisme nouveau, la lecture du lien. Ici le compte a servi à
+**écrire** cinq Blueprints et à découvrir l'architecture même du portail — l'absence de dossier, le
+profil d'e-campus qui en tient lieu, la page des relevés capricieuse. Sans compte, on aurait pu publier
+Montaigne en lien collé et en portes ouvertes, ce que la ligne fait déjà pour les versions installées ;
+on n'aurait pas pu lui donner une Scolarité.
+
+**Ce qu'il faut donc demander au prochain établissement entier** : le compte, sans alternative, pour
+la Scolarité. Pour l'emploi du temps seul, les deux gestes du verdict de l'IUT suffisent toujours
+(la boîte d'export en capture, trois intitulés et trois salles recopiés) — à condition d'ajouter
+**un cours annulé ou déplacé** aux exemples : c'est là que l'export de Montaigne cachait ses défauts.
+
+## Ce qui reste
+1. Publier, dans l'ordre de [prochaine-version.md](../prochaine-version.md#bordeaux-montaigne-joué-le-2026-11-11) :
+   les Blueprints, la ligne, les bâtiments. Juger d'abord sur l'iPhone la liste ci-dessus.
+2. Demander le logo au service communication, et au prêteur s'il veut être crédité.
+3. Confronter les alias à quelques étudiants de Montaigne.
+4. Le bâtiment **H** et l'`Amphi N°1` : un relevé sur place dirait lequel des deux H d'OSM est le bon.
+5. Les motifs d'annulation de PRONOTE se lisent comme une information ; dire « annulé » demanderait un
+   champ que l'export ne porte pas. À rouvrir avec un exemple de cours annulé confirmé.
+6. Signaler à Aetherius la navigation qui recharge au lieu de charger
+   ([registre](../defauts-fonctionnels.md)).

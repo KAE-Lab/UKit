@@ -158,3 +158,15 @@ describe('separerCodeUE, espaces de Celcat', () => {
         });
     });
 });
+
+describe('separerCodeUE, intitules PRONOTE', () => {
+    it('ne laisse pas le tiret separateur en tete du titre', () => {
+        // La forme de Bordeaux Montaigne (2026-11-11), intitule fabrique.
+        expect(separerCodeUE('3ABCU22 - Cartographie des ressources')).toEqual({
+            code: '3ABCU22',
+            reste: 'Cartographie des ressources',
+        });
+        // Un tiret qui fait partie de l'intitule reste a sa place.
+        expect(separerCodeUE('4TIN606U Analyse - partie 2')?.reste).toBe('Analyse - partie 2');
+    });
+});

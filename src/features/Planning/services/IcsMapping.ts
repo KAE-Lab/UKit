@@ -19,6 +19,8 @@
 import ICAL from 'ical.js';
 import moment from 'moment';
 
+import { champsNommes, ligneDeSalle, naturesDesLignes, typeNomme } from './IcsChampsNommes';
+import { estJourneeEntiere, etalerJourneesEntieres } from './IcsJourneesEntieres';
 import { assemblerAnnee, assemblerJour, assemblerSemaine } from './PlanningAssembly';
 import { creneauCompose, heureOuVide } from './PlanningApiMapping';
 import type { CibleGroupe, PlanningEvent, PlanningWeekDay } from './PlanningAssembly';
@@ -58,19 +60,6 @@ const PALETTE = 8;
 function dateDe(evenement: ICAL.Component, nom: string): Date | null {
     const valeur = evenement.getFirstPropertyValue(nom);
     return valeur !== null && typeof valeur === 'object' && 'toJSDate' in valeur ? valeur.toJSDate() : null;
-}
-
-/**
- * L'evenement est-il une **journee entiere** — un `DTSTART` de type date, sans heure (RFC 5545) ?
- *
- * C'est la forme des vacances et des jours feries de l'export PRONOTE (onze dans l'annee de l'IUT,
- * mesure du 2026-11-10). Projetes comme un cours, ils s'affichaient « 00:00 - 00:00 » dans le fil de
- * la journee (limite ecrite au jalon 6-J) ; marques, ils prennent le bandeau que le Planning dessine
- * deja pour les calendriers du telephone.
- */
-function estJourneeEntiere(evenement: ICAL.Component): boolean {
-    const valeur = evenement.getFirstPropertyValue('dtstart');
-    return valeur !== null && typeof valeur === 'object' && 'isDate' in valeur && valeur.isDate === true;
 }
 
 /**
@@ -159,89 +148,6 @@ function lignesUtiles(description: string, salle: string, matiere: string, categ
 }
 
 /**
- * Une ligne de description **a champ nomme** : `Matière : R5.03 Animation de réunion`.
- *
- * C'est la forme de PRONOTE Campus, mesuree le 2026-11-10 sur l'export d'abonnement de l'IUT de
- * Bordeaux : chaque ligne porte sa cle — `Matière`, `Type`, `Salle` ou `Salles`, `Enseignant` ou
- * `Enseignants`, `Mémo` —, la ou ADE sert des valeurs nues dans un ordre a deviner. Le `SUMMARY`, lui,
- * empile tout (« Matiere - Type - Enseignants - Memo ») : c'est le defaut « intitules d'un iCalendar
- * colle » du registre, constate chez Bordeaux Montaigne, meme produit.
- */
-const CHAMP_NOMME = /^([^:]{2,24}?)\s+:\s+(.*)$/;
-
-/** Les champs qu'une description nommee porte, lus par leur cle et non par leur rang. */
-interface ChampsNommes {
-    readonly matiere: string;
-    readonly type: string;
-    /** La cle telle que la source l'ecrit (`Salle`, `Salles`) et sa valeur. */
-    readonly salle: { readonly cle: string; readonly valeur: string } | null;
-    readonly enseignants: readonly string[];
-    /** Le reste, cle comprise : on l'affiche sans savoir l'interpreter (`Mémo : DS R5.real.09`). */
-    readonly autres: readonly string[];
-}
-
-/** Une valeur de PRONOTE sans ses doubles espaces : `203  BUT3B` s'affiche `203 BUT3B`. */
-function resserrer(valeur: string): string {
-    return valeur.replace(/\s{2,}/g, ' ').trim();
-}
-
-/**
- * Les champs d'une description nommee, ou `null` si elle n'en est pas une.
- *
- * **Toutes** les lignes non vides doivent avoir une cle, et la matiere doit etre la : une description
- * ADE dont une ligne contiendrait un deux-points par hasard ne bascule pas. Hors de cette forme, rien ne
- * change — la projection d'ADE est celle que Bordeaux INP joue depuis 6-I.
- */
-function champsNommes(description: string): ChampsNommes | null {
-    const lignes = champs(description).filter((ligne) => ligne !== '');
-    if (lignes.length === 0) return null;
-
-    const paires: [string, string][] = [];
-    for (const ligne of lignes) {
-        const morceaux = CHAMP_NOMME.exec(ligne);
-        if (morceaux === null) return null;
-        paires.push([morceaux[1].trim(), morceaux[2].trim()]);
-    }
-
-    const valeur = (...cles: string[]): string => paires.find(([cle]) => cles.includes(cle))?.[1] ?? '';
-    const matiere = valeur('Matière');
-    if (matiere === '') return null;
-
-    const salle = paires.find(([cle]) => cle === 'Salle' || cle === 'Salles');
-    return {
-        matiere,
-        type: valeur('Type'),
-        salle: salle === undefined ? null : { cle: salle[0], valeur: resserrer(salle[1]) },
-        enseignants: valeur('Enseignant', 'Enseignants').split(',').map(resserrer).filter((nom) => nom !== ''),
-        autres: paires
-            .filter(([cle]) => !['Matière', 'Type', 'Salle', 'Salles', 'Enseignant', 'Enseignants'].includes(cle))
-            .map(([cle, texte]) => `${cle} : ${resserrer(texte)}`),
-    };
-}
-
-/**
- * Le type d'une description nommee, sans sa duree : `TD_2h` → `TD`, `Cours_2h` → `Cours`.
- *
- * La pastille et le compte des seances parlent d'un **type** ; la duree se lit deja sur le creneau, et
- * `TD_2h` et `TD_4h` sont le meme enseignement.
- */
-function typeNomme(type: string): string {
-    return type.split('_')[0].trim();
-}
-
-/**
- * La ligne de salle d'une description nommee : la valeur, precedee du mot de la source quand elle ne
- * nomme pas deja un lieu.
- *
- * `203 BUT3B` ne dit pas qu'il s'agit d'une salle, et la fiche reconnait une salle a son contenu
- * (CourseAnnotations.ts) — sans referentiel de lieux, comme a l'IUT, elle aurait pris l'icone d'un
- * groupe. `Salle 203 BUT3B` se lit et se reconnait ; `Amphi 2` se suffit.
- */
-function ligneDeSalle(salle: { readonly cle: string; readonly valeur: string }): string {
-    return /salle|amphi/i.test(salle.valeur) ? salle.valeur : `${salle.cle} ${salle.valeur}`;
-}
-
-/**
  * Le sous-groupe a filtrer, quand le cours en designe un plus precis que le groupe demande.
  *
  * Meme intention que chez Celcat, et meme resultat a l'ecran : un etudiant de `2A GR1` voit dans son
@@ -275,7 +181,7 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
     const lire = (nom: string): string => String(evenement.getFirstPropertyValue(nom) ?? '');
 
     const description = lire('description');
-    const nommes = champsNommes(description);
+    const nommes = champsNommes(champs(description));
 
     // Une description a champs nommes (PRONOTE) dit elle-meme sa matiere et son type : le titre est la
     // matiere et non le `SUMMARY`, qui empile enseignants et memo. Sinon, la projection d'ADE, intacte.
@@ -311,39 +217,9 @@ export function projeterEvenement(evenement: ICAL.Component, groupe: CibleGroupe
         group: groupe as string,
         toFilter: sousGroupe(lignes, groupe),
         ...(journeeEntiere ? { journeeEntiere } : {}),
+        // Ce que les champs nommes disent de chaque ligne : l'icone ne se devine plus au contenu.
+        ...(nommes === null ? {} : { natures: naturesDesLignes(salle, nommes) }),
     };
-}
-
-/** Au-dela, une fin est aberrante : une journee entiere ne s'etale pas sur plus d'une annee. */
-const JOURS_MAX = 366;
-
-/**
- * Une journee entiere de plusieurs jours, etalee en un evenement par jour.
- *
- * Les vacances de la Toussaint sont **un** evenement de neuf jours (`DTEND` exclusif, a minuit). Le
- * Planning range un evenement au jour de son debut : sans cet etalement, le bandeau ne paraissait que
- * le premier samedi. Chaque copie porte un identifiant a elle, que les listes exigent uniques.
- *
- * Applique aux vues jour et semaine seulement : la plage annuelle, qui sert la synchronisation de
- * l'agenda, garde l'evenement tel que la source le donne.
- */
-export function etalerJourneesEntieres(evenements: readonly PlanningEvent[]): PlanningEvent[] {
-    return evenements.flatMap((evenement) => {
-        if (evenement.journeeEntiere !== true) return [evenement];
-        const debut = moment(evenement.date.start ?? null).startOf('day');
-        const fin = moment(evenement.date.end ?? null);
-        if (!debut.isValid() || !fin.isValid()) return [evenement];
-
-        const jours: PlanningEvent[] = [];
-        for (const jour = debut.clone(); jour.isBefore(fin) && jours.length < JOURS_MAX; jour.add(1, 'day')) {
-            jours.push({
-                ...evenement,
-                id: `${evenement.id}@${jour.format('YYYY-MM-DD')}`,
-                date: { start: jour.toISOString(), end: jour.clone().add(1, 'day').toISOString() },
-            });
-        }
-        return jours.length > 1 ? jours : [evenement];
-    });
 }
 
 /**

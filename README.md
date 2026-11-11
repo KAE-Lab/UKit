@@ -255,7 +255,7 @@ livré ; elle est mise à jour à chaque contribution.
   universitaire. [docs/donnees-et-persistance.md](docs/donnees-et-persistance.md)
 - [x] **Cartographie libre** — MapLibre et OpenFreeMap (données OpenStreetMap) en WebView, marqueur au thème de
   l'application, carte **embarquée dans les fiches** (cours, restaurant, BU) plutôt que sur un écran
-  à part, référentiel de 73 bâtiments embarqué dans le binaire et corrigeable à distance. Où se
+  à part, référentiel de 87 bâtiments embarqué dans le binaire et corrigeable à distance. Où se
   donne un cours **se lit** désormais dans un champ que la source déclare, au lieu d'être deviné dans
   du texte libre : deux causes indépendantes faisaient disparaître la carte d'une fiche de cours, sans
   jamais afficher d'erreur. [docs/cartographie.md](docs/cartographie.md)

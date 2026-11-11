@@ -73,10 +73,26 @@
     "ukit.portail.bordeaux-iut.edt.lien": {
         "version": "1"
     },
+    "ukit.portail.bordeaux-montaigne.dossier": {
+        "version": "1",
+        "min_engine": "0.5.8"
+    },
+    "ukit.portail.bordeaux-montaigne.messagerie": {
+        "version": "1"
+    },
+    "ukit.portail.bordeaux-montaigne.moodle": {
+        "version": "1"
+    },
+    "ukit.portail.bordeaux-montaigne.documents": {
+        "version": "1"
+    },
+    "ukit.portail.bordeaux-montaigne.edt.lien": {
+        "version": "1"
+    },
     "ukit.portail.deconnexion": {
         "version": "2"
     },
     "ukit.portail.verification": {
-        "version": "3"
+        "version": "4"
     }
 }

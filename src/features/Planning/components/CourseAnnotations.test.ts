@@ -141,4 +141,23 @@ describe('lignesDuCreneau', () => {
         expect(lignesDuCreneau('\n  \n')).toEqual([]);
         expect(lignesDuCreneau(undefined)).toEqual([]);
     });
+
+    it('suit la nature que la source a dite plutot que de la deviner', () => {
+        // La forme de Bordeaux Montaigne (2026-11-11), noms fabriques : un motif d'annulation que
+        // « batiments » faisait prendre pour une salle, un enseignant sans capitales pris pour un groupe.
+        const lignes = lignesDuCreneau('Salle G 306\nDupont Marie\nFermeture des bâtiments\nTD : GRP03', undefined, {
+            'Salle G 306': 'salle',
+            'Dupont Marie': 'enseignant',
+            'Fermeture des bâtiments': 'information',
+            'TD : GRP03': 'information',
+        });
+        expect(lignes.map((l) => [l.texte, l.icone])).toEqual([
+            ['Salle G 306', 'room'],
+            ['Dupont Marie', 'person'],
+            ['Fermeture des bâtiments', 'info-outline'],
+            ['TD : GRP03', 'info-outline'],
+        ]);
+        // Sans natures, l'heuristique d'avant : c'est elle qui se trompait.
+        expect(iconeDAnnotation('Fermeture des bâtiments')).toBe('room');
+    });
 });

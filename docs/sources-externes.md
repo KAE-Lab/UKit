@@ -34,6 +34,7 @@ fragilité, extraction, contrat non versionné — ne s'y applique. Ce document 
 | 8 | ADE (`ade.bordeaux-inp.fr`) | emploi du temps, par export iCalendar | aucune | moyenne — export anonyme, mais **index de ressource positionnels et projet annuel**. **Deux Blueprints** depuis [6-I](phase-6/6-i-planning-universel.md) |
 | 9 | **N'importe quel export iCalendar**, à l'adresse que l'étudiant colle | emploi du temps | le lien **est** le secret (trousseau) | inconnue par construction — c'est le [repli universel](phase-6/6-j-compte-et-sources-par-etablissement.md) de 6-J. Un Blueprint unique, [`ukit.edt.abonnement`](../blueprints/ukit-edt-abonnement.blueprint.json), demande le lien **verbatim et sans bornes** ; le découpage par date est applicatif, parce que tous les produits n'acceptent pas de paramètres de plage |
 | 10 | PRONOTE Campus de l'IUT de Bordeaux (`pronote.iut.u-bordeaux.fr`) | **l'adresse** d'abonnement de l'étudiant, lue dans son espace | identifiants universitaires (CAS de Bordeaux) | **moyenne** — une application web dont l'export n'est atteignable que par une touche clavier. **Un Blueprint**, [`ukit.portail.bordeaux-iut.edt.lien`](../blueprints/portails/ukit-portail-bordeaux-iut-edt-lien.blueprint.json) ; le calendrier lui-même passe ensuite par la source 9 |
+| 11 | Université Bordeaux Montaigne (`sso.`, `e-campus.`, `carbonio.`, `intranet.`, `flaubert2.u-bordeaux-montaigne.fr`) | identité, messagerie, chronologie e-campus, certificat, **l'adresse** d'abonnement PRONOTE | identifiants universitaires (CAS de Montaigne) | **moyenne** — cinq portails de produits différents derrière un CAS Apereo. **Cinq Blueprints** `ukit.portail.bordeaux-montaigne.*` ([section 11](#11-université-bordeaux-montaigne--le-troisième-portail)) |
 
 ## 1. Celcat — emplois du temps
 
@@ -862,7 +863,7 @@ qu'il ne surveille pas :
 | Source | Sonde | Ce qu'elle prouve |
 |---|---|---|
 | Celcat | le Blueprint `ukit.celcat.groupes` de l'application | la liste des groupes rend plus de zéro entrée |
-| CAS de Bordeaux, CAS de Bordeaux INP | `ukit.sonde.cas` | la page de connexion sert son formulaire (`renew=true`) |
+| CAS de Bordeaux, de Bordeaux INP, de Bordeaux Montaigne | `ukit.sonde.cas` | la page de connexion sert son formulaire (`renew=true`) ; à Montaigne, ce CAS garde tous les services, PRONOTE compris |
 | Moodle de Bordeaux, chaîne SSO | `ukit.sonde.moodle` | l'adresse Unsolicited SSO de l'IdP atteint le formulaire du CAS |
 | ADE de Bordeaux INP | le Blueprint `ukit.portail.bordeaux-inp.edt` de l'application | l'export d'une ressource se lit comme un calendrier |
 | PRONOTE de l'IUT de Bordeaux | `ukit.sonde.pronote` | la page publique mène à l'espace Étudiants ; l'export, lui, est derrière le CAS, que `cas-bordeaux` sonde déjà |
@@ -1065,6 +1066,35 @@ champs est dans [planning.md](features/planning.md#ce-que-licalendar-donne-et-ce
   de 45 s ;
 - un bandeau « Information » paraît à certaines premières visites, sans qu'on sache le reproduire :
   il est fermé s'il est là.
+
+## 11. Université Bordeaux Montaigne — le troisième portail
+
+Mesuré le 2026-11-11 sur le compte prêté, au lot 3 de la [prochaine version](prochaine-version.md) ;
+la mesure complète et le verdict sont dans la [fiche](campus/bordeaux-montaigne.md). Le premier
+établissement qui ne partage rien avec l'Université de Bordeaux : chaque service est un produit à part,
+tous derrière le même CAS.
+
+| Hôte | Produit | Ce qu'on en lit | Blueprint |
+|---|---|---|---|
+| `sso.u-bordeaux-montaigne.fr/cas` | Apereo CAS, thème MDC : `#submitBtn`, `#loginErrorsPanel`, comme Bordeaux INP | la preuve des identifiants, la déconnexion | les deux génériques, `ukit.portail.verification` et `.deconnexion` |
+| `e-campus.u-bordeaux-montaigne.fr` | Moodle, authentification CAS directe | le profil (nom, adresse `etu.`, INE), la chronologie du tableau de bord | `.dossier`, `.moodle` |
+| `intranet.u-bordeaux-montaigne.fr/relevesDeNotesEtudiant` | page PHP | l'intitulé de l'inscription et son année, en bonus | `.dossier` |
+| `carbonio.u-bordeaux-montaigne.fr` | Carbonio (successeur de Zimbra), par `carb-cas` | le nombre de non lus de la réception | `.messagerie` |
+| `intranet.u-bordeaux-montaigne.fr/certificats_etudiant` | page PHP | le certificat de scolarité, un PDF à adresse fixe | `.documents` |
+| `flaubert2.u-bordeaux-montaigne.fr` | PRONOTE Campus 2026.5 (`hyperplanning.` en est un alias) | l'adresse d'abonnement | `.edt.lien` |
+
+Ce qui n'existe pas, mesuré et non supposé : un dossier de scolarité en ligne (ni `mondossierweb` ni
+Pégase ; la racine de l'intranet est une page de test du serveur), une page HTML portant le numéro
+étudiant ou la date de naissance, une plateforme `moodle.`. Les relevés de notes
+(`intranet/relevesDeNotesEtudiant`) sont une porte, et la seule page qui nomme l'inscription : le
+dossier y lit la formation en lecture bonus. Elle est capricieuse — « Etudiant non reconnu » trois fois
+sur quatre dans une même session de mesure au poste, correcte dans le navigateur de l'application —,
+d'où le bloc `optional`.
+
+**Après `/cas/logout`, seul PRONOTE redemande le CAS** : e-campus, Carbonio et les certificats gardent
+leur session de service, la limite déjà écrite pour `mondossierweb`
+([scolarite.md](features/scolarite.md#le-pendant-obligatoire--la-déconnexion-ferme-la-session-distante)).
+Le contrôle `lienDuMemeCompte` du lien PRONOTE reste donc entier.
 
 ## Modèle d'erreur commun
 

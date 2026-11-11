@@ -26,6 +26,15 @@
       "casser": "cas"
     },
     {
+      "source": "cas-bordeaux-montaigne",
+      "libelle": "CAS de l’Université Bordeaux Montaigne",
+      "blueprint": "sondes/cas.blueprint.json",
+      "catalogue": { "etablissement": "bordeaux-montaigne", "cas": "services.cas", "service": "services.ent" },
+      "encoder": ["service"],
+      "preuve": "la page de connexion sert son formulaire",
+      "casser": "cas"
+    },
+    {
       "source": "moodle-bordeaux",
       "libelle": "Moodle de Bordeaux — chaîne SSO",
       "blueprint": "sondes/moodle.blueprint.json",

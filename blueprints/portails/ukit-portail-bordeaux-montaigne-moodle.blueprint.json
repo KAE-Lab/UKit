@@ -1,0 +1,120 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-montaigne.moodle",
+  "description": "Le WIDGET Moodle de l'UNIVERSITE BORDEAUX MONTAIGNE : la chronologie du tableau de bord d'e-campus, ce qui est a rendre et combien. Mesures du 2026-11-11 sur le compte prete. (1) La plateforme pedagogique s'appelle e-campus (e-campus.u-bordeaux-montaigne.fr) ; aucun sous-domaine `moodle.` n'existe. C'est un Moodle dont le tableau de bord porte le bloc Chronologie aux MEMES regions que celui du College Sciences et Technologies (`data-block=timeline`, `event-list-loading-placeholder`, `no-events-empty-message`) : les lectures de `ukit.portail.bordeaux.moodle` valent ici telles quelles. (2) L'entree est beaucoup plus simple qu'a Bordeaux : Moodle s'authentifie par le CAS de Montaigne EN DIRECT (auth CAS, `service=…/login/index.php`), sans SAML, sans page de choix d'etablissement, sans SSO initie par l'IdP. /my/ sans session rebondit sur le CAS et revient au tableau de bord. (3) Le compte prete n'avait aucune echeance ce jour-la (« Aucune activite ne necessite d'action ») : `repere` et `nombre` sont mesures, le titre d'une echeance (`detail`) ne l'est pas ici et vient du gabarit de Moodle (blocks/timeline/templates/event-list-item.mustache), comme a Bordeaux.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "tableau": "https://e-campus.u-bordeaux-montaigne.fr/my/"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.tableau }}"
+    },
+    {
+      "action": "wait",
+      "ms": 4000,
+      "note": "La pause d'un `navigate` qui rebondit (docs/blueprints.md, « Attendre ») : sans session, /my/ renvoie au CAS."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, [data-block=\"timeline\"]",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:MOODLE_INDISPONIBLE"
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#submitBtn"
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 4000,
+      "note": "La cascade d'authentification : une operation emise pendant ces sauts se perd en silence sur un appareil."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    {
+      "action": "wait_for",
+      "selector": "[data-block=\"timeline\"]",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:MOODLE_INDISPONIBLE"
+    },
+    {
+      "action": "wait_for",
+      "selector": "[data-block=\"timeline\"] [data-region=\"event-list-loading-placeholder\"]",
+      "state": "hidden",
+      "timeout_ms": 15000,
+      "on_timeout": "fail:MOODLE_INDISPONIBLE",
+      "note": "Le gabarit d'attente a disparu : la requete de la chronologie a atterri. `hidden` est vrai pour un element absent, comme a Bordeaux."
+    },
+    {
+      "id": "chronologie",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "repere": {
+          "selector": "[data-block=\"timeline\"]",
+          "as": "text"
+        },
+        "nombre": {
+          "selector": "[data-region=\"event-list-item\"]",
+          "as": "count"
+        },
+        "detail": {
+          "selector": "[data-region=\"event-list-item\"] .event-name",
+          "as": "list"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "repere": "{{ steps.chronologie.repere }}",
+    "nombre": "{{ steps.chronologie.nombre }}",
+    "detail": "{{ steps.chronologie.detail }}"
+  }
+}

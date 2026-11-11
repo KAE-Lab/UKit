@@ -1,0 +1,178 @@
+{
+  "aetherius": "1.0",
+  "name": "ukit.portail.bordeaux-montaigne.dossier",
+  "description": "Le parcours FROID de l'UNIVERSITE BORDEAUX MONTAIGNE : l'identite de l'etudiant, son adresse universitaire et son INE. Il rend les noms de sortie du contrat (identite, email, ine, numero_etudiant, naissance), parce que c'est la sortie qui est le contrat et que l'application ne connait pas les portails. Mesures du 2026-11-11 sur le compte prete, qui expliquent pourquoi la source est la plateforme pedagogique et pas un dossier administratif. (1) Montaigne n'offre a l'etudiant AUCUN dossier de scolarite en ligne : pas de mondossierweb, pas de Pegase. Son espace etudiant (etu.u-bordeaux-montaigne.fr) est un site public de liens ; la racine de l'intranet est une page de test du serveur ; les services nommes par le site sont les certificats, les releves de notes, Carbonio, e-campus et PRONOTE. (2) La page qui porte une identite lisible en HTML est le PROFIL d'e-campus, le Moodle de l'etablissement : le nom complet en titre, puis des couples libelle / valeur (`dl > dt + dd`) dont « Adresse de courriel » (l'adresse etu.u-bordeaux-montaigne.fr) et « Numero INE ». (3) Le titre ecrit le PRENOM D'ABORD, le nom en capitales : c'est le reglage d'affichage du site Moodle (`fullnamedisplay`), le meme pour tous les comptes, mesure par comparaison avec l'adresse (prenom.nom). L'application prend donc le premier mot comme prenom, comme a Bordeaux. (4) La FORMATION vient d'une seconde page, celle des releves de notes, en lecture bonus (bloc `optional`). (5) Le NUMERO ETUDIANT ne s'ecrit sur aucune page HTML trouvee : seulement dans le PDF du certificat. `numero_etudiant` est rendu vide, et c'est une limite ecrite, pas un oubli. La date de naissance non plus. (6) e-campus passe par le CAS de Montaigne EN DIRECT (auth CAS de Moodle, sans SAML ni page de choix d'etablissement) : le CAS est un Apereo au theme MDC, le meme bouton `#submitBtn` et le meme `#loginErrorsPanel` que celui de Bordeaux INP. L'INE descend en `as: list` : un compte sans le champ ne doit pas perdre son identite.",
+  "act": "continuum",
+  "secrets": [
+    "portail_user",
+    "portail_pass"
+  ],
+  "vars": {
+    "profil": "https://e-campus.u-bordeaux-montaigne.fr/user/profile.php",
+    "releves": "https://intranet.u-bordeaux-montaigne.fr/relevesDeNotesEtudiant/"
+  },
+  "options": {
+    "timeout_ms": 30000,
+    "debug": false,
+    "stealth": {
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    },
+    "session": {
+      "persist": true
+    }
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "url": "{{ vars.profil }}"
+    },
+    {
+      "action": "wait",
+      "ms": 4000,
+      "note": "La pause qui protege la premiere operation apres un `navigate` qui REBONDIT : sans session, Moodle renvoie a /login/index.php, qui renvoie au CAS. Meme valeur et meme raison que les autres portails (docs/blueprints.md, « Attendre »)."
+    },
+    {
+      "action": "wait_for",
+      "selector": "#username, body#page-user-profile",
+      "timeout_ms": 20000,
+      "on_timeout": "fail:CAS_INDISPONIBLE",
+      "note": "Le formulaire du CAS, ou le profil deja ouvert. Dans le parcours froid de l'application, la verification vient d'ouvrir la session CAS : la seconde issue est la reguliere."
+    },
+    {
+      "id": "porte",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "formulaire": {
+          "selector": "#username",
+          "as": "count"
+        }
+      }
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#username",
+      "value": "{{ secrets.portail_user }}"
+    },
+    {
+      "action": "fill",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#password",
+      "value": "{{ secrets.portail_pass }}"
+    },
+    {
+      "action": "click",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#submitBtn",
+      "note": "Le CAS de Montaigne sert un <button id=submitBtn>, comme celui de Bordeaux INP (theme MDC d'Apereo)."
+    },
+    {
+      "action": "wait",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "ms": 4000,
+      "note": "La cascade d'authentification : une operation emise pendant ces sauts se perd en silence sur un appareil. Payee seulement si l'on s'est reellement authentifie."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "#loginErrorsPanel",
+      "state": "detached",
+      "timeout_ms": 2000,
+      "on_timeout": "fail:LOGIN_FAILED",
+      "note": "Mesure du 2026-11-11 avec un identifiant inexistant : absent de la page propre, present 0,47 s apres le refus."
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "selector": "body#page-user-profile",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:LOGIN_FAILED"
+    },
+    {
+      "action": "wait_for",
+      "when": "{{ steps.porte.formulaire == 0 }}",
+      "selector": "body#page-user-profile",
+      "timeout_ms": 30000,
+      "on_timeout": "fail:CAS_INDISPONIBLE"
+    },
+    {
+      "action": "emit",
+      "when": "{{ steps.porte.formulaire > 0 }}",
+      "event": "LOGIN_SUCCESS",
+      "note": "La garde des autres portails : sans formulaire, le CAS ne s'est prononce sur rien, et emettre l'evenement ferait enregistrer un mot de passe faux comme s'il etait bon."
+    },
+    {
+      "id": "dossier",
+      "action": "extract",
+      "timeout_ms": 5000,
+      "outputs": {
+        "identite": {
+          "selector": ".page-header-headings h1",
+          "as": "text"
+        },
+        "email": {
+          "selector": "//section[contains(@class,'node_category')]//dl[dt[normalize-space()='Adresse de courriel']]/dd/a",
+          "selector_type": "xpath",
+          "as": "text",
+          "note": "Le lien `mailto:` et non toute la valeur : Moodle ecrit a cote de l'adresse « (visible pour les autres participants au cours) », que le premier essai du 2026-11-11 avait emporte. Le libelle ancre la valeur : un profil reorganise fait echouer la lecture au lieu de rendre une autre ligne."
+        },
+        "ine": {
+          "selector": "//section[contains(@class,'node_category')]//dl[dt[normalize-space()='Numéro INE']]/dd",
+          "selector_type": "xpath",
+          "as": "list",
+          "note": "Un champ de profil propre a ce Moodle. `as: list` : son absence rend [] et ne coute pas l'identite."
+        }
+      }
+    },
+    {
+      "action": "assert",
+      "condition": "{{ steps.dossier.identite != '' and '@' in steps.dossier.email }}",
+      "message": "Le profil d'e-campus n'a pas rendu le nom et l'adresse attendus : la page a change. Corriger les selecteurs de ce Blueprint et republier."
+    },
+    {
+      "id": "bonus_inscription",
+      "action": "optional",
+      "note": "La formation courante, lue sur la page des releves de notes en ligne : la seule page qui nomme l'inscription (« Licence 1 … ») et son annee. Un bloc `optional` parce que cette page est capricieuse : mesuree le 2026-11-11, elle a repondu « Etudiant non reconnu » trois fois sur quatre dans une meme session de mesure, et correctement dans le navigateur de l'application. Si elle cede, le run finit en `partial` avec l'identite deja lue. Rien n'y est touche : la page porte aussi un lien « Envoi par courriel », qui enverrait un message.",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "{{ vars.releves }}"
+        },
+        {
+          "action": "wait",
+          "ms": 4000,
+          "note": "Une marge et non une garde : la page rebondit par le CAS, et une lecture bonus ne doit pas faire ceder le bloc sur une page lente."
+        },
+        {
+          "id": "inscription",
+          "action": "extract",
+          "timeout_ms": 5000,
+          "outputs": {
+            "formation_libelle": {
+              "selector": "(//table//tbody/tr)[1]/td[3]",
+              "selector_type": "xpath",
+              "as": "list",
+              "note": "La colonne « Releve de notes » de la premiere ligne : l'intitule de l'inscription."
+            },
+            "formation_annee": {
+              "selector": "(//table//tbody/tr)[1]/td[1]",
+              "selector_type": "xpath",
+              "as": "list",
+              "note": "La colonne « Annee »."
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "identite": "{{ steps.dossier.identite }}",
+    "email": "{{ steps.dossier.email }}",
+    "ine": "{{ steps.dossier.ine }}",
+    "numero_etudiant": "",
+    "naissance": "",
+    "formation_libelle": "{{ steps.inscription.formation_libelle | default([]) }}",
+    "formation_annee": "{{ steps.inscription.formation_annee | default([]) }}"
+  }
+}

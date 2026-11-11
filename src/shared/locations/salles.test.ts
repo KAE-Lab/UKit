@@ -82,6 +82,53 @@ describe('getLocations, forme Bordeaux INP', () => {
 });
 
 /**
+ * Celui de Bordeaux Montaigne, mesure le 2026-11-11 sur son export PRONOTE : une lettre de batiment et
+ * un numero a trois chiffres (`G 306`, `F 011`, `MOD 002`), ou un amphitheatre qui donne son code entre
+ * parentheses (`Amphi Pina Bausch (C200)`). La fiche recoit la ligne de salle de la projection, donc
+ * `Salle G 306` : le motif cherche le code apres une espace ou une parenthese, pas au debut.
+ */
+const MONTAIGNE: FormatSalles = {
+    separateurs: [', '],
+    motif: '(?:^|[\\s(])(MOD(?= ?\\d{3})|[BC]\\d{3}(?=\\))|CIROT\\b|[A-K](?= ?\\d{3}))',
+    depuis: 0,
+};
+
+describe('forme Bordeaux Montaigne', () => {
+    const titres = (lieux: { title: string }[]) => lieux.map((lieu) => lieu.title);
+
+    it('trouve la lettre du batiment dans la ligne de salle de la fiche', () => {
+        expect(titres(getLocationsInText('Salle G 306', MONTAIGNE))).toEqual(['G']);
+        expect(titres(getLocationsInText('Salle E 208 informatique', MONTAIGNE))).toEqual(['E']);
+        expect(titres(getLocationsInText('Salle MOD 002', MONTAIGNE))).toEqual(['MOD']);
+        expect(getLocationsInText('Salle G 306', MONTAIGNE)[0].lat).toBeCloseTo(44.7967, 3);
+    });
+
+    it('prend le code d un amphitheatre entre parentheses, et non sa lettre', () => {
+        expect(titres(getLocations('Amphi Pina Bausch (C200)', MONTAIGNE))).toEqual(['C200']);
+        expect(titres(getLocations('Amphi Olympe de Gouges (B400)', MONTAIGNE))).toEqual(['B400']);
+        expect(titres(getLocationsInText('Amphi CIROT', MONTAIGNE))).toEqual(['CIROT']);
+    });
+
+    it('enumere deux salles du meme batiment en un seul lieu', () => {
+        expect(titres(getLocations('G 306, G 307', MONTAIGNE))).toEqual(['G']);
+    });
+
+    it('ne place rien pour une salle qui n en est pas une, ni pour un amphi sans code', () => {
+        for (const libelle of ['A distance Synchrone', 'Hors UBM', 'Amphi N°1', 'TD : GRP03']) {
+            expect(getLocations(libelle, MONTAIGNE)).toEqual([]);
+            expect(getLocationsInText(libelle, MONTAIGNE)).toEqual([]);
+        }
+    });
+
+    it('ne resout aucun batiment de Talence', () => {
+        // Le referentiel est commun aux etablissements : le motif ne doit produire que des codes que
+        // le socle bordelais n'a pas (`A22`, `B1`, `C1` ont deux chiffres au plus ou aucune lettre seule).
+        expect(getLocations('A22/Amphi', MONTAIGNE)).toEqual([]);
+        expect(getLocationsInText('Salle B1 12', MONTAIGNE)).toEqual([]);
+    });
+});
+
+/**
  * Un etablissement sans referentiel de lieux (jalon 6-J).
  *
  * Le cas est celui de « Mon universite n'est pas dans la liste » : on ne connait ni ses batiments ni
