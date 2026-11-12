@@ -24,7 +24,8 @@ Un objectif ne se vérifie pas, une liste si. Le lot 1 est fini quand :
   attendue d'un utilisateur) ;
 - chaque parcours de la liste d'audit a été joué au banc Android, dans les deux thèmes, sur
   `ukit` et `ukit-a8`, et ce qu'il a révélé est corrigé ou consigné ;
-- les portes de [CLAUDE.md](../CLAUDE.md) sont vertes.
+- les portes sont vertes : `npx tsc --noEmit`, `npx eslint .`, `npm test`, et celles que
+  [qualite.md](qualite.md) ajoute selon ce qui a bougé.
 
 iOS n'est pas au banc : le lot rend la liste de ce qui reste à juger sur l'iPhone.
 

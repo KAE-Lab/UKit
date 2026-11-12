@@ -21,7 +21,7 @@ Chaque ligne se coche à la livraison, ou s'écrit en limite.
 | R8 | **Le Planning** : l'heure de fin en bas de la carte ; le repère de l'heure sans point lumineux ; la vue semaine refaite | le Planning |
 | R9 | **Les trois propositions acceptées** : le carrousel suit la carte étoilée ; les fiches portent leur nom dans la barre ; « Plus tard » quitte l'accueil | Campus, fiches, accueil |
 | R10 | **Pas de Fig. 01 dans l'application** : le U du logo à l'accueil | accueil, [identité](../identite.md) |
-| R11 | La règle « pas de point lumineux » dans les règles de design | `~/.claude/rules/design.md`, fait le 2026-11-05 |
+| R11 | La règle « pas de point lumineux » dans les règles de design | les règles de design du propriétaire, fait le 2026-11-05 |
 
 **Les écrans que la première passe n'a pas touchés**, relevés dans le diff : les listes Restaurants,
 Bibliothèques et Salles libres, le compte universitaire, les documents et leur lecteur, le navigateur

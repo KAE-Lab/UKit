@@ -52,7 +52,7 @@ parcours froid, chargements.
 
 Décisions du propriétaire : le jeu en pixel art (option A de la passe), « Ouvrir sur le groupe
 favori » retiré, la barre d'Android 9 laissée au prochain build natif, le U en trait fin gardé pour
-le site, les deux défauts consignés corrigés, trois règles ajoutées à `~/.claude/rules/design.md`.
+le site, les deux défauts consignés corrigés, trois règles ajoutées aux règles de design du propriétaire.
 
 - [x] le réglage mort retiré (`e90259b`) ; « Invalid date » corrigé (`89d8c1d`) ; la réinitialisation
   passe par la déconnexion (`fde2460`), vérifiée au banc

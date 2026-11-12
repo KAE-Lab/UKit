@@ -77,7 +77,7 @@ export const tokens = {
         /**
          * L'intertitre gris d'un groupe : une categorie de menu, un etage, un groupe de reglages. En
          * casse de phrase depuis la deuxieme passe de 7-J : les petites capitales espacees qu'il
-         * portait sont un tic des interfaces generees (~/.claude/rules/design.md). La couleur reste a
+         * portait sont un tic des interfaces generees (regle de design du projet). La couleur reste a
          * l'appelant, `theme.fontSecondary`.
          */
         intertitre: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
