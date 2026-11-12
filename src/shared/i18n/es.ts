@@ -217,6 +217,7 @@ const es: TranslationDict = {
 		'Para recuperar tu expediente, tus mensajes y tu horario. Tus credenciales se quedan cifradas en tu teléfono y solo se envían a tu universidad.',
 	LATER: 'Más tarde',
 	OTHER_CAMPUS_QUESTION: '¿Eres de otro campus?',
+	ELSEWHERE: 'En otro lugar',
 	TIMETABLE_LINK: 'Enlace del horario',
 	TIMETABLE_LINK_TITLE: 'Pega tu enlace del horario',
 	TIMETABLE_LINK_PLACEHOLDER: 'https://…',

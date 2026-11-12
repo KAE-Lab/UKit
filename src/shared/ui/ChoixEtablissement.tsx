@@ -75,9 +75,11 @@ function ListeDesEtablissements({ groupes, intertitres, choisi, theme, onChoisir
         <ScrollView style={{ marginBottom: tokens.space.sm }}>
             {groupes.map((groupe) => (
                 <View key={groupe.campus ?? '-'}>
-                    {intertitres && groupe.campus !== null ? (
+                    {/* Le groupe sans campus porte son intertitre aussi : sans lui, « Autre campus » se
+                        lisait comme une ligne du dernier campus nomme (signale sur iPhone le 2026-11-12). */}
+                    {intertitres ? (
                         <Text style={[theme.popup.textDescription, { marginTop: tokens.space.md, marginBottom: 0, ...tokens.texte.intertitre }] as never}>
-                            {groupe.campus}
+                            {groupe.campus ?? Translator.get('ELSEWHERE')}
                         </Text>
                     ) : null}
                     {groupe.etablissements.map((etablissement) => (

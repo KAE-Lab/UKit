@@ -217,6 +217,7 @@ const en = {
 		'To bring back your record, your messages and your timetable. Your credentials stay encrypted on your phone, and are only ever sent to your university.',
 	LATER: 'Later',
 	OTHER_CAMPUS_QUESTION: 'From another campus?',
+	ELSEWHERE: 'Elsewhere',
 	TIMETABLE_LINK: 'Timetable link',
 	TIMETABLE_LINK_TITLE: 'Paste your timetable link',
 	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
