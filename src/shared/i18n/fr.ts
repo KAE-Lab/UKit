@@ -218,7 +218,7 @@ const fr: TranslationDict = {
 		'Pour retrouver dossier, messages et emploi du temps. Les identifiants restent chiffrés sur le téléphone, et ne sont envoyés qu’à l’université.',
 	LATER: 'Plus tard',
 	OTHER_CAMPUS_QUESTION: 'Tu es d’un autre campus ?',
-	ELSEWHERE: 'Ailleurs',
+	ELSEWHERE: 'Autre campus',
 	TIMETABLE_LINK: 'Lien iCal',
 	TIMETABLE_LINK_TITLE: 'Colle le lien de l’emploi du temps',
 	TIMETABLE_LINK_PLACEHOLDER: 'https://…',
