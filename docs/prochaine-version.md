@@ -2,7 +2,26 @@
 
 > Ouvert le 2026-11-10. Remplace, pour cette version, le découpage en jalons de
 > [phase-7](phase-7/README.md) : trois lots menés l'un après l'autre sur la branche
-> `prochaine-version`, un seul agent à la fois. Le numéro se décide à la sortie.
+> `prochaine-version`, un seul agent à la fois. **Numérotée 6.3.0 le 2026-11-14** et fusionnée dans
+> `main` ce jour-là, après le passage sur iPhone ; les publications attendent la sortie sur les stores
+> (voir [Les publications](#les-publications-à-la-sortie)).
+
+## Les publications, à la sortie
+
+Décidé le 2026-11-14 : **rien ne se publie avant que la 6.3.0 soit sur les stores.** Le binaire embarque
+les deux campus et leurs Blueprints ; publier plus tôt n'apporterait qu'aux versions installées, et à
+leur détriment :
+
+- `ukit.portail.verification` 4 serait adoptée par tout le parc, sur un moteur (`@aetherius/react-native`
+  0.5.9) où elle n'a jamais été jouée : c'est la connexion de tous qui serait en jeu ;
+- ce même moteur télécharge chaque entrée annoncée à chaque rafraîchissement avant de la juger
+  ([blueprints.md](blueprints.md#ce-que-le-manifeste-annonce)) : sept entrées de plus, c'est l'egress
+  de septembre qui repart ;
+- sur la 6.2.2, un étudiant de l'IUT ou de Montaigne aurait le lien à coller et les intitulés empilés,
+  sans que personne l'ait vérifié.
+
+À la sortie : poser `min_engine` à `0.5.10` sur les entrées nouvelles de `versions.json`, puis dérouler
+les étapes écrites plus bas pour l'IUT et pour Montaigne.
 
 ## Ce qu'elle contient
 

@@ -10,8 +10,11 @@ pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 
 ## [Non publié]
 
-Le jalon [7-J](docs/phase-7/7-j-ecrans.md), la refonte de l'interface, sur `v6.3` : l'heure juste,
-une application qui donne l'heure des choses d'un regard.
+La 6.3.0, numérotée le 2026-11-14 ; la date de sortie s'écrit ici au tag. Le jalon
+[7-J](docs/phase-7/7-j-ecrans.md), la refonte de l'interface : l'heure juste, une application qui donne
+l'heure des choses d'un regard. Puis les trois lots de [la prochaine version](docs/prochaine-version.md) :
+les défauts signalés et ceux d'un audit par parcours, « il reste N séances », et deux campus, l'IUT de
+Bordeaux et l'Université Bordeaux Montaigne.
 
 ### Ajouté
 
