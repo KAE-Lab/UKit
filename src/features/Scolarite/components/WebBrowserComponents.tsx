@@ -21,6 +21,48 @@ interface FloatingActionBarProps {
     loading: boolean;
 }
 
+interface NavButtonProps {
+    theme: FloatingActionBarProps['theme'];
+    onPress: () => void;
+    disabled?: boolean;
+    iconName: React.ComponentProps<typeof MaterialIcons>['name'] | React.ComponentProps<typeof MaterialCommunityIcons>['name'] | string;
+    iconLib?: 'material' | 'community';
+    size?: number;
+}
+
+/*
+ * Au niveau du module, et non dans le rendu de la barre : declare a l'interieur, le composant changeait
+ * d'identite a chaque rendu, et React demontait puis remontait les cinq boutons a chaque page chargee.
+ * Sur iOS, ce va-et-vient finissait par desaccorder la barre et ses vues natives — « Attempt to unmount
+ * a view which has a different index », lu dans le journal d'un iPhone le 2026-11-14 —, ce qui arrete
+ * un build de developpement.
+ */
+// Des icones neutres, sans fond teinte (7-J, deuxieme passe) : chaque bouton prenait un carre de sa
+// couleur, rouge pour sortir comme pour une destruction, bleu pour le reste. Elles passent aussi par
+// `Icon`, qu'un composant local masquait encore, et se dessinent donc au trait comme ailleurs.
+const NavButton = ({ theme, onPress, disabled, iconName, iconLib = 'material', size = 24 }: NavButtonProps) => {
+    const couleur = disabled ? theme.fontTertiary : theme.font;
+    const icone = (iconLib === 'community' ? { name: iconName } : { family: 'material', name: iconName }) as IconSpec;
+
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            disabled={disabled}
+            accessibilityRole="button"
+            style={{
+                width: 44,
+                height: 44,
+                borderRadius: tokens.radius.md,
+                justifyContent: 'center',
+                alignItems: 'center',
+                // 5 en dur jusqu'a 6.1-E : `space.xs` (4) rapproche les boutons d'un point.
+                marginHorizontal: tokens.space.xs,
+            }}>
+            <Icon icon={icone} size={size} color={couleur} />
+        </TouchableOpacity>
+    );
+};
+
 export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh, openURL, onQuit, canGoBack, canGoForward, loading }: FloatingActionBarProps) => {
     const buttonContainerWidth = 290;
     const translateX = useSharedValue(0);
@@ -64,40 +106,6 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
         };
     });
 
-    interface NavButtonProps {
-        onPress: () => void;
-        disabled?: boolean;
-        iconName: React.ComponentProps<typeof MaterialIcons>['name'] | React.ComponentProps<typeof MaterialCommunityIcons>['name'] | string;
-        iconLib?: 'material' | 'community';
-        size?: number;
-    }
-
-    // Des icones neutres, sans fond teinte (7-J, deuxieme passe) : chaque bouton prenait un carre de sa
-    // couleur, rouge pour sortir comme pour une destruction, bleu pour le reste. Elles passent aussi par
-    // `Icon`, qu'un composant local masquait encore, et se dessinent donc au trait comme ailleurs.
-    const NavButton = ({ onPress, disabled, iconName, iconLib = 'material', size = 24 }: NavButtonProps) => {
-        const couleur = disabled ? theme.fontTertiary : theme.font;
-        const icone = (iconLib === 'community' ? { name: iconName } : { family: 'material', name: iconName }) as IconSpec;
-
-        return (
-            <TouchableOpacity
-                onPress={onPress}
-                disabled={disabled}
-                accessibilityRole="button"
-                style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: tokens.radius.md,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    // 5 en dur jusqu'a 6.1-E : `space.xs` (4) rapproche les boutons d'un point.
-                    marginHorizontal: tokens.space.xs,
-                }}>
-                <Icon icon={icone} size={size} color={couleur} />
-            </TouchableOpacity>
-        );
-    };
-
     return (
         <GestureDetector gesture={panGesture}>
             <Animated.View style={[
@@ -116,11 +124,11 @@ export const FloatingActionBar = ({ theme, insets, onBack, onForward, onRefresh,
                 </TouchableOpacity>
 
                 <View style={styles.buttonsContainer}>
-                    <NavButton onPress={onQuit} iconName="door-open" iconLib="community" size={26} />
-                    <NavButton onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
-                    <NavButton onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
-                    <NavButton onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
-                    <NavButton onPress={openURL} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
+                    <NavButton theme={theme} onPress={onQuit} iconName="door-open" iconLib="community" size={26} />
+                    <NavButton theme={theme} onPress={onBack} disabled={!canGoBack} iconName="navigate-before" size={28} />
+                    <NavButton theme={theme} onPress={onForward} disabled={!canGoForward} iconName="navigate-next" size={28} />
+                    <NavButton theme={theme} onPress={onRefresh} disabled={loading} iconName="refresh" size={24} />
+                    <NavButton theme={theme} onPress={openURL} iconName={Platform.OS === 'ios' ? 'apple-safari' : 'google-chrome'} iconLib="community" size={22} />
                 </View>
             </Animated.View>
         </GestureDetector>

@@ -19,6 +19,20 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### ~~Sur iPhone, quitter le navigateur intégré arrêtait un build de développement~~ — constaté le 2026-11-12, corrigé le 2026-11-14
+
+Sur l'iPhone, après avoir ouvert le certificat puis un service de la Scolarité, la porte du
+navigateur arrêtait l'application, sans erreur JavaScript. Le journal de l'appareil, lu par USB
+(`idevicesyslog -p UKit`), donne le texte que le rapport de plantage ne porte pas : « Attempt to
+unmount a view which has a different index », sur la barre flottante. `NavButton` était déclaré
+**dans** le rendu de `FloatingActionBar`
+([`WebBrowserComponents.tsx`](../src/features/Scolarite/components/WebBrowserComponents.tsx)) : il
+changeait d'identité à chaque rendu, et les cinq boutons se démontaient et se remontaient à chaque
+page chargée. Sorti au niveau du module ; le geste, rejoué de nombreuses fois sur l'iPhone, ne plante
+plus. Le défaut existait sur `main` avant ce lot. Deux choses restent non expliquées : pourquoi le
+certificat devait être ouvert avant, et ce que la même incohérence donnait dans un build de
+production, où cette vérification de React Native n'est pas compilée.
+
 ### Un titre qui contient un nom de groupe se coupe comme un code d'UE — constaté le 2026-11-11, à la relecture du lot 3
 
 `CODE_UE` ([`PlanningAssembly.ts`](../src/features/Planning/services/PlanningAssembly.ts)) n'est pas

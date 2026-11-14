@@ -89,6 +89,9 @@ une application qui donne l'heure des choses d'un regard.
 
 ### Corrigé
 
+- **Le navigateur de la Scolarité ne remonte plus ses boutons à chaque page.** Sur iPhone, quitter un
+  service après avoir ouvert le certificat pouvait arrêter l'application.
+
 - **Une nouvelle tentative après un mot de passe refusé aboutit** : elle s'annonçait « portail lent » à
   chaque essai, chez tous les établissements, jusqu'à la relance de l'application.
 - **Les cours PRONOTE annulés, déplacés ou rattrapés gardent leur titre** : une annulation écrite sans
