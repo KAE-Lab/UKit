@@ -93,6 +93,8 @@ select etablissement, version, plateforme, count(*) as appareils
 
 Il sous-compte : un appareil qui a coupé les notifications, ou refusé leur permission, n'y est pas.
 
+Le même compte, arrondi à la centaine inférieure, est la seule lecture publique de `jetons_push` : `public.parc_actif_arrondi()` (migration `20261115200000`), appelée avec la clé publiable par kylianmalartre.com, qui l'affiche en direct. Rien d'autre ne sort : ni ligne, ni campus, ni version.
+
 **Une annonce**, sur une période :
 
 ```sql

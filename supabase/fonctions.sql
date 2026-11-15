@@ -422,3 +422,27 @@ $$;
 
 revoke execute on function public.compter(jsonb) from public;
 grant execute on function public.compter(jsonb) to anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Le parc actif, en centaines (migration 20261115200000)
+-- -----------------------------------------------------------------------------
+--
+-- La seule lecture que `anon` peut faire de `jetons_push` : la requete de reference de
+-- docs/mesure.md, arrondie a la centaine inferieure dans la base. kylianmalartre.com l'affiche en
+-- direct (« 2,100+ active users ») avec la cle publiable, sans la cle service_role, qui ne circule
+-- pas (docs/backend.md). Aucune ligne ni aucun decoupage ne sort.
+create or replace function public.parc_actif_arrondi()
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select (floor(count(*) / 100.0) * 100)::integer
+      from public.jetons_push
+     where maj_le > now() - interval '14 days'
+       and not testeur;
+$$;
+
+revoke execute on function public.parc_actif_arrondi() from public;
+grant execute on function public.parc_actif_arrondi() to anon, authenticated;
