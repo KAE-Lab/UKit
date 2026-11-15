@@ -85,7 +85,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `etablissements` | catalogue des universités et de leurs portails ; depuis 7-C : `credits` (`[{ nom, role, lien }]`), `campus` (le libellé qui regroupe, « Talence ») et `alias` (`text[] not null`, les mots des étudiants), portés par la base et `etablissements.sql`, **lus depuis [7-I](phase-7/7-i-releve-et-vocabulaire.md)** — `campus` par [`campusActif()`](../src/shared/etablissements/catalogue.ts), qui remplace le « Talence » écrit en dur des bâtiments ; `alias` et `credits` projetés, que l'écran lira en [7-J](phase-7/7-j-ecrans.md) — et écrits par la console, qui refuse un crédit que l'application ignorerait ([`credits.ts`](../src/shared/etablissements/credits.ts)) ; et les gabarits `services.formulaire` / `services.formulaire_campus` | l'onboarding, les réglages et le campus des bâtiments | **6-G** | les lignes publiées à la date de la release — une copie, vérifiée par un test (6.1-A) |
 | `app_release` | version courante et minimale par plateforme, lien de store | rien aujourd'hui | — | — |
 | `service_messages` | les messages de service — information, avertissement, incident — et leur ciblage ; depuis 7-H, `maj_le` et « tous les campus » en `null`, comme les annonces | [`shared/messages`](../src/shared/messages/index.ts) | **6.1-B** | *aucun* — un cache (`messages@1`) |
-| `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service) ; la console compte le parc sans lire le jeton lui-même, retiré à tous ses comptes depuis 7-H | **6.1.x-E** | — |
+| `jetons_push` | **écrite par l'application** (6.1.x-E) : un jeton push par appareil, campus, version, plateforme, testeur — par `deposer_jeton` / `retirer_jeton`, jamais par la table | la fonction `notifier` (service) ; la console compte le parc sans lire le jeton lui-même, retiré à tous ses comptes depuis 7-H ; `anon`, par `parc_actif_arrondi()`, le parc actif arrondi à la centaine et rien d'autre | **6.1.x-E** | — |
 | `evenements_connus` | le vocabulaire fermé de la mesure (7-D) : un événement, sa description ; la clé étrangère de `mesures` en fait la liste de ce que la base accepte, et [`migration.test.ts`](../src/shared/mesure/migration.test.ts) la compare à celle de l'application | la console (éditeurs) | **7-D** | — |
 | `mesures` | **écrite par l'application** (7-D) : des compteurs anonymes par jour ou par heure, événement, clé, campus, version, plateforme, testeur — par `compter`, jamais par la table ; pas de journal ; purge à treize mois ([mesure.md](mesure.md)) | la console (éditeurs, [7-G](phase-7/7-g-console-statistiques.md)) | **7-D** | — |
 | `testeurs` | les appareils qui voient l'audience `testeurs` ; l'application n'en lit que la colonne `id` | [`shared/testeur`](../src/shared/testeur/statut.ts) | **6.1-B** | *aucun* — « non » par défaut |
@@ -306,6 +306,14 @@ que l'API n'expose pas, s'exécutent avec les droits de leur propriétaire (`sec
 de recherche vide, noms qualifiés — les trois précautions que la documentation de Supabase impose), et
 sont des politiques d'accès exprimées en SQL. Une troisième fonction qui calculerait quelque chose pour
 l'écran serait la première entorse, et elle se refuse.
+
+**Une exception, qui ne calcule rien pour l'écran de l'application** : `public.parc_actif_arrondi()`
+(migration `20261115200000`) rend le parc actif de [mesure.md](mesure.md) arrondi à la centaine
+inférieure, pour le chiffre public de kylianmalartre.com. Sans elle, le site devait lire `jetons_push`
+avec la clé `service_role`, qui ne circule pas. Elle ne laisse sortir qu'un entier que le site publie
+déjà. Sa limite : `deposer_jeton` est ouverte à `anon`, donc de faux jetons gonfleraient le compte ;
+le site borne la valeur qu'il accepte. Elle reste la seule : une autre fonction qui calcule se refuse
+toujours.
 
 ## Les politiques d'accès
 

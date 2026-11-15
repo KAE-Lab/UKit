@@ -1,5 +1,5 @@
 -- Le parc actif, en centaines, pour qui le demande : le chiffre que kylianmalartre.com affiche
--- (« 2,100+ active users ») et lit en direct depuis le 2026-11-15. C'est la requete de reference de
+-- (« 2,100+ active users ») et lit en direct. C'est la requete de reference de
 -- docs/mesure.md (jetons redeposes sur quatorze jours, testeurs exclus), arrondie a la centaine
 -- inferieure dans la base : aucune ligne, aucune colonne, aucun decoupage par campus, version ou
 -- plateforme ne sort, seulement un entier que le site publie deja.
@@ -8,6 +8,10 @@
 -- elle, le site devait lire `jetons_push` avec la cle service_role, qui ne circule pas
 -- (docs/backend.md). `security definer` parce que `anon` ne lit pas `jetons_push` ; les deux
 -- precautions de fonctions.sql s'appliquent : `search_path` vide et noms qualifies.
+--
+-- C'est l'exception a la regle de docs/backend.md (aucune fonction qui calcule), consignee la-bas.
+-- Sa limite : `deposer_jeton` est ouverte a `anon`, donc de faux jetons gonfleraient le compte ;
+-- le site borne la valeur qu'il accepte.
 
 create or replace function public.parc_actif_arrondi()
 returns integer

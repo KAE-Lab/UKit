@@ -17,6 +17,9 @@
 -- Supabase impose pour cela deux precautions, appliquees ici : un `search_path` vide et des noms
 -- qualifies, pour qu'un objet homonyme d'un autre schema ne puisse pas se substituer aux notres.
 --
+-- Une seule fonction, en fin de fichier, lit une table pour `anon` : `parc_actif_arrondi()`, le parc
+-- actif en centaines pour le site de Kylian, l'exception consignee dans docs/backend.md.
+--
 -- Voir docs/backend.md et docs/pilotage.md.
 
 create schema if not exists private;
