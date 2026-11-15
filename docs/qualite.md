@@ -658,8 +658,9 @@ seulement les pull requests : `main` avance en avance rapide depuis les branches
 règle de protection de `main` exige les trois vérifications **sans pull request obligatoire** —
 GitHub accepte une poussée directe dont le commit a déjà passé ses vérifications sur une autre
 branche. Les quatre autres ne vérifient rien :
-[`release.yml`](../.github/workflows/release.yml), déclenché par un tag `v*` ou manuellement,
-**construit et publie** l'application ; [`console.yml`](../.github/workflows/console.yml) construit
+[`release.yml`](../.github/workflows/release.yml), lancé à la main pour une sortie (un tag seul ne
+construit rien pour les stores, [plateforme.md](plateforme.md#publication)), **construit et soumet**
+l'application ; [`console.yml`](../.github/workflows/console.yml) construit
 et déploie la console sur GitHub Pages ; [`sondes.yml`](../.github/workflows/sondes.yml) joue chaque
 matin les sondes des sources tierces ; [`retours.yml`](../.github/workflows/retours.yml) importe les
 retours toutes les 72 heures. Voir [plateforme.md](plateforme.md).

@@ -247,10 +247,10 @@ plutôt que d'attendre le bon moment.
 ## Publication
 
 Les versions sont construites et publiées par
-[`.github/workflows/release.yml`](.github/workflows/release.yml), déclenché par un tag `v*` ou
-manuellement. Avant de poser un tag, vérifier la cohérence de `package.json`, `app.config.ts` et
-`VERSION` — le workflow ne met pas tout à jour automatiquement. Détail et pièges :
-[docs/plateforme.md](docs/plateforme.md).
+[`.github/workflows/release.yml`](.github/workflows/release.yml), lancé à la main
+(`workflow_dispatch`, `build_production` coché) : un tag poussé seul ne construit rien pour les stores.
+Avant le lancement, vérifier la cohérence de `package.json`, `app.config.ts` et `VERSION`. Détail et
+pièges : [docs/plateforme.md](docs/plateforme.md#publication).
 
 ## Checklist avant Pull Request
 

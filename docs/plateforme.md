@@ -413,24 +413,37 @@ Le tri est un geste du propriétaire du produit sur GitHub ; le dépôt, lui, po
 ## Publication
 
 Un seul workflow : [`.github/workflows/release.yml`](../.github/workflows/release.yml), déclenché par
-un tag `v*` ou manuellement (`workflow_dispatch`) avec trois entrées — `target_tag`, `release_notes`,
+un tag `v*` ou manuellement (`workflow_dispatch`) avec quatre entrées — `target_tag`, `release_notes`,
 et les interrupteurs `skip_build` / `build_production`.
+
+**Une sortie sur les stores est un dispatch, jamais un tag.** `build_production` et `release_notes`
+sont des entrées du dispatch : sur un push de tag, `github.event.inputs` est vide, les étapes de
+production sont sautées, et le tag ne produit que l'APK et une Release GitHub sans texte. Les dix
+dernières exécutions (avril à septembre 2026) sont toutes des dispatchs depuis `main` ; c'est la
+Release GitHub qui pose alors le tag, sur le commit du dispatch.
+
+```bash
+gh workflow run release.yml --ref main -f target_tag=v6.3.0 -f build_production=true \
+  -f release_notes="<le texte « Quoi de neuf »>"
+```
 
 Enchaînement :
 
-1. Mise à jour de version : `npm version <tag sans v>` sans tag git, puis commit et push du bump.
-2. `npm install`.
+1. Mise à jour de version : `npm version <tag sans v>` et le `sed` de `app.config.ts`, commit et push
+   du bump s'ils changent quelque chose — rien quand le numéro est déjà posé, ce que le protocole
+   demande.
+2. `npm ci`.
 3. Si `build_production` : iOS `eas build --profile production --auto-submit --no-wait`, puis Android
    construit localement en AAB et soumis par `eas submit`.
 4. Si `skip_build` n'est pas coché : APK `preview` construit localement et attaché à une Release
-   GitHub.
+   GitHub, dont `release_notes` est le texte.
 
-Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` (écrit dans `google-play-key.json` à l'exécution).
+La soumission ne publie rien : Android arrive en brouillon sur la piste de production
+(`releaseStatus: draft`, [`eas.json`](../eas.json)), iOS dans App Store Connect. Le texte « Quoi de
+neuf », l'envoi en examen et le déploiement se font dans les deux consoles.
 
-> **Le workflow tente de modifier `app.config.js`**, un fichier qui n'existe pas — la configuration est
-> dans `app.config.ts`. Le `sed` de mise à jour de version et le `git add` correspondant sont donc
-> sans effet : **le champ `version` de `app.config.ts` n'est pas mis à jour automatiquement** et doit
-> être modifié à la main avant de poser un tag.
+Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` et `GOOGLE_SERVICES_JSON`, écrits en fichiers à
+l'exécution.
 
 ## La console de pilotage
 
@@ -468,7 +481,7 @@ Quatre endroits portent une version :
 | [`app.config.ts`](../app.config.ts) `android.versionCode` | `551` | **seule déclaration** depuis 6.1.x-A — une clé racine du même nom, qui n'est pas un champ Expo, portait une autre valeur ; de toute façon inopérante, `appVersionSource: remote` fait d'EAS l'autorité |
 | [`VERSION`](../VERSION) | `6.2.0` | fichier historique, aligné par le protocole de release ; plus lu à distance depuis [6-Z](phase-6/6-z-livraison-finale.md) |
 
-Avant de poser un tag, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-1-z-sortie.md)).
+Avant de lancer la sortie, les trois premiers doivent s'accorder ([6-1-z](phase-6/6-1-z-sortie.md)).
 
 ## Vérifier
 
