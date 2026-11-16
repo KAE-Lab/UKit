@@ -8,7 +8,11 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
-## [Non publié]
+## [6.3.1] - 2026-11-16
+
+La version qui sort sur les stores à la place de la 6.3.0 : construite et soumise en brouillon, la
+6.3.0 n'a jamais été publiée, le défaut ci-dessous a été vu sur un vrai téléphone avant. Elle porte
+tout le contenu de la 6.3.0, plus ce correctif.
 
 ### Corrigé
 

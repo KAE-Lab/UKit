@@ -33,11 +33,12 @@ l'application » réduit à son premier mot. Le remède, global :
 [`tools/expo/graisse-du-systeme.js`](../tools/expo/graisse-du-systeme.js), l'application ignore ce
 réglage ; la règle pour ne plus corriger écran par écran :
 [qualite.md](qualite.md#le-texte-coupé-sur-android). Natif : il n'arrive qu'avec un nouveau binaire,
-la 6.3.0 construite le 2026-11-16 ne le porte pas.
+la 6.3.1, qui remplace la 6.3.0 avant sa publication.
 
 Vérifié le 2026-11-16 sur `ukit` avec le build de développement EAS qui le porte, gras activé : les
 Réglages et l'écran Apparence entiers (« Agenda », « Confidentialité », « Clair », « Sombre »,
-« Réinitialiser l'application »). Reste ouvert jusqu'à la release qui l'embarque.
+« Réinitialiser l'application »). Confirmé le même jour sur le téléphone qui l'avait montré, gras
+activé. Reste ouvert jusqu'à la sortie de la 6.3.1.
 
 ### ~~Sur iPhone, quitter le navigateur intégré arrêtait un build de développement~~ — constaté le 2026-11-12, corrigé le 2026-11-14
 

@@ -3,12 +3,14 @@
 > Ouvert le 2026-11-10. Remplace, pour cette version, le découpage en jalons de
 > [phase-7](phase-7/README.md) : trois lots menés l'un après l'autre sur la branche
 > `prochaine-version`, un seul agent à la fois. **Numérotée 6.3.0 le 2026-11-14** et fusionnée dans
-> `main` ce jour-là, après le passage sur iPhone ; les publications attendent la sortie sur les stores
+> `main` ce jour-là, après le passage sur iPhone. La 6.3.0 construite le 2026-11-16 n'est pas publiée :
+> **c'est la 6.3.1 qui sort**, le même contenu plus le texte coupé sur Android
+> ([CHANGELOG](../CHANGELOG.md)). Les publications attendent sa sortie sur les stores
 > (voir [Les publications](#les-publications-à-la-sortie)).
 
 ## Les publications, à la sortie
 
-Décidé le 2026-11-14 : **rien ne se publie avant que la 6.3.0 soit sur les stores.** Le binaire embarque
+Décidé le 2026-11-14 : **rien ne se publie avant que la 6.3 soit sur les stores** (la 6.3.1, qui remplace la 6.3.0). Le binaire embarque
 les deux campus et leurs Blueprints ; publier plus tôt n'apporterait qu'aux versions installées, et à
 leur détriment :
 
