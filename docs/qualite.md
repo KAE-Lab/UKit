@@ -380,6 +380,34 @@ Ce que le banc ne dit pas, et qui reste aux deux appareils :
 L'émulateur pèse 3,5 Go : il tourne dans un service systemd plafonné à 4 Go, pour que le manque de
 mémoire le tue lui et pas la session, et un seul à la fois.
 
+### Le texte coupé sur Android
+
+Un texte qui perd ses dernières lettres sur un vrai Android (« Agend », « Confidentialit », « Clai »)
+alors que le banc l'affiche entier, c'est le réglage **« Texte en gras »** du téléphone (Android 12 et
+plus, `fontWeightAdjustment`). React Native mesure le texte sans en tenir compte, Android le dessine en
+gras, plus large que sa boîte, et coupe ce qui dépasse. Tous les textes sont touchés, pas un écran.
+Cause reproduite le 2026-11-16 sur `ukit`, remède dans
+[`tools/expo/graisse-du-systeme.js`](../tools/expo/graisse-du-systeme.js) : l'application ignore ce
+réglage, et le dessin redevient celui de la mesure.
+
+La règle, parce que le défaut est revenu plusieurs fois : **un texte coupé sur Android ne se corrige
+pas dans son écran.** Une largeur, un `flex`, un `numberOfLines`, une espace ajoutée : chacune de ces
+retouches a été essayée et n'a fait que déplacer le symptôme, aucun style ne rattrape une mesure
+fausse. Avant de toucher un style :
+
+1. `tools/appareil/banc.sh gras oui` (l'application redémarre), puis l'écran signalé. `gras non` pour
+   revenir.
+2. Coupé au banc avec le gras : le build de développement installé précède le remède, à refaire.
+3. Entier au banc avec le gras et coupé sur le téléphone : relever le modèle, la version d'Android et
+   la police du système. Une police de constructeur est l'autre cause citée en ligne, jamais
+   reproduite ici ; la piste se consigne au [registre](defauts-fonctionnels.md) avant tout correctif.
+4. Coupé au banc sans le gras : c'est alors un vrai défaut de mise en page, à corriger dans l'écran,
+   et à vérifier aussi avec `police 1.3`.
+
+**Expo Go montre le défaut même corrigé** : le remède vit dans le `MainActivity` de UKit, et Expo Go
+est sa propre application, avec le sien. Un texte coupé se juge sur un build de UKit (développement
+ou store), jamais dans Expo Go. Le défaut du 2026-11-16 a été vu dans Expo Go.
+
 ```bash
 npm install
 npx expo start        # puis a pour Android, i pour iOS, ou scan du QR avec Expo Go

@@ -19,6 +19,22 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Sur Android, des textes perdent leur dernière lettre — constaté de nouveau le 2026-11-16 sur un vrai téléphone, cause trouvée le même jour
+
+Sur un téléphone Android, dans toutes les langues : « Agend », « Confidentialit » dans les Réglages,
+« Clai » et « Sombr » dans l'apparence, et d'autres écrans. Le défaut était déjà revenu, corrigé
+chaque fois texte par texte. Le banc ne le montrait pas, ce qui l'a fait passer pour un défaut
+d'appareil.
+
+La cause est le réglage « Texte en gras » d'Android 12 et plus : Android dessine le texte plus gras que
+React Native ne l'a mesuré, et coupe le dépassement. Reproduit sur `ukit` avec
+`banc.sh gras oui` : « Agend », « Apparenc », « Langu », « Établissemen », et « Réinitialiser
+l'application » réduit à son premier mot. Le remède, global :
+[`tools/expo/graisse-du-systeme.js`](../tools/expo/graisse-du-systeme.js), l'application ignore ce
+réglage ; la règle pour ne plus corriger écran par écran :
+[qualite.md](qualite.md#le-texte-coupé-sur-android). Natif : il n'arrive qu'avec un nouveau binaire,
+la 6.3.0 construite le 2026-11-16 ne le porte pas.
+
 ### ~~Sur iPhone, quitter le navigateur intégré arrêtait un build de développement~~ — constaté le 2026-11-12, corrigé le 2026-11-14
 
 Sur l'iPhone, après avoir ouvert le certificat puis un service de la Scolarité, la porte du

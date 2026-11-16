@@ -92,6 +92,9 @@ export default {
 		// ont pas : sans elles, tout ce qui touche aux facs echoue en erreur reseau sur ces
 		// appareils (tools/expo/autorites-universitaires.js).
 		"./tools/expo/autorites-universitaires",
+		// Le reglage Android « Texte en gras » ignore : React Native ne le mesure pas, et le texte
+		// dessine en gras perdait ses dernieres lettres (tools/expo/graisse-du-systeme.js).
+		"./tools/expo/graisse-du-systeme",
 		"expo-background-task",
 		"expo-secure-store",
 		[

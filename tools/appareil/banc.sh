@@ -17,6 +17,8 @@
 #                                                    premier lancement ; ensuite, son propre reglage
 #   tools/appareil/banc.sh format a8|petit|defaut|<L>x<H> <dpi>
 #   tools/appareil/banc.sh police <echelle>          1 par defaut, 1.3 pour une grande police
+#   tools/appareil/banc.sh gras oui|non              « Texte en gras » du systeme (Android 12+) ;
+#                                                    l'application redemarre (docs/qualite.md)
 #   tools/appareil/banc.sh animations oui|non        non = « supprimer les animations » du systeme
 #   tools/appareil/banc.sh reseau oui|non            coupe wifi et donnees ; Metro passe par adb
 #   tools/appareil/banc.sh journal                   journal JavaScript et natif de l'application
@@ -152,6 +154,12 @@ case "$commande" in
 		esac ;;
 	format) format "$@" ;;
 	police) "$ADB" shell settings put system font_scale "${1:-1}" ;;
+	gras)
+		case "${1:-}" in
+			oui) "$ADB" shell settings put secure font_weight_adjustment 300 ;;
+			non) "$ADB" shell settings put secure font_weight_adjustment 0 ;;
+			*) erreur "gras oui|non" ;;
+		esac ;;
 	animations) animations "$@" ;;
 	reseau) reseau "$@" ;;
 	journal) "$ADB" logcat -v time ReactNativeJS:V ReactNative:V AndroidRuntime:E '*:S' ;;
