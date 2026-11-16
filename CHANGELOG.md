@@ -8,6 +8,15 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
+## [Non publié]
+
+### Corrigé
+
+- **Sur Android, les textes ne perdent plus leurs dernières lettres** quand le téléphone est réglé en
+  « Texte en gras » : « Agend », « Confidentialit », « Clai ». React Native mesurait le texte sans le
+  gras et Android le dessinait avec ; l'application ignore désormais ce réglage
+  ([`graisse-du-systeme`](tools/expo/graisse-du-systeme.js)). Natif : arrive avec un nouveau binaire.
+
 ## [6.3.0] - 2026-11-16
 
 Le jalon [7-J](docs/phase-7/7-j-ecrans.md), la refonte de l'interface : l'heure juste, une application

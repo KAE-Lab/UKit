@@ -35,6 +35,10 @@ réglage ; la règle pour ne plus corriger écran par écran :
 [qualite.md](qualite.md#le-texte-coupé-sur-android). Natif : il n'arrive qu'avec un nouveau binaire,
 la 6.3.0 construite le 2026-11-16 ne le porte pas.
 
+Vérifié le 2026-11-16 sur `ukit` avec le build de développement EAS qui le porte, gras activé : les
+Réglages et l'écran Apparence entiers (« Agenda », « Confidentialité », « Clair », « Sombre »,
+« Réinitialiser l'application »). Reste ouvert jusqu'à la release qui l'embarque.
+
 ### ~~Sur iPhone, quitter le navigateur intégré arrêtait un build de développement~~ — constaté le 2026-11-12, corrigé le 2026-11-14
 
 Sur l'iPhone, après avoir ouvert le certificat puis un service de la Scolarité, la porte du
