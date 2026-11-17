@@ -83,7 +83,7 @@ répondent, parce que la cause avait trois étages :
 
 Le retour et la ligne de progression apparaissent à partir de l'étape 2, en haut.
 
-![L'étape 1, la vitrine : un cours, un restaurant et une bibliothèque en relief, en thème sombre, sur le banc Android](../screenshots/onboarding-bienvenue-android.png)
+![L'étape 1, la vitrine : un cours, un restaurant et une bibliothèque en relief, le titre en deux tons et le bouton Commencer](../screenshots/onboarding-bienvenue.png)
 
 **L'étape 1 montre l'application avant de lui poser une question**
 ([`VitrineDAccueil`](../../src/features/Onboarding/components/VitrineDAccueil.tsx), direction A de
@@ -117,11 +117,13 @@ Un lien d'abonnement se demande sans groupe, et une journée entière (un jour f
 pour un cours ; constaté au banc pour l'IUT le 2026-11-10 (« Aujourd'hui, un cours. »), où la fin
 montrait jusque-là le cercle seul.
 
-> **Capture attendue** — `onboarding-preferences.png` : l'étape 2, sélection du thème et de la langue.
->
-> **Capture attendue** — `onboarding-fin.png` : l'étape 5, confirmation avant l'entrée dans l'application.
+![L'étape 2 : le thème, choisi sur deux aperçus d'une même journée, et la langue](../screenshots/onboarding-preferences.png)
 
-![L'étape du choix de l'université : une tuile par établissement, son logo en filigrane, en thème clair](../screenshots/onboarding-etablissement.png)
+![L'étape du choix de l'université : une rangée par établissement avec son logo et sa ville, « Autre campus » en dernier](../screenshots/onboarding-etablissement.png)
+
+![L'étape du compte universitaire : le formulaire, la promesse sur les identifiants et la sortie vers un autre campus ; « Suivant » passe sans se connecter](../screenshots/onboarding-compte.png)
+
+![La dernière étape, avant l'entrée dans l'application](../screenshots/onboarding-fin.png)
 
 Chaque choix est appliqué **immédiatement**, pas à la fin : sélectionner le mode sombre à l'étape 2
 repeint l'écran en cours. L'utilisateur voit ce qu'il choisit. Il n'y a donc pas d'état à valider —
@@ -175,8 +177,7 @@ l'année affichait « Aucun groupe ne correspond à cette recherche ».
 L'affichage est plafonné à **10 résultats** ; au-delà, un message indique combien sont masqués et
 invite à préciser la recherche.
 
-> **Capture attendue** — `onboarding-groupes.png` : l'étape 4, avec une année et un semestre
-> sélectionnés et une liste de groupes filtrée.
+![L'étape du groupe : l'année et le semestre choisis, la recherche, la liste des groupes filtrée](../screenshots/onboarding-groupes.png)
 
 ## Décisions de conception
 

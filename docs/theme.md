@@ -223,8 +223,7 @@ le téléphone, et un téléphone sombre sous une application claire mélangeait
 Expo Go le 2026-09-06, où c'est de toute façon le réglage de l'hôte qui s'applique. Aligner l'apparence
 du système sur le choix de l'utilisateur est ce qui rend le thème **un** sur toute la surface.
 
-> **Capture attendue** — `theme-clair-sombre.png` : un même écran dans les deux thèmes, côte à côte,
-> pour servir de référence visuelle.
+![La vue jour du Planning dans les deux thèmes, côte à côte : la référence visuelle](screenshots/theme-clair-sombre.png)
 
 ## Le vocabulaire partagé
 

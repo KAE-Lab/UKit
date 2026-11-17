@@ -27,7 +27,7 @@ Socle commun : [campus.md](campus.md). Source de données : Croustillant, sectio
    ([`CampusMapSection`](../../src/features/Campus/components/CampusMapSection.tsx)), dans la page et
    non derrière un bouton d'en-tête, comme sur une fiche de cours.
 
-![La liste des restaurants : distance, favori, et les horaires du fournisseur — « du lundi au vendredi | SELF : 11h30-13h30 | BAR : 8h-14h30 »](../screenshots/crous-liste.png)
+![La liste des restaurants : photo, favori, ville, distance, et les horaires tels que le fournisseur les écrit — « du lundi au vendredi : 09h00 - 17h45 »](../screenshots/crous-liste.png)
 
 La ligne d'horaires de cette capture est le correctif du jalon [6-D](../phase-6/6-d-campus.md) : avant
 lui, ces trois mentions étaient remplacées par « Horaires non spécifiés », pour **tous** les

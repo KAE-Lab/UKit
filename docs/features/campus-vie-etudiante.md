@@ -25,10 +25,9 @@ fonctionnalité alimentée par la base**, et le **premier écran branché sur le
 3. Toucher une annonce ouvre sa fiche : visuel au ratio de l'image, titre, émetteur, étiquette
    d'information, description longue, et bouton d'action ouvrant un lien externe.
 
-> **Capture attendue** — `annonces-liste.png` : la grille des annonces actives.
->
-> **Capture attendue** — `annonce-detail.png` : une fiche complète, avec émetteur, étiquette et bouton
-> d'action.
+![La grille des annonces actives : l'affiche au format 4:5, l'émetteur et le titre](../screenshots/annonces-liste.png)
+
+![La fiche d'une annonce : l'affiche, le titre, l'accroche, le texte, le lieu et le bouton d'action](../screenshots/annonce-detail.png)
 
 ## Flux de données
 

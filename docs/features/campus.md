@@ -79,7 +79,7 @@ disparaît, le journal dit pourquoi — et **explicite** sur l'écran dédié, q
 Chaque section suit le même gabarit : un titre, un bouton « voir tout », une liste horizontale de
 cartes, et un squelette à la forme de ses cartes pendant qu'elle charge.
 
-> **Capture attendue** — `campus-dashboard.png` : le tableau de bord, les quatre sections peuplées.
+![Le tableau de bord du Campus : les annonces en tête, puis les restaurants en carrousel, chacun avec sa distance et ses horaires](../screenshots/campus-dashboard.png)
 
 ## Une section vide dit pourquoi, et propose un geste
 

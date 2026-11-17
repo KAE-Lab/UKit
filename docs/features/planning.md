@@ -33,15 +33,14 @@ seul composant.
    n'a ni carte ni UE, et ouvre l'agenda du système. Un **« + »** dans l'en-tête ouvre l'éditeur du
    système sur le jour affiché ; il n'existe que si un calendrier est affiché.
 
-![La vue jour : curseur de dates en bandeau, cartes de cours colorées par catégorie, salle et enseignant en description](../screenshots/planning-jour.png)
+![La vue jour : le curseur de dates, la ligne de l'heure et le temps avant le premier cours, deux cartes colorées par catégorie et la pause qui les sépare ; noms d'enseignants masqués](../screenshots/planning-jour.png)
 
-> **Capture attendue** — `planning-semaine.png` : la vue semaine, en agenda.
->
-> **Capture attendue** — `planning-groupes.png` : la recherche de groupes et ses sections
-> alphabétiques colorées.
->
-> **Capture attendue** — `planning-cours-detail.png` : la fiche d'un cours localisé, avec sa carte.
->
+![La vue semaine : le curseur des semaines, une section par jour avec son nombre de cours, les cours passés estompés](../screenshots/planning-semaine.png)
+
+![La recherche de groupes : le champ, puis les groupes rangés par préfixe](../screenshots/planning-groupes.png)
+
+![La fiche d'un cours : catégorie, titre, horaires et durée, salle, groupe et code d'UE, puis la salle sur la carte ; nom d'enseignant masqué](../screenshots/planning-cours-detail.png)
+
 > **Capture attendue** — `planning-telephone.png` : une journée où un rendez-vous personnel et une
 > journée entière se mêlent aux cours, dans la couleur de leur calendrier, avec le « + » en en-tête.
 

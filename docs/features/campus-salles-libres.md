@@ -16,11 +16,10 @@ Socle commun : [campus.md](campus.md). Sources : Celcat (section 1 de
    cette heure — **sectionnée par étage, du plus bas au plus haut** — avec pour chacune la durée de
    disponibilité restante.
 
-> **Capture attendue** — `salles-libres-liste.png` : la liste des bâtiments en accès libre.
->
-> **Capture attendue** — `salles-libres-detail.png` : la fiche d'un bâtiment en journée, sélecteur
-> d'heure et créneaux disponibles.
->
+![La liste des bâtiments en accès libre : photo, ville, distance, horaires et nombre de salles](../screenshots/salles-libres-liste.png)
+
+![La fiche d'un bâtiment à 10 h : le sélecteur d'heure, les salles libres rangées par étage, chacune avec l'heure où elle cesse de l'être et la durée restante](../screenshots/salles-libres-detail.png)
+
 > **Capture attendue** — `salles-libres-ferme.png` : l'état fermé, hors horaires d'ouverture ou
 > pendant les vacances.
 

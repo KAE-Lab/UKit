@@ -44,8 +44,8 @@ au retour sur l'accueil (`relireLesReglages`).
 
 Le bouton d'action de la barre d'onglets mène à **À propos**.
 
-> **Capture attendue** — `reglages.png` : l'écran complet, sections visibles.
->
+![Les Réglages : quatre groupes (établissement, affichage, préférences, réinitialisation), une icône au trait par rangée, la valeur en gris à droite](../screenshots/reglages.png)
+
 > **Capture attendue** — `reglages-langue.png` : la modale de langue.
 >
 ## Le compte universitaire, et le lien d'emploi du temps
@@ -76,7 +76,7 @@ bibliothèques. Le nom affiché à droite vient du **catalogue** et n'est pas tr
 comme le nom d'un calendrier système trois sections plus bas
 ([6-G](../phase-6/6-g-etablissements.md)).
 
-![La modale d'établissement et sa confirmation : la liste des universités, puis l'écran qui annonce ce que la bascule effacera](../screenshots/reglages-etablissement.png)
+![La modale d'établissement, premier temps : les universités rangées par campus, l'actuelle cochée](../screenshots/reglages-etablissement.png)
 
 La modale a **deux temps** : la liste, puis une confirmation qui annonce ce qui sera effacé. Une
 bascule immédiate au premier toucher rendrait ce coût invisible jusqu'à ce qu'il soit payé. Toucher
@@ -598,7 +598,7 @@ le logo vectoriel ([`LogoUKit`](../../src/shared/ui/epure/LogoUKit.tsx)) au lieu
 blanc. L'écran avait son propre gabarit, une bande grise d'en-tête par carte : une troisième manière de
 titrer un groupe. La version garde ses sept tapes, qui ouvrent le menu de test.
 
-![L'écran À propos, au gabarit des Réglages, sur le banc Android](../screenshots/reglages-apropos-android.png)
+![L'écran À propos, au gabarit des Réglages : la version, la source des données, le contact, les crédits](../screenshots/reglages-apropos.png)
 
 ## Décisions de conception
 

@@ -1,8 +1,8 @@
 # Captures d'écran
 
-Les images illustrant la documentation vivent dans ce dossier. Celles de l'application sont prises
-**à la main** sur un appareil ou un émulateur : le projet ne dispose d'aucun outillage de capture
-automatique, et une application React Native n'a pas de mode de rendu sans écran. Celles de la
+Les images illustrant la documentation vivent dans ce dossier. Celles de l'application se prennent sur
+le banc Android ([qualite.md](../qualite.md#le-banc-android)) ou sur un appareil : une application
+React Native n'a pas de mode de rendu sans écran. Celles de la
 **console web**, dans [`console/`](console/), sont prises par un navigateur piloté (Playwright, Chromium
 1280 px, thème sombre émulé) : une page web se photographie sans main.
 
@@ -47,12 +47,33 @@ Le chemin est `../screenshots/…` depuis `docs/features/`, `screenshots/…` de
 npx expo start        # puis a (Android), i (iOS), ou Expo Go sur un appareil
 ```
 
-- **Android** : `adb exec-out screencap -p > docs/screenshots/<nom>.png`
+- **Android** : `adb exec-out screencap -p > docs/screenshots/<nom>.png`, ou
+  `tools/appareil/banc.sh capture` sur le banc.
 - **iOS (simulateur)** : `xcrun simctl io booted screenshot docs/screenshots/<nom>.png`
 - **Appareil physique** : capture système, puis transfert dans ce dossier.
 
 Pour les écrans dépendant de l'heure (salles libres, menu du jour, rappels), le menu flottant de
 simulation temporelle permet de se placer au bon moment — voir [qualite.md](../qualite.md).
+
+La passe du 2026-11-17 (6.3.1, banc `ukit`, 1080 × 2400) a tenu à quatre réglages, à refaire à la
+prochaine :
+
+- **L'heure** : l'horloge de l'émulateur réglée en root (`settings put global auto_time 0`, puis
+  `date MMJJhhmmAAAA.ss`), et la barre d'état en mode démonstration de SystemUI, l'heure recopiée de
+  l'appareil à chaque capture : la ligne « maintenant » du Planning et la barre disent la même heure.
+  Le menu flottant déplace l'heure de l'application, pas celle de la barre.
+- **La position** : `adb emu geo fix` n'atteint pas Android 15 ; un fournisseur de test, si
+  (`cmd location providers add-test-provider` puis `set-test-provider-location`, pour `gps`,
+  `network` et `fused`). Sans position, le Campus n'affiche aucune distance.
+- **L'affluence des bibliothèques** est celle du service, en direct : la nuit, toutes sont fermées,
+  quelle que soit l'heure de l'appareil. Ces captures se prennent aux heures d'ouverture.
+- **Les noms d'enseignants** d'ADE (Planning jour, fiche d'un cours) se masquent d'une barre neutre,
+  à partir des bornes que donne `android layout --flat` avec la capture.
+
+L'accueil se rejoue sur des données effacées (`pm clear`) ; une sauvegarde en root de
+`/data/data/com.bordeaux1.emplois` et de `/data/user_de/0/com.bordeaux1.emplois`, restaurée ensuite
+avec son propriétaire et `restorecon`, rend au banc son état exact. Le bouton « Tools » du client de
+développement se masque dans son menu.
 
 ## Inventaire
 
@@ -64,12 +85,12 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `onboarding-bienvenue-android.png` | étape 1, la vitrine (7-J, accueil refait), en sombre, sur le banc Android | **prise** |
-| `onboarding-etablissement.png` | étape 3, les tuiles des universités, en clair (7-J, accueil refait) | **prise** |
-| `onboarding-compte.png` | étape 4, le compte universitaire et sa sortie « Plus tard » (jalon 6-J) | attendue |
-| `onboarding-preferences.png` | étape 2, choix du thème et de la langue | essentielle |
-| `onboarding-groupes.png` | étape 4, année, semestre et recherche de groupe | essentielle |
-| `onboarding-fin.png` | étape 5, confirmation | complémentaire |
+| `onboarding-bienvenue.png` · `-dark` | étape 1, la vitrine (7-J, accueil refait) | **prise** le 2026-11-17 (6.3.1) |
+| `onboarding-etablissement.png` | le choix de l'université : quatre établissements et « Autre campus » | **reprise** le 2026-11-17 (6.3.1) |
+| `onboarding-compte.png` | le compte universitaire, que « Suivant » passe sans connexion (jalon 6-J) | **prise** le 2026-11-17 |
+| `onboarding-preferences.png` | étape 2, choix du thème et de la langue | **prise** le 2026-11-17 |
+| `onboarding-groupes.png` | année, semestre et recherche de groupe | **prise** le 2026-11-17 |
+| `onboarding-fin.png` | la confirmation | **prise** le 2026-11-17 |
 
 ### Finitions d'interface — [phase-6/6-1-e-finitions-interface.md](../phase-6/6-1-e-finitions-interface.md)
 
@@ -83,13 +104,13 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `planning-jour.png` | vue jour, curseur de dates, journée chargée | **prise** |
-| `planning-semaine.png` | vue semaine, sections repliables | essentielle |
-| `planning-groupes.png` | recherche de groupes, sections alphabétiques | essentielle |
-| `planning-cours-detail.png` | fiche d'un cours avec sa carte | essentielle |
+| `planning-jour.png` · `-dark` | vue jour, curseur de dates, ligne de l'heure, noms d'enseignants masqués | **reprise** le 2026-11-17 (6.3.1) |
+| `planning-semaine.png` · `-dark` | vue semaine, une section par jour | **prise** le 2026-11-17 |
+| `planning-groupes.png` · `-dark` | recherche de groupes, sections par préfixe | **prise** le 2026-11-17 |
+| `planning-cours-detail.png` · `-dark` | fiche d'un cours avec sa carte, nom d'enseignant masqué | **prise** le 2026-11-17 |
 | `planning-cours-simultanes.png` | carrousel de cours qui se chevauchent | complémentaire |
-| `planning-hors-ligne.png` | bandeau de données en cache daté | **prise** — produite avec l'interrupteur **hors ligne** du menu de développement, sans mode avion ([qualite.md](../qualite.md)) |
-| `planning-echec.png` | l'échec d'une source : message de la famille et bouton Réessayer | **prise** — même interrupteur |
+| `planning-hors-ligne.png` | bandeau de données en cache daté | **à reprendre** : prise en août sur iPhone, en anglais, avant les refontes de 7-J ; l'interrupteur **hors ligne** du menu de développement la produit ([qualite.md](../qualite.md)), `banc.sh reseau non` coupe aussi Metro sur `ukit` |
+| `planning-echec.png` | l'échec d'une source : message de la famille et bouton Réessayer | **à reprendre** (août, iPhone) — même interrupteur |
 | `planning-groupes-sombre-avant.png` · `planning-groupes-sombre-apres.png` | la première section de la recherche de groupes en sombre, avant et après la correction de l'index 0 de `sectionsHeaders` ([6.1-C](../phase-6/6-1-c-passe-de-code.md)) | **prises** — le couple avant/après d'un rendu qui change |
 | `planning-lien-attendu.png` | l'onglet Planning proposant de coller un lien d'abonnement (jalon 6-J) | attendue |
 | `lien-edt-saisie.png` | l'écran de saisie du lien, après une vérification réussie | attendue |
@@ -100,11 +121,11 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `campus-dashboard.png` | tableau de bord, quatre sections | essentielle — la comparaison avant / après du jalon 6-K a été faite **hors dépôt** ; le fichier reste à déposer |
+| `campus-dashboard.png` · `-dark` | tableau de bord : annonces, restaurants, bibliothèques, salles libres | **prise** le 2026-11-17 (6.3.1) |
 | `campus-dashboard-avant.png` · `-avant-dark.png` · `-avant-android.png` · `-avant-android-dark.png` | le tableau de bord **avant** le jalon [7-I](../phase-7/7-i-releve-et-vocabulaire.md), sur les deux appareils et dans les deux thèmes : la ligne de base du relevé du mouvement | attendues — à prendre avant tout code du jalon |
 | `campus-dashboard-apres.png` · `-apres-dark.png` · `-apres-android.png` · `-apres-android-dark.png` | le même écran à la livraison de 7-I | les deux `-android` **prises** le 2026-11-05 au format de l'A8, avec 7-J ; celles de l'iPhone attendues |
 | `planning-jour-`, `scolarite-dashboard-`, `reglages-` · `avant-android` · `apres-android`, et leurs `-dark` | les trois autres onglets avant et après [7-J](../phase-7/7-j-ecrans.md), au format de l'A8, noms d'enseignants floutés | **prises** le 2026-11-05 ; à la sortie, `-apres` devient la capture courante de chaque écran |
-| `annonces-liste-avant.png` · `annonces-liste-apres.png` | la grille des annonces, du 1:1 au 4:5 | attendues |
+| `annonces-liste-avant.png` · `annonces-liste-apres.png` | la grille des annonces, du 1:1 au 4:5 | l'avant **pris** ; l'après est `annonces-liste.png` |
 | `campus-liste-filtres.png` | modale de filtres du socle de liste | complémentaire |
 | `campus-liste-vide.png` | état vide d'une liste filtrée | complémentaire |
 
@@ -112,9 +133,9 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `crous-liste.png` | liste des restaurants avec distances **et horaires** | **livrée** |
-| `crous-menu.png` | menu d'un restaurant, midi et soir | **livrée** (reprise au banc Android, deuxième passe de 7-J) |
-| `crous-menu-absent.png` | restaurant qui ne publie pas de menu — l'état vide, à contraster avec l'état d'échec | **livrée** |
+| `crous-liste.png` · `-dark` | liste des restaurants avec distances **et horaires** | **reprise** le 2026-11-17 (6.3.1) |
+| `crous-menu.png` · `-dark` | menu d'un restaurant | **reprise** le 2026-11-17 (6.3.1) |
+| `crous-menu-absent.png` · `-dark` | restaurant qui ne publie pas de menu — l'état vide, à contraster avec l'état d'échec | **reprise** le 2026-11-17 (6.3.1) |
 
 ### Campus — bibliothèques · [features/campus-bibliotheques.md](../features/campus-bibliotheques.md)
 
@@ -128,17 +149,17 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `salles-libres-liste.png` | liste des bâtiments en accès libre | essentielle |
-| `salles-libres-detail.png` | sélecteur d'heure et créneaux disponibles | essentielle |
+| `salles-libres-liste.png` · `-dark` | liste des bâtiments en accès libre | **prise** le 2026-11-17 |
+| `salles-libres-detail.png` · `-dark` | sélecteur d'heure et salles libres par étage | **prise** le 2026-11-17 |
 | `salles-libres-ferme.png` | état fermé (hors horaires ou vacances) | complémentaire |
 
 ### Campus — vie étudiante · [features/campus-vie-etudiante.md](../features/campus-vie-etudiante.md)
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `annonces-liste.png` | liste des annonces actives | essentielle |
-| `annonce-detail.png` | fiche d'une annonce avec bouton d'action | essentielle |
-| `annonces-erreur.png` | la liste en échec : service indisponible et bouton Réessayer — **déposée** (jalon 6-B) | essentielle |
+| `annonces-liste.png` · `-dark` | liste des annonces actives | **prise** le 2026-11-17 |
+| `annonce-detail.png` · `-dark` | fiche d'une annonce avec bouton d'action | **prise** le 2026-11-17 |
+| `annonces-erreur.png` | la liste en échec : service indisponible et bouton Réessayer (jalon 6-B) | **à reprendre** (août, iPhone) |
 
 ### Scolarité — [features/scolarite.md](../features/scolarite.md)
 
@@ -146,10 +167,11 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `scolarite-login.png` | écran de connexion universitaire | **à reprendre** (6-K : retrait de Montserrat) |
-| `scolarite-dashboard.png` | salutation et ligne de messagerie — **différée** : l'habillage de ces écrans doit changer, et une capture périmée renseigne moins bien qu'une absence signalée | essentielle |
+| `scolarite-login.png` · `-dark` | écran de connexion universitaire, avant toute saisie | **reprise** le 2026-11-17 (6.3.1) |
+| `scolarite-sans-compte.png` · `-dark` | la page sans compte : salutation, « En un coup d'œil », services | **prise** le 2026-11-17 (6.3.1) |
+| `scolarite-dashboard.png` | la page connectée — attend un **compte de test** : le banc n'a que des comptes réels | essentielle |
 | `scolarite-progression.png` | écran de progression du parcours froid | **à reprendre** (6-K : retrait de Montserrat) |
-| `scolarite-echec.png` | un échec de session nommé, message et bouton Réessayer — l'écran que le module n'avait pas avant le jalon 6-F — **déposée** | essentielle |
+| `scolarite-echec.png` | un échec de session nommé, message et bouton Réessayer — l'écran que le module n'avait pas avant le jalon 6-F | **à reprendre** (août, iPhone) |
 | `scolarite-login-echec.png` | le refus d'identifiants sur le formulaire, distinct de l'échec de session | **à reprendre** (6-K : retrait de Montserrat) |
 | `scolarite-biometrie.png` | l'invite Face ID à l'ouverture de l'onglet, sur un build — **déposée** (6.1-A, 2026-09-02) | complémentaire |
 | `scolarite-compte.png` | réglages du compte et déconnexion — **différée** (idem) | complémentaire |
@@ -163,12 +185,12 @@ Toutes les captures de cette section exigent un compte de test ou un floutage.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `reglages.png` | écran complet, sections déployées | essentielle |
-| `reglages-apropos-android.png` | écran À propos, au gabarit des Réglages (7-J), sur le banc Android | **prise** |
+| `reglages.png` · `-dark` | écran complet | **prise** le 2026-11-17 (6.3.1) |
+| `reglages-apropos.png` · `-dark` | écran À propos, au gabarit des Réglages (7-J) | **reprise** le 2026-11-17 (6.3.1) |
 | `reglages-filtres.png` | modale de gestion des filtres d'UE | complémentaire |
 | `reglages-calendrier.png` | modale de choix du calendrier | complémentaire |
 | `reglages-langue.png` | modale de langue | complémentaire |
-| `reglages-etablissement.png` | modale d'établissement : la liste, puis la confirmation | **à reprendre** (6-K : boutons de confirmation pleins) |
+| `reglages-etablissement.png` · `-dark` | modale d'établissement, premier temps : la liste par campus | **reprise** le 2026-11-17 (6.3.1) ; la confirmation reste à prendre |
 
 ### Pilotage — [pilotage.md](../pilotage.md)
 
@@ -226,27 +248,27 @@ l'écran.
 | Fichier | Contenu | Document | Priorité |
 |---|---|---|---|
 | `navigation-tabbar.png` | barre d'onglets et bouton d'action contextuel | [navigation.md](../navigation.md) | essentielle |
-| `theme-clair-sombre.png` | un même écran dans les deux thèmes | [theme.md](../theme.md) | essentielle |
+| `theme-clair-sombre.png` | un même écran dans les deux thèmes : la vue jour, composée des deux `planning-jour` | [theme.md](../theme.md) | **prise** le 2026-11-17 |
 | `carte.png` | écran carte, marqueur au thème de l'application | [cartographie.md](../cartographie.md) | essentielle |
 | `modmenu.png` | menu flottant de simulation temporelle | [qualite.md](../qualite.md) | complémentaire |
 | `modmenu-blueprints.png` | panneau de livraison : origine, version et raison par Blueprint | [blueprints.md](../blueprints.md) | **à reprendre** (6-K : teintes du menu) |
 
-## Sept captures que le jalon 6-K a périmées
+## Les captures d'avant 6.3 qui restent
 
-Le socle visuel a changé quatre choses **visibles** sur des écrans déjà photographiés : les teintes
-d'affluence des bibliothèques (Material → Apple), l'icône « végétarien » du Crous, les boutons de
-confirmation des modales (gris → plein), et le retrait de Montserrat — qui ne rendait que dans la
-Scolarité, la seule graisse chargée y vivant.
+La passe du 2026-11-17 a repris sur 6.3.1 tout ce que le banc atteint sans compte réel ni panne
+provoquée. Restent des captures d'août, sur iPhone, d'avant les refontes de 6-K et de 7-J :
 
-`bu-liste` · `bu-detail` · `bu-couverture-partielle` · `crous-menu` · `scolarite-login` ·
-`scolarite-progression` · `scolarite-login-echec` · `reglages-etablissement` · `modmenu-blueprints`
+- `bu-liste` · `bu-detail` · `bu-couverture-partielle` : l'affluence est celle du service, en direct,
+  et la passe a eu lieu de nuit ; le bandeau de couverture partielle n'apparaît que si une zone ne
+  répond pas.
+- `planning-hors-ligne` · `planning-echec` · `annonces-erreur` · `scolarite-echec` : des états
+  d'échec, à produire avec l'interrupteur hors ligne du menu de développement.
+- `scolarite-progression` · `scolarite-login-echec` · `scolarite-biometrie` : un compte de test, ou
+  l'iPhone pour Face ID.
+- `modmenu-blueprints` : le menu de développement, à rouvrir par sept tapes sur la version.
 
-Elles restent dans le dépôt en attendant : les remplacer demande un appareil, et une capture absente
-renseigne moins bien qu'une capture datée dont on sait qu'elle l'est. **Mais elles sont marquées, et
-c'est ce qui compte** — le tableau ci-dessus les porte en « à reprendre ».
-
-Celles qui **n'ont pas bougé**, vérifiées : `planning-jour`, `planning-echec`, `planning-hors-ligne`,
-`crous-liste`, `crous-menu-absent`, `annonces-erreur`, `onboarding-etablissement`, `scolarite-echec`.
+Elles restent en attendant, marquées « à reprendre » dans les tableaux : une capture datée dont on
+sait qu'elle l'est renseigne mieux qu'une absence.
 
 ## Mettre à jour
 

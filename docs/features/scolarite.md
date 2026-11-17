@@ -60,12 +60,8 @@ section 2 de [sources-externes.md](../sources-externes.md).
 > ne doivent montrer ni nom, ni numéro étudiant, ni INE, ni adresse mail, ni contenu de messagerie
 > réels.
 >
-> **Capture attendue** — `scolarite-login.png` : l'écran de connexion universitaire.
->
-> **Deux captures différées, volontairement** — `scolarite-dashboard.png` et `scolarite-compte.png`.
-> Elles montrent des écrans dont l'habillage doit changer prochainement, et une capture périmée
-> renseigne moins bien qu'une absence signalée. Les quatre autres, ci-dessous, illustrent ce que le
-> jalon 6-F a réellement changé et n'ont pas cette fragilité.
+> **Deux captures attendent un compte de test** — `scolarite-dashboard.png` (la page connectée) et
+> `scolarite-compte.png`. Le banc n'a que des comptes réels, et ces deux écrans montrent un dossier.
 
 ![L'écran de connexion universitaire, avant toute saisie](../screenshots/scolarite-login.png)
 
@@ -175,8 +171,7 @@ aucun teaser. Le signalement qui l'a demandé venait d'un enseignant-chercheur d
 l'application avait été imposée : il cherchait la page courriel, et l'onglet ne lui montrait qu'un
 formulaire étudiant. « Autre campus », qui ne publie aucune porte, garde sa page.
 
-> **Capture attendue** — `scolarite-sans-compte.png` : la page sans compte à Bordeaux — bandeau sans
-> prénom, encart d'invitation, grille en portes, tuile Documents — à côté de la page connectée.
+![La page sans compte à Bordeaux : la salutation sans prénom, « En un coup d'œil » avec Moodle et la messagerie en portes et la tuile Documents, puis les services](../screenshots/scolarite-sans-compte.png)
 
 Un établissement qui ne déclare pas une adresse **n'affiche pas la porte**. La grille se construit
 donc **depuis le catalogue**, jamais depuis une liste écrite dans l'écran :
