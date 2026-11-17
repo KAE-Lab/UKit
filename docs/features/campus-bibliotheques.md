@@ -29,9 +29,9 @@ Socle commun : [campus.md](campus.md). Source de données : Affluences, section 
    dernier lien de l'application à partir dans le navigateur du système, et `expo-web-browser` est
    sorti avec lui.
 
-![La liste des bibliothèques : visuel, ville, distance recalculée et état d'ouverture](../screenshots/bu-liste.png)
+![La liste des bibliothèques : photo, ville, distance, et l'affluence en direct en jauge et en pourcentage](../screenshots/bu-liste.png)
 
-![La fiche d'une BU : jauge d'affluence, bandeau de dates et horaires du jour](../screenshots/bu-detail.png)
+![La fiche d'une BU : le bandeau des jours, l'affluence en direct et son taux d'occupation, les horaires du jour, la carte et le bouton Réserver](../screenshots/bu-detail.png)
 
 ![Le bandeau de couverture partielle au-dessus d'une liste réelle : « Certaines zones n'ont pas répondu », avec Réessayer](../screenshots/bu-couverture-partielle.png)
 

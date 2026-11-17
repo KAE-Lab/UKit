@@ -141,8 +141,8 @@ peuvent attendre.
 
 | Fichier | Contenu | Priorité |
 |---|---|---|
-| `bu-liste.png` | liste avec pastilles d'affluence | **à reprendre** (6-K : teintes d'affluence) |
-| `bu-detail.png` | fiche, jauge d'affluence et horaires | **à reprendre** (6-K : teintes d'affluence) |
+| `bu-liste.png` · `-dark` | liste avec jauges d'affluence | **reprise** le 2026-11-17 (6.3.1), aux heures d'ouverture, sur deux façades : d'autres photos de la liste montrent des visages |
+| `bu-detail.png` · `-dark` | fiche, jauge d'affluence et horaires | **reprise** le 2026-11-17 (6.3.1) |
 | `bu-couverture-partielle.png` | le bandeau de couverture partielle au-dessus d'une liste réelle — la seule interface que le jalon 6-D ajoute | **à reprendre** (6-K : teintes d'affluence des cartes) |
 
 ### Campus — salles libres · [features/campus-salles-libres.md](../features/campus-salles-libres.md)
@@ -258,9 +258,8 @@ l'écran.
 La passe du 2026-11-17 a repris sur 6.3.1 tout ce que le banc atteint sans compte réel ni panne
 provoquée. Restent des captures d'août, sur iPhone, d'avant les refontes de 6-K et de 7-J :
 
-- `bu-liste` · `bu-detail` · `bu-couverture-partielle` : l'affluence est celle du service, en direct,
-  et la passe a eu lieu de nuit ; le bandeau de couverture partielle n'apparaît que si une zone ne
-  répond pas.
+- `bu-couverture-partielle` : le bandeau n'apparaît que si une zone du service d'affluence ne répond
+  pas.
 - `planning-hors-ligne` · `planning-echec` · `annonces-erreur` · `scolarite-echec` : des états
   d'échec, à produire avec l'interrupteur hors ligne du menu de développement.
 - `scolarite-progression` · `scolarite-login-echec` · `scolarite-biometrie` : un compte de test, ou
