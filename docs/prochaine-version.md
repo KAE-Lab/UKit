@@ -25,6 +25,13 @@ leur détriment :
 À la sortie : poser `min_engine` à `0.5.10` sur les entrées nouvelles de `versions.json`, puis dérouler
 les étapes écrites plus bas pour l'IUT et pour Montaigne.
 
+**Fait le 2026-11-18**, la 6.3.1 en ligne sur les deux stores. `min_engine` est à `0.5.10` sur les sept
+entrées nouvelles. Les Blueprints n'ont rien eu à publier : le manifeste n'annonce que ce qui bat le
+socle sorti, et la v6.3.1 les embarque tous ; il reste vide, ce qui tient aussi le parc en 0.5.9 à
+l'écart de `ukit.portail.verification` 4. Les lignes `bordeaux-iut` et `bordeaux-montaigne` et les
+quatorze bâtiments sont en base. La sonde `cas-bordeaux-montaigne`, en erreur les jours précédents faute
+de ligne au catalogue, est repassée au vert le même jour, comme `pronote-bordeaux-iut`.
+
 ## Ce qu'elle contient
 
 Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctions interactives
@@ -34,7 +41,7 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 |---|---|---|
 | 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison ; les quatre parcours restants joués au lot 2, le même jour (liste ci-dessous) |
 | 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | joué le 2026-11-10 : « il reste N TD » livré, Appliphase reporté (raison ci-dessous), 7 entrées corrigées au registre (11 défauts croisés en jouant l'audit), 1 consignée |
-| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publication préparée, non publiée ([fiche](campus/bordeaux-iut.md)) ; passe de corrections jouée le même soir ([ci-dessous](#la-passe-de-corrections-davant-montaigne)) ; Montaigne joué le 2026-11-11 : vérifié au banc, publication préparée, non publiée ([ci-dessous](#bordeaux-montaigne-joué-le-2026-11-11)) |
+| 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publié le 2026-11-18 ([fiche](campus/bordeaux-iut.md)) ; passe de corrections jouée le même soir ([ci-dessous](#la-passe-de-corrections-davant-montaigne)) ; Montaigne joué le 2026-11-11 : vérifié au banc, publié le 2026-11-18 ([ci-dessous](#bordeaux-montaigne-joué-le-2026-11-11)) |
 
 ## Ce que « zéro défaut » veut dire ici
 
