@@ -62,14 +62,26 @@ export interface CourseRowProps {
     minute?: number | null;
 }
 
-/** Le rail de couleur : plein, ou qui se remplit avec le temps ecoule d'un cours en cours. */
+/**
+ * Le rail de couleur : plein, ou qui se remplit avec le temps ecoule d'un cours en cours.
+ *
+ * Le remplissage est **hors du flux** : dans le flux, sa hauteur en pourcentage pesait sur la mesure
+ * du rail, qui n'a pas de hauteur propre (il s'etire), et passe la moitie d'un cours la carte
+ * s'allongeait jusqu'a bloquer le defilement (defauts-fonctionnels.md, 2026-11-23). En absolu, il ne
+ * compte plus dans la mesure, et son pourcentage se resout contre la hauteur finale du rail.
+ */
 function Rail({ couleur, progression }: { couleur: string; progression: number | null }) {
     if (progression === null) {
         return <View style={[styles.rail, { backgroundColor: couleur }]} />;
     }
     return (
         <View style={[styles.rail, { backgroundColor: `${couleur}4D` }]}>
-            <View style={{ height: `${Math.round(Math.min(1, Math.max(0, progression)) * 100)}%`, backgroundColor: couleur }} />
+            <View
+                style={[
+                    styles.remplissage,
+                    { height: `${Math.round(Math.min(1, Math.max(0, progression)) * 100)}%`, backgroundColor: couleur },
+                ]}
+            />
         </View>
     );
 }
@@ -285,6 +297,12 @@ const styles = StyleSheet.create({
         width: RAIL,
         alignSelf: 'stretch',
         overflow: 'hidden',
+    },
+    remplissage: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
     },
     heures: {
         paddingLeft: tokens.space.md - RAIL,

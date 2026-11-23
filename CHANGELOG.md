@@ -8,6 +8,15 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
+## [Non publié]
+
+### Corrigé
+
+- **Pendant un cours, sa carte garde sa hauteur et le Planning défile jusqu'au bout.** Passé la
+  moitié d'un cours, la carte s'allongeait, un vide s'ouvrait dessous et la liste ne descendait plus
+  jusqu'aux cours suivants, sur Android comme sur iPhone. Le remplissage du rail, qui mesure le temps
+  écoulé, pesait sur la mesure de la carte ; il est sorti du flux.
+
 ## [6.3.1] - 2026-11-16
 
 La version qui sort sur les stores à la place de la 6.3.0 : construite et soumise en brouillon, la

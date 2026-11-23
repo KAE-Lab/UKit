@@ -19,6 +19,23 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Pendant un cours, sa carte s'allonge et le Planning ne défile plus — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour
+
+Signalé par plusieurs étudiants en 6.3.1, captures à l'appui : passé la moitié d'un cours, sa
+carte s'étire bien au-delà de son contenu, un vide s'ouvre sous elle, et la liste ne descend plus
+jusqu'aux cours suivants ; sur iPhone elle descend, mais mal. Avant le premier cours de la journée,
+rien.
+
+Reproduit au banc sur `ukit`, horloge de l'émulateur réglée dans un cours puis application relancée :
+à 84 % d'un cours, la carte mesure 376 dp au lieu de 160 et sa zone tactile 457 dp ; à 18 %, rien ne
+se voit. La cause est le rail qui se remplit avec le temps écoulé (7-J,
+[`CourseRow.tsx`](../src/features/Planning/components/CourseRow.tsx)) : son remplissage avait une
+hauteur en pourcentage, dans le flux d'un rail sans hauteur propre, et cette hauteur pesait sur la
+mesure de la carte. Sorti du flux (position absolue) : 160 dp à 84 %, défilement jusqu'au dernier cours,
+carrousel de cours superposés compris. La vitrine de l'accueil, qui montre des cartes en cours, en
+profite aussi. JavaScript seul, mais sans mise à jour OTA : il n'arrive qu'avec une version des
+stores. Reste ouvert jusqu'à sa sortie.
+
 ### Sur Android, des textes perdent leur dernière lettre — constaté de nouveau le 2026-11-16 sur un vrai téléphone, cause trouvée le même jour
 
 Sur un téléphone Android, dans toutes les langues : « Agend », « Confidentialit » dans les Réglages,
