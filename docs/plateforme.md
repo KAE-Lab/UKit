@@ -305,7 +305,9 @@ qui s'allongeait, [defauts-fonctionnels.md](defauts-fonctionnels.md)). Ce que ç
 
 - le build de développement a ses propres données : l'accueil s'y refait une fois, les identifiants
   de la Scolarité s'y ressaisissent ;
-- sur iOS, l'identifiant `.dev` a son propre profil de provisionnement, que le premier build crée ;
+- sur iOS, l'identifiant `.dev` a son propre profil de provisionnement : le premier build le crée,
+  en interactif seulement, parce qu'il demande la connexion au compte Apple (`--non-interactive`
+  échoue sur « couldn't find any credentials suitable for internal distribution ») ;
 - sur Android, il n'a pas de `google-services.json`, qui ne déclare que le paquet du store : pas de
   notification distante. Pour en avoir, déclarer `com.bordeaux1.emplois.dev` dans le projet Firebase,
   refaire la variable `GOOGLE_SERVICES_JSON` d'EAS avec le fichier qui porte les deux paquets, et

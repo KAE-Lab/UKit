@@ -38,7 +38,7 @@ d'exemple, n'était pas touchée. JavaScript seul, mais sans mise à jour OTA : 
 version des stores. Reste ouvert jusqu'à sa sortie.
 
 La vidéo d'un iPhone (cours de 10:15 à 12:15, vue à 11:48, 77 %) montre la forme iOS du même défaut :
-la carte garde sa hauteur, mais un vide d'une carte et demie la sépare de la pause, et la liste
+la carte garde sa hauteur, mais un vide plus haut qu'elle la sépare de la pause, et la liste
 revient d'elle-même en haut quand on la lâche. Le lendemain, sans cours en cours, la journée
 s'affiche normalement. Observé à 64, 77, 82, 84 et 88 % d'un cours, jamais à 18 %.
 
