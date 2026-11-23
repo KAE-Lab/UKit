@@ -351,7 +351,7 @@ JSON. Un sélecteur `text=` simple est une sous-chaîne sans casse : `text=Start
 
 Deux comportements de l'application à connaître sur le banc. Le thème du système (`theme`) n'est lu
 qu'au premier lancement ; ensuite, l'application suit son propre réglage, et `pm clear` sur
-`com.bordeaux1.emplois` rejoue une installation neuve. La coupure `reseau non` est celle du système,
+`com.bordeaux1.emplois.dev` rejoue une installation neuve. La coupure `reseau non` est celle du système,
 WebView et Supabase compris, et Metro continue d'arriver par le tunnel d'adb : c'est le chemin
 dégradé réel sans perdre la session, vérifié le 2026-11-04. Enfin, `animations non` ne vaut
 « réduire les animations » qu'**après un arrêt forcé** de l'application : Reanimated lit le réglage du

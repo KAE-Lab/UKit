@@ -71,7 +71,7 @@ prochaine :
   à partir des bornes que donne `android layout --flat` avec la capture.
 
 L'accueil se rejoue sur des données effacées (`pm clear`) ; une sauvegarde en root de
-`/data/data/com.bordeaux1.emplois` et de `/data/user_de/0/com.bordeaux1.emplois`, restaurée ensuite
+`/data/data/com.bordeaux1.emplois.dev` et de `/data/user_de/0/com.bordeaux1.emplois.dev`, restaurée ensuite
 avec son propriétaire et `restorecon`, rend au banc son état exact. Le bouton « Tools » du client de
 développement se masque dans son menu.
 

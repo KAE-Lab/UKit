@@ -32,7 +32,10 @@ SDK="${ANDROID_HOME:-$HOME/Android/Sdk}"
 ADB="$SDK/platform-tools/adb"
 EMULATEUR="$SDK/emulator/emulator"
 SERVICE="emulateur-ukit"
-PAQUET="com.bordeaux1.emplois"
+# Le build de developpement a son propre paquet depuis le 2026-11-23 (docs/plateforme.md). Un
+# emulateur qui porte encore l'ancien, celui du store, reste ouvrable jusqu'a sa reinstallation.
+PAQUET="com.bordeaux1.emplois.dev"
+PAQUET_ANCIEN="com.bordeaux1.emplois"
 PORT_METRO=8081
 
 erreur() { echo "banc: $*" >&2; exit 1; }
@@ -105,9 +108,11 @@ arreter() {
 
 ouvrir() {
 	relier
+	local paquet="$PAQUET"
+	"$ADB" shell pm path "$PAQUET" >/dev/null 2>&1 || paquet="$PAQUET_ANCIEN"
 	"$ADB" shell am start -a android.intent.action.VIEW \
 		-d "exp+ukit://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A$PORT_METRO" \
-		"$PAQUET" >/dev/null
+		"$paquet" >/dev/null
 }
 
 format() {

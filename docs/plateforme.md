@@ -16,6 +16,7 @@ est évaluée à chaque commande Expo — pour rendre les variables d'environnem
 | Slug Expo | `Ukit` (propriétaire `kaelab`) |
 | Identifiant iOS | `com.bordeaux.ukit` |
 | Paquet Android | `com.bordeaux1.emplois` |
+| Build de développement | « UKit Dev », `com.bordeaux.ukit.dev` et `com.bordeaux1.emplois.dev` ([plus bas](#le-build-de-développement--les-quatre-choses-qui-se-perdent)) |
 | Orientation | portrait uniquement |
 | Couleur principale | `#006F9F` |
 | Projet EAS | `77596c7c-87fc-4c86-9189-3a70fd839abf` |
@@ -293,12 +294,22 @@ l'absence d'un module dans un vieux binaire.
 **`expo-dev-client` est une dépendance du dépôt**, ajoutée automatiquement au premier build. Elle doit
 être commitée : sans elle, le dépôt ne décrit plus ce qui a été construit.
 
-**L'identifiant reste partagé avec l'application du store — et c'est une décision.**
-`com.bordeaux.ukit` est le même des deux côtés, donc iOS les tient pour la même application :
-installer le build de développement **remplace** celle du store, et efface ses données. On pourrait
-les faire cohabiter en donnant un identifiant distinct au profil de développement ; **on ne le fait
-pas**, parce que tester au quotidien dans les conditions réelles vaut mieux que de garder les deux.
-Ne pas « corriger » ce point sans raison.
+**Le build de développement est une application à part, depuis le 2026-11-23.** Le profil
+`development` d'[`eas.json`](../eas.json) pose `APP_VARIANT=development`, et
+[`app.config.ts`](../app.config.ts) en tire `com.bordeaux.ukit.dev`, `com.bordeaux1.emplois.dev` et le
+nom « UKit Dev » : il s'installe à côté de l'application du store au lieu de la remplacer.
+Jusque-là, l'identifiant était partagé par décision, pour tester au quotidien dans les conditions
+réelles. Le coût l'a emporté : désinstaller l'application du store à chaque build, et ne pas pouvoir
+comparer les deux à la même heure simulée quand un défaut est signalé en production (la carte de cours
+qui s'allongeait, [defauts-fonctionnels.md](defauts-fonctionnels.md)). Ce que ça entraîne :
+
+- le build de développement a ses propres données : l'accueil s'y refait une fois, les identifiants
+  de la Scolarité s'y ressaisissent ;
+- sur iOS, l'identifiant `.dev` a son propre profil de provisionnement, que le premier build crée ;
+- sur Android, il n'a pas de `google-services.json`, qui ne déclare que le paquet du store : pas de
+  notification distante. Pour en avoir, déclarer `com.bordeaux1.emplois.dev` dans le projet Firebase,
+  refaire la variable `GOOGLE_SERVICES_JSON` d'EAS avec le fichier qui porte les deux paquets, et
+  retirer l'exception d'`app.config.ts`.
 
 **Et iOS 16 demande le mode développeur** : *Réglages → Confidentialité et sécurité → Mode
 développeur*, puis un redémarrage. L'entrée n'apparaît qu'après avoir installé une application signée
@@ -306,7 +317,7 @@ en interne.
 
 > **Ce que ça change pour la vérification, et c'est le vrai gain.** Expo Go est un bac à sable
 > générique : le code y tourne avec *ses* droits et *ses* limites. Un build de développement porte le
-> runtime natif de UKit — son identifiant, ses permissions, ses droits, ses modules. Deviennent donc
+> runtime natif de UKit — ses permissions, ses droits, ses modules. Deviennent donc
 > testables des choses qui ne l'étaient pas, à commencer par **les notifications push**, retirées
 > d'Expo Go depuis le SDK 53 : les rappels de cours, capacité livrée de l'application, n'y étaient pas
 > vérifiables. `__DEV__` reste vrai, donc le chrono des runs

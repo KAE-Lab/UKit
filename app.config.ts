@@ -4,8 +4,15 @@ import { config as chargerEnv } from 'dotenv';
 // chaque commande Expo : on charge en silence.
 chargerEnv({ quiet: true });
 
+/*
+ * Le build de developpement est une application a part : son propre identifiant, son propre nom, et
+ * il s'installe a cote de celle du store au lieu de la remplacer (2026-11-23, docs/plateforme.md).
+ * Le profil `development` d'eas.json pose la variable ; partout ailleurs, rien ne change.
+ */
+const DEVELOPPEMENT = process.env.APP_VARIANT === 'development';
+
 export default {
-	name: 'UKit',
+	name: DEVELOPPEMENT ? 'UKit Dev' : 'UKit',
 	description: 'UKit, a companion app for student of University of Bordeaux',
 	slug: 'Ukit',
 	privacy: 'public',
@@ -28,7 +35,7 @@ export default {
 	ios: {
 		icon: './assets/icons/icon.png',
 		supportsTablet: true,
-		bundleIdentifier: 'com.bordeaux.ukit',
+		bundleIdentifier: DEVELOPPEMENT ? 'com.bordeaux.ukit.dev' : 'com.bordeaux.ukit',
 		infoPlist: {
 			NSCalendarsUsageDescription:
 				'UKit Bordeaux requires calendar access to add your university classes (e.g., "Maths lecture at 8:00 AM") directly to your personal calendar. This allows you to view your school schedule alongside personal events. No calendar data ever leaves your device.',
@@ -46,7 +53,7 @@ export default {
 		},
 	},
 	android: {
-		package: 'com.bordeaux1.emplois',
+		package: DEVELOPPEMENT ? 'com.bordeaux1.emplois.dev' : 'com.bordeaux1.emplois',
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 		/*
 		 * Les identifiants Firebase, sans lesquels Android n'obtient aucun jeton de notification
@@ -56,8 +63,12 @@ export default {
 		 *
 		 * Sans lui — un poste qui ne l'a pas, une construction locale — la cle vaut `undefined` et
 		 * Expo l'ignore : tout se construit, seules les notifications distantes manquent.
+		 *
+		 * Le build de developpement s'en passe : le fichier ne declare que le paquet du store, et
+		 * Gradle refuse un paquet qu'il ne connait pas. Les notifications distantes d'Android se
+		 * verifient donc sur un build du store, ou apres avoir declare le paquet `.dev` dans Firebase.
 		 */
-		googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
+		googleServicesFile: DEVELOPPEMENT ? undefined : process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
 		// La seule declaration : la cle racine du meme nom n'est pas un champ Expo et etait ignoree.
 		// EAS fait de toute facon autorite sur le numero de build (eas.json, appVersionSource: remote).
 		versionCode: 551,
