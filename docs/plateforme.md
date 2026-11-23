@@ -305,13 +305,25 @@ qui s'allongeait, [defauts-fonctionnels.md](defauts-fonctionnels.md)). Ce que ç
 
 - le build de développement a ses propres données : l'accueil s'y refait une fois, les identifiants
   de la Scolarité s'y ressaisissent ;
-- sur iOS, l'identifiant `.dev` a son propre profil de provisionnement : le premier build le crée,
-  en interactif seulement, parce qu'il demande la connexion au compte Apple (`--non-interactive`
-  échoue sur « couldn't find any credentials suitable for internal distribution ») ;
+- sur iOS, l'identifiant `.dev` a son propre profil de provisionnement, créé le 2026-11-24 avec la
+  clé d'API App Store Connect du poste (ci-dessous) et la clé de notifications de l'application
+  associée. Un appareil ajouté plus tard se fait entrer par
+  `eas build --non-interactive --refresh-ad-hoc-provisioning-profile` ;
 - sur Android, il n'a pas de `google-services.json`, qui ne déclare que le paquet du store : pas de
   notification distante. Pour en avoir, déclarer `com.bordeaux1.emplois.dev` dans le projet Firebase,
   refaire la variable `GOOGLE_SERVICES_JSON` d'EAS avec le fichier qui porte les deux paquets, et
   retirer l'exception d'`app.config.ts`.
+
+**Le poste a une clé d'API App Store Connect** (clé d'équipe, rôle Admin, 2026-11-24) : le `.p8` dans
+`~/.appstoreconnect/private_keys/`, ses références dans le `.env` (`EXPO_ASC_API_KEY_PATH`,
+`EXPO_ASC_KEY_ID`, `EXPO_ASC_ISSUER_ID`, `EXPO_APPLE_TEAM_ID`, `EXPO_APPLE_TEAM_TYPE`). Avec elle,
+`eas build` crée et répare les identifiants iOS sans mot de passe ni code 2FA ; elle se charge par
+`export $(grep -E '^EXPO_(ASC|APPLE)_' .env | xargs)`, un `. ./.env` échouant sur une valeur du
+fichier. Deux limites mesurées en la mettant en place : créer des identifiants de distribution
+interne reste interactif (le choix des appareils), et la mise en place des notifications proposée
+par `eas build` exige la connexion par mot de passe ; `eas credentials -p ios`, sans connexion,
+« Use an existing push key », fait la même chose. Elle se révoque dans App Store Connect,
+Utilisateurs et accès, Intégrations.
 
 **Et iOS 16 demande le mode développeur** : *Réglages → Confidentialité et sécurité → Mode
 développeur*, puis un redémarrage. L'entrée n'apparaît qu'après avoir installé une application signée
