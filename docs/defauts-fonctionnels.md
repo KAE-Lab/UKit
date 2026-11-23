@@ -32,9 +32,15 @@ se voit. La cause est le rail qui se remplit avec le temps écoulé (7-J,
 [`CourseRow.tsx`](../src/features/Planning/components/CourseRow.tsx)) : son remplissage avait une
 hauteur en pourcentage, dans le flux d'un rail sans hauteur propre, et cette hauteur pesait sur la
 mesure de la carte. Sorti du flux (position absolue) : 160 dp à 84 %, défilement jusqu'au dernier cours,
-carrousel de cours superposés compris. La vitrine de l'accueil, qui montre des cartes en cours, en
-profite aussi. JavaScript seul, mais sans mise à jour OTA : il n'arrive qu'avec une version des
-stores. Reste ouvert jusqu'à sa sortie.
+carrousel de cours superposés compris. La fin de l'accueil, qui montre la vraie journée à l'heure
+réelle, avait la même carte et en profite aussi ; la vitrine, figée à 10:35 avant tout cours
+d'exemple, n'était pas touchée. JavaScript seul, mais sans mise à jour OTA : il n'arrive qu'avec une
+version des stores. Reste ouvert jusqu'à sa sortie.
+
+La vidéo d'un iPhone (cours de 10:15 à 12:15, vue à 11:48, 77 %) montre la forme iOS du même défaut :
+la carte garde sa hauteur, mais un vide d'une carte et demie la sépare de la pause, et la liste
+revient d'elle-même en haut quand on la lâche. Le lendemain, sans cours en cours, la journée
+s'affiche normalement. Observé à 64, 77, 82, 84 et 88 % d'un cours, jamais à 18 %.
 
 ### Sur Android, des textes perdent leur dernière lettre — constaté de nouveau le 2026-11-16 sur un vrai téléphone, cause trouvée le même jour
 
