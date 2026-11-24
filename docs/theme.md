@@ -528,7 +528,9 @@ Acquises, et qui ont coûté à être trouvées :
 
   **L'Épure ne l'a pas rouverte** (7-I) : Geist reste la police du site et de la communication, et
   l'application garde celle du système — rendu natif, taille réglable par l'utilisateur, listes denses
-  ([identite.md](identite.md)).
+  ([identite.md](identite.md)). *Amendé le 2026-11-24 : le site a pris la police du système, comme
+  l'application ([7-M](phase-7/7-m-le-site.md#la-refonte-publiée-le-2026-11-18)) ; Geist reste à la
+  communication.*
 - **Un état plein écran s'ancre en haut, jamais au centre.** Il se pose à une distance fixe
   (`space.xxl`) sous l'en-tête, la même sur les huit écrans qui en portent un. C'est le rôle de
   [`ScreenState`](../src/shared/ui/ScreenState.tsx), et **aucun écran ne calcule plus le sien**.

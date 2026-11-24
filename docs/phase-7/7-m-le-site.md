@@ -12,6 +12,41 @@
 > la police (Geist dans l'Épure, celle du système ici), les formes (des cercles dans l'Épure, des carrés
 > arrondis ici) et le thème (l'Épure n'existe qu'en sombre).
 
+> **Refonte publiée le 2026-11-18, et l'amendement du 2026-09-24 retiré : le site ne part pas de
+> l'Épure, il prend le style de l'application.** Ce qui a été fait, ce qui s'écarte du cadre ci-dessous
+> et ce qui reste : [la refonte](#la-refonte-publiée-le-2026-11-18).
+
+## La refonte, publiée le 2026-11-18
+
+Faite du 16 au 18 novembre sur le dépôt `UKit-website`, publiée par la poussée sur `main` du 18
+(`88517e9`). Elle a commencé sur l'Épure (`568ef74`) et l'a quittée le jour même pour le style de
+l'application (`9422475`) ; le propriétaire du produit a confirmé ce choix le 2026-11-24. La règle
+qu'en tire le site, ses valeurs et sa façon de prendre les captures sont dans son
+[README](https://github.com/KAE-Lab/UKit-website#le-style--celui-de-lapplication) ; ce document ne les
+répète pas.
+
+**Ce que la refonte a fait** : l'accueil devient la fiche produit de l'application, un module par
+onglet relevé sur la 6.3.1 au banc ; les mentions légales (l'association KAE Lab comme éditeur) ; la
+confidentialité du site ; une page introuvable. Tailwind et les particules sortent, le CSS s'écrit à la
+main.
+
+**Où elle s'écarte du cadre**, chaque fois au profit de l'application :
+
+| Le cadre ci-dessous | Le site publié | Pourquoi |
+|---|---|---|
+| la direction de l'Épure, à l'intensité « forte » ([identite.md](../identite.md#les-intensités)) | le premier écran de l'accueil de l'application ([`VitrineDAccueil.tsx`](../../src/features/Onboarding/components/VitrineDAccueil.tsx)), ses cartes, ses icônes au trait | une personne qui passe du site à l'application ne change pas d'univers ; c'est la direction du cadre, sans l'Épure entre les deux |
+| les deux thèmes | **sombre seulement**, sur les valeurs du thème sombre de l'application | aucune raison écrite à la refonte ; l'accueil de l'application tient les deux thèmes, et un thème clair du site reste à décider |
+| Geist pour le site | la police du système | celle de l'application, sans police à télécharger |
+| Vite et Tailwind ; tsParticles à rejuger | Vite et du CSS écrit à la main ; plus de particules | quelques pages ne justifient pas Tailwind, et un fond qui s'anime ne dit pas ce que dit l'application |
+| des captures par Playwright | les captures de l'application prises au banc Android à la géométrie de l'iPhone 13 Pro | le site montre l'application, pas lui-même |
+| une confidentialité générée depuis `PRIVACY.md` | une page écrite pour le site seul, qui renvoie à `PRIVACY.md` pour l'application | le site ne garde rien ; la page générée reste à faire, ci-dessous |
+
+**Ce qui reste**, et que la 6.4 attend ([7-L](7-l-la-boucle.md)) : la page d'une annonce `/a/<id>` et sa
+fonction, les deux fichiers des liens universels, les pages Aide, Nouveautés (générée depuis
+`CHANGELOG.md`), Soutenir ([7-N](7-n-le-soutien.md)) et Merci, et la confidentialité générée depuis
+`PRIVACY.md`. Leur conception, plus bas, tient toujours ; seule leur apparence suit désormais le site
+publié.
+
 ## L'écart mesuré le 2026-09-15
 
 Le site est soigné, et il ne parle pas la langue de l'application. Relevé dans le dépôt `UKit-website` :

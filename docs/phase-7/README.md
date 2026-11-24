@@ -55,7 +55,7 @@ Prises le 2026-09-14. Leur raisonnement, question par question, est dans la
 | Console | Grosse passe **sans release**, sur un socle standard (TanStack Query et Table, react-hook-form et zod, primitives sans style, Recharts, compression d'image dans le navigateur). **Rôles** : la donnée dès la 6.2.2, l'interface avant l'arrivée de l'équipe. |
 | Formulaire | Google Forms reste, **pré-rempli** dès la 6.2.2 ; le catalogue porte l'adresse longue du formulaire, un lien `forms.gle` ne se pré-remplit pas. Formulaire natif relié à la base en 6.4. |
 | Dons | **HelloAsso**, paliers libellés en repas CROUS, champ campus pour la jauge, page « Où va l'argent » sur le site, entrée dans l'application par une adresse de service du catalogue. Règle des stores : le don se collecte **hors de l'application**, dans le navigateur du système (Apple 3.2.2 iv ; Google exempte les dons à but non lucratif). |
-| Site | Refonte **après la direction artistique de la 6.3** ; pages ouvertes par l'application dans sa vue intégrée. |
+| Site | Refonte **après la direction artistique de la 6.3** ; pages ouvertes par l'application dans sa vue intégrée. *Amendé le 2026-11-24 : la refonte a pris le style de l'application, pas celui de l'Épure ; publiée le 2026-11-18 ([7-M](7-m-le-site.md#la-refonte-publiée-le-2026-11-18)).* |
 | Touche créative | Cartes d'erreur illustrées au gabarit des cartes, mini-jeu pendant la connexion universitaire, tirer-pour-rafraîchir signature, états vides dans la voix éditoriale. |
 
 Le modèle de données que ces décisions entraînent, tout additif et appliqué par migrations numérotées,
@@ -205,7 +205,7 @@ Les lots de campus avancent ensuite au rythme des comptes prêtés.
 | 7-J Les écrans, et la refonte de l'interface | **ouvert et livré le 2026-11-05 sur `v6.3`**, élargi ce jour-là à toute l'interface par le propriétaire du produit, qui délègue le jugement de design ; six lots menés sur le banc Android, portes vertes (`tsc`, ESLint, 1 147 tests, parité, export des deux plateformes). Reste l'iPhone ([la livraison](7-j-ecrans.md#la-livraison-du-2026-11-05)). **Deuxième passe livrée le même jour** sur la review du propriétaire : un en-tête unique et fondu, les couleurs de l'identité seules, des icônes au trait, la Scolarité et le parcours froid remaniés, les fiches Campus, l'accueil sur le U du logo, les intertitres en casse de phrase, les écrans laissés ; portes vertes (`tsc`, ESLint, 1 163 tests, parité 13/13, export des deux plateformes). **Troisième passe le 2026-11-06** : les Réglages en pages, des contrôles qui répondent au doigt, le repère de l'heure ancré, le fondu des écrans poussés sous le titre, des menus et des cartes plus lisibles ; le jeu attend une décision ([la troisième passe](7-j-troisieme-passe.md)). Reste l'iPhone ([la deuxième passe](7-j-deuxieme-passe.md)) |
 | 7-K Sortie de la 6.3 | à ouvrir |
 | 7-L La boucle | à ouvrir |
-| 7-M Le site | à ouvrir |
+| 7-M Le site | **refonte publiée le 2026-11-18**, dans le style de l'application et non de l'Épure (décision confirmée par le propriétaire le 2026-11-24) : l'accueil en fiche produit, les mentions légales, la confidentialité du site, la page introuvable ; Tailwind et les particules retirés. **Reste** ce que la 6.4 attend du site : la page d'une annonce, les liens universels, Aide, Nouveautés, Soutenir, Merci, la confidentialité générée ([la refonte](7-m-le-site.md#la-refonte-publiée-le-2026-11-18)) |
 | 7-N Le soutien | à ouvrir |
 | 7-Z Clôture de la phase | à ouvrir |
 
