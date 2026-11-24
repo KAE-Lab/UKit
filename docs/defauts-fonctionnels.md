@@ -26,7 +26,7 @@ exigées et restreignent la disponibilité (téléphone, tablette, ordinateur, A
 `android.hardware.screen.portrait`, implicite parce que l'activité est verrouillée en portrait
 (`orientation: 'portrait'`, [`app.config.ts`](../app.config.ts)), et `android.hardware.wifi`,
 implicite par la permission `ACCESS_WIFI_STATE` qu'une dépendance déclare. Rien de neuf : l'APK de la
-6.3.1 porte les deux mêmes (`aapt2 dump badging`), la 6.3.2 est partie avec « Proceed anyway ».
+6.3.1 porte les deux mêmes (`aapt2 dump badging`), et l'avertissement n'empêche pas l'envoi (« Proceed anyway »).
 Remède attendu dans un binaire suivant : les déclarer `android:required="false"` par un greffon de
 configuration, puis vérifier avec `aapt2 dump badging` qu'elles ne sont plus exigées.
 
