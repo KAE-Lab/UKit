@@ -12,7 +12,9 @@
 > points passent sur l'iPhone, et l'Android a trouvé un défaut, corrigé le jour même — la file
 > soustraite après un lot accepté ne s'écrivait qu'une seconde plus tard, et une fermeture depuis les
 > applications récentes dans cette seconde la faisait repartir. **Reste** : les fiches *App Privacy* et
-> *Data safety* dans les consoles, avant la sortie. Ce que la mise en œuvre et le protocole ont corrigé
+> *Data safety* dans les consoles, avant la sortie. *Faites avant la sortie de la 6.3.1 : Data safety
+> enregistrée le 2026-11-16, App Privacy remplie par le propriétaire, son contenu non relu depuis
+> ([7-K](7-k-sortie-6-3.md#la-sortie-telle-quelle-sest-faite)).* Ce que la mise en œuvre et le protocole ont corrigé
 > est en fin de document.
 >
 > Publication : **6.3**, décidé le 2026-09-21 à la sortie de la 6.2.2 — la 6.2.3 n'existe plus

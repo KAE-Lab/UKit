@@ -115,6 +115,8 @@ l'application — sans intermédiaire.
 | CAS / mondossierweb Bordeaux INP | identité étudiant, formation | identifiants universitaires, extraction de pages |
 | ADE Bordeaux INP | emploi du temps | export iCalendar anonyme, aucune authentification |
 | PRONOTE Campus IUT de Bordeaux | l'adresse d'abonnement de l'emploi du temps | identifiants universitaires, lue dans l'espace étudiant |
+| CAS, e-campus et Carbonio Université Bordeaux Montaigne | identité et formation (profil e-campus), échéances, messagerie, certificat de scolarité | identifiants universitaires, extraction de pages |
+| PRONOTE Campus Université Bordeaux Montaigne | l'adresse d'abonnement de l'emploi du temps | identifiants universitaires, lue dans l'espace étudiant |
 | Affluences | bibliothèques, affluence temps réel, horaires | API privée |
 | Croustillant | restaurants CROUS et menus | API publique |
 | OpenFreeMap | fonds de carte (style Positron, données OpenStreetMap) | tuiles vectorielles publiques, sans clé, attribution affichée |
@@ -246,6 +248,12 @@ livré ; elle est mise à jour à chaque contribution.
   il **ancre le bloc sous l'en-tête** plutôt que de le centrer : centrer demanderait de connaître ce
   qui occupe le bas de chaque écran. L'application **tutoie** partout, et les avertissements ESLint
   sont passés de 79 à 53.
+- [x] **La refonte de l'interface, l'heure juste** (7-I, 7-J, 6.3) — une application qui donne l'heure
+  des choses d'un regard : le Planning en frise, la pause cotée et le repère de l'heure ancré ;
+  l'accueil refait en vitrine, ouvert sur le U du logo ; les Réglages en pages ; les fiches de lieux,
+  les menus et les cartes sans couleur décorative ; des contrôles qui répondent au doigt, le
+  glissement entre onglets, et Encre, le petit jeu de la connexion universitaire. Chaque écran se juge
+  dans les deux thèmes. [docs/phase-7/7-j-ecrans.md](docs/phase-7/7-j-ecrans.md)
 - [x] **Internationalisation** — français, anglais, espagnol ; 424 clés par dictionnaire, typage de
   la clé, locale des dates alignée. **Plus aucune chaîne visible en dur ni clé manquante** : les
   treize libellés Campus qui manquaient sont traduits, et les casts qui les masquaient au compilateur
@@ -293,9 +301,11 @@ livré ; elle est mise à jour à chaque contribution.
   la 6.3. La clôture (6-Z) a sorti la **v6.0 le 2026-08-31**, et la version est ensuite partie en
   plusieurs publications : la **6.1** le 2026-09-06 (la consolidation), la **6.2.0** le 2026-09-08
   (le socle et les demandes), la **6.2.1** le 2026-09-13 (les ajustements d'après sortie), la
-  **6.2.2** le 2026-09-21 (économie et socle). La suite — la mesure et le mouvement de l'interface
-  dans une seule **6.3**, puis la boucle en 6.4 — est la [phase 7](docs/phase-7/README.md), découpée
-  en jalons.
+  **6.2.2** le 2026-09-21 (économie et socle). La suite est la [phase 7](docs/phase-7/README.md),
+  découpée en jalons : la mesure et le mouvement de l'interface sont sortis ensemble dans la **6.3**,
+  en 6.3.1, en ligne au 2026-11-18, avec l'IUT de Bordeaux et Bordeaux Montaigne, puis la 6.3.2, un
+  correctif envoyé le 2026-11-24 ;
+  la boucle suit en 6.4.
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
@@ -530,8 +540,12 @@ livré ; elle est mise à jour à chaque contribution.
   établissement ne publie pas se **dit** au lieu d'échouer. Depuis la 6.1, **le socle embarque tous
   les établissements publiés à la date de la release** — Blueprints compris, un test le garantit —,
   l'accueil se réabonne à l'arrivée du catalogue et sait attendre sa première réponse : le premier
-  jour de la rentrée 2026, une installation neuve n'avait vu que le Collège ST.
-  [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md)
+  jour de la rentrée 2026, une installation neuve n'avait vu que le Collège ST. **Depuis la 6.3**,
+  l'IUT de Bordeaux et l'Université Bordeaux Montaigne rejoignent l'Université de Bordeaux et Bordeaux
+  INP : leur emploi du temps PRONOTE se lit sur le compte, sans rien coller, et la liste se regroupe par
+  campus et se cherche par alias (« UB », « ENSEIRB »).
+  [docs/phase-6/6-g-etablissements.md](docs/phase-6/6-g-etablissements.md) ·
+  [docs/campus/](docs/campus/README.md)
 - [x] **Le compte à l'accueil, et l'emploi du temps par lien collé** — la connexion au compte
   universitaire est proposée dès le parcours d'accueil, **sautable et rappelée**, et omise chez un
   établissement qui ne publie aucun portail. Pour l'emploi du temps, un **lien d'abonnement iCal collé

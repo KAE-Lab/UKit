@@ -7,6 +7,12 @@
 > **c'est la 6.3.1 qui sort**, le même contenu plus le texte coupé sur Android
 > ([CHANGELOG](../CHANGELOG.md)). Les publications attendent sa sortie sur les stores
 > (voir [Les publications](#les-publications-à-la-sortie)).
+>
+> **En ligne sur les deux stores au 2026-11-18**, publications faites ce jour-là ; puis la **6.3.2** le
+> 2026-11-24, le correctif de la carte du cours en cours, en ligne sur Android le jour même et en examen
+> chez Apple. Ce document est désormais l'archive de cette version. Ce que le passage sur iPhone a
+> couvert : [ci-dessous](#le-passage-sur-iphone-du-2026-11-12-au-2026-11-14) ; ce que la sortie a tenu du
+> protocole de 7-K et sa ligne de base : [7-K](phase-7/7-k-sortie-6-3.md#la-sortie-telle-quelle-sest-faite).
 
 ## Les publications, à la sortie
 
@@ -42,6 +48,39 @@ Le code de la 6.3 tel qu'il est sur `main`, plus trois lots. Les grosses fonctio
 | 1. Zéro défaut | les défauts signalés par le formulaire, le registre ouvert, puis un audit par parcours au banc | joué le 2026-11-10 : 18 entrées corrigées au registre, 9 restent ouvertes avec leur raison ; les quatre parcours restants joués au lot 2, le même jour (liste ci-dessous) |
 | 2. Petites fonctions | ce qui s'ajoute sans décision d'architecture | joué le 2026-11-10 : « il reste N TD » livré, Appliphase reporté (raison ci-dessous), 7 entrées corrigées au registre (11 défauts croisés en jouant l'audit), 1 consignée |
 | 3. Deux campus | IUT de Bordeaux, puis Bordeaux Montaigne, sur les comptes prêtés du `.env` | IUT joué le 2026-11-10 : vérifié au banc, publié le 2026-11-18 ([fiche](campus/bordeaux-iut.md)) ; passe de corrections jouée le même soir ([ci-dessous](#la-passe-de-corrections-davant-montaigne)) ; Montaigne joué le 2026-11-11 : vérifié au banc, publié le 2026-11-18 ([ci-dessous](#bordeaux-montaigne-joué-le-2026-11-11)) |
+
+## Le passage sur iPhone, du 2026-11-12 au 2026-11-14
+
+Joué par le propriétaire sur son iPhone, avec le build de développement servi depuis
+`prochaine-version`, avant la fusion dans `main` du 14. Il reprend les trois listes « à juger sur
+l'iPhone » plus bas, sans les avoir cochées une à une ; ce qui suit est ce qu'il a rapporté pendant
+les sessions de travail de ces trois jours, qu'aucun commit ne consigne.
+
+**Validé** :
+
+- l'IUT de Bordeaux et Bordeaux Montaigne : l'emploi du temps lu sans rien coller, ce qui prouve la
+  touche Entrée de l'agent dans WKWebView sur PRONOTE ; la Scolarité, la messagerie (Carbonio à
+  Montaigne), Moodle, l'ENT, le certificat ouvert dans le lecteur ;
+- la première connexion universitaire ;
+- la langue ;
+- la WebView enveloppée de `pointerEvents="none"`, puisque la connexion et les widgets ont joué ;
+- le jeu, essayé puis repris ([la troisième passe](phase-7/7-j-troisieme-passe.md)) ;
+- la synchronisation de l'agenda ;
+- le navigateur intégré, dont la fermeture arrêtait le build de développement, corrigé le 14
+  ([registre](defauts-fonctionnels.md)).
+
+**Sans trace de jugement**, à reprendre au prochain passage : VoiceOver sur la WebView enveloppée, les
+icônes devenues décor et les boutons nommés ; la modale des propositions et son dialogue d'annulation ; la recréation du calendrier
+« UKit » et un calendrier iCloud ou Google en lecture seule ; le toast du trousseau qui refuse
+l'écriture ; minuit passé l'application ouverte ; la permission de position refusée puis accordée, et un nom de lieu entre parenthèses trié sous
+Hermes iOS ; la bascule de langue à chaud sur le ruban des jours ; la
+rangée de l'emploi du temps introuvable de l'INP ; le détour de la vérification 4 après un mot de passe
+refusé ; le bandeau « Information » de PRONOTE et la relecture du lien au lancement ; « Nouveau record » et
+le plateau de 150 points du jeu ; les points iPhone de [7-J](phase-7/7-j-ecrans.md)
+(ombres, zones sûres, barre d'état, tracé de l'accueil, glissement entre onglets).
+
+Depuis, la 6.3.2 a été vérifiée sur iPhone le 2026-11-24, côte à côte avec la 6.3.1, pour le seul
+défaut qu'elle corrige ([registre](defauts-fonctionnels.md)).
 
 ## Ce que « zéro défaut » veut dire ici
 
@@ -133,7 +172,7 @@ daté du 2026-11-10 ; ce que le banc ne joue pas est en fin de section.
 - [x] réinitialisation — `ukit-a8` C es
 - [x] calendriers du téléphone : écran de choix, un calendrier coché puis décoché, son événement au Planning et sa fiche — `ukit` S, au lot 2
 
-**Ce que le banc ne joue pas, à juger sur l'iPhone** : VoiceOver sur la WebView enveloppée, les
+**Ce que le banc ne joue pas, à juger sur l'iPhone** ([jugé ou non](#le-passage-sur-iphone-du-2026-11-12-au-2026-11-14)) : VoiceOver sur la WebView enveloppée, les
 icônes devenues décor et les boutons nommés ; la modale des propositions et son dialogue d'annulation
 (zones sûres, clavier) ; la synchronisation vers un calendrier iCloud ou Google en lecture seule,
 et la recréation du calendrier « UKit » (iOS exige une source) ; le toast du trousseau qui refuse
@@ -200,11 +239,12 @@ entrée.
 - Croisés en chemin et corrigés : l'identifiant ADE écrit dans le journal, une identité réelle dans un
   test du dépôt (elle reste dans l'historique git, que seul le propriétaire peut réécrire).
 
-**À publier, avec le reste** : `ukit.portail.verification` 3, depuis `main` (étape 3 ci-dessous ; le
+*Dépassé : la version 4 a remplacé la 3, et la 6.3.1 l'embarque
+([les publications](#les-publications-à-la-sortie)).* **À publier, avec le reste** : `ukit.portail.verification` 3, depuis `main` (étape 3 ci-dessous ; le
 manifeste publié est vide, lu le 2026-11-10 : la version 3 bat le socle du dernier tag et sera
 annoncée). Sans publication, la correction arrive avec la release.
 
-**À juger sur l'iPhone** :
+**À juger sur l'iPhone** ([jugé ou non](#le-passage-sur-iphone-du-2026-11-12-au-2026-11-14)) :
 
 - la première connexion sur un iPhone neuf (WKWebView, la page de succès du CAS) ;
 - la permission de position refusée puis accordée dans Réglages (iOS ne repose jamais la question),
@@ -216,6 +256,8 @@ tels quels. Il reste à écrire son portail de zéro (CAS distinct), et dans une
 `ukit.portail.bordeaux-iut.edt.lien`, le bloc de connexion et les `vars` (`flaubert2`) ; puis à nommer
 ce Blueprint dans `edt.abonnement.blueprint_lien` de sa ligne.
 
+*Pour l'IUT, faite le 2026-11-18, plus simplement que prévu : la 6.3.1 embarque son Blueprint, le manifeste reste
+vide, seule la ligne a été publiée ([les publications](#les-publications-à-la-sortie)).*
 **La publication, préparée et non faite.** Elle se fait après relecture, dans cet ordre :
 
 1. juger sur l'iPhone la touche Entrée de l'agent dans WKWebView (le seul geste propre au Blueprint) ;
@@ -255,7 +297,10 @@ Ce que le banc a fait corriger, pour Montaigne et au-delà :
 
 **À juger sur l'iPhone** : la touche Entrée dans WKWebView sur PRONOTE ; Carbonio dans la vue cachée et
 dans le navigateur intégré ; le détour de la vérification 4 ; le certificat dans le lecteur iOS.
+*Jugé du 2026-11-12 au 14, sauf le détour de la vérification 4 ([le passage](#le-passage-sur-iphone-du-2026-11-12-au-2026-11-14)).*
 
+*Faite le 2026-11-18, comme pour l'IUT : les Blueprints embarqués par la 6.3.1, la ligne et les
+quatorze bâtiments publiés ([les publications](#les-publications-à-la-sortie)).*
 **La publication, préparée et non faite**, après celle de l'IUT ou avec elle, dans cet ordre :
 
 1. juger sur l'iPhone la liste ci-dessus ;

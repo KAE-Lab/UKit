@@ -104,6 +104,14 @@ visuelle de UKit ([identite.md](identite.md)).
 Collège Sciences et Technologies de l'université de Bordeaux et Bordeaux INP —, et trois autres campus sont
 en préparation ([phase 7](phase-7/README.md)).
 
+## Novembre 2026 : la 6.3
+
+Le 18 novembre, la **6.3** est sur les deux stores : une interface refaite de bout en bout, la mesure de l'usage sans
+suivre personne, et deux établissements de plus, l'IUT de Bordeaux et l'Université Bordeaux Montaigne,
+portés grâce aux étudiants qui ont prêté leur accès. Le même mois, le site
+[ukit-bordeaux.fr](https://ukit-bordeaux.fr) est refait dans le style de l'application. Fin novembre,
+plus de 2 100 téléphones utilisent UKit ([la ligne de base](phase-7/7-k-sortie-6-3.md#la-ligne-de-base)).
+
 La suite s'écrira ici, au fil de l'année.
 
 ## Sources

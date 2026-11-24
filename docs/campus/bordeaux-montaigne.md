@@ -100,7 +100,8 @@ tentative qui suit un mot de passe refusé.
 
 **À juger sur l'iPhone** : la touche Entrée dans WKWebView sur PRONOTE (même geste qu'à l'IUT) ; Carbonio,
 application lourde, dans la vue cachée et dans le navigateur intégré ; le détour de la vérification 4
-dans WKWebView ; le PDF du certificat dans le lecteur iOS.
+dans WKWebView ; le PDF du certificat dans le lecteur iOS. *Jugé du 2026-11-12 au 14, sauf le détour de la
+vérification 4 ([le passage sur iPhone](../prochaine-version.md#le-passage-sur-iphone-du-2026-11-12-au-2026-11-14)).*
 
 ## Ce qui se fait sans compte, et ce qui ne se fait pas
 
@@ -130,8 +131,10 @@ la Scolarité. Pour l'emploi du temps seul, les deux gestes du verdict de l'IUT 
 **un cours annulé ou déplacé** aux exemples : c'est là que l'export de Montaigne cachait ses défauts.
 
 ## Ce qui reste
-1. Publier, dans l'ordre de [prochaine-version.md](../prochaine-version.md#bordeaux-montaigne-joué-le-2026-11-11) :
-   les Blueprints, la ligne, les bâtiments. Juger d'abord sur l'iPhone la liste ci-dessus.
+1. ~~Publier, dans l'ordre de [prochaine-version.md](../prochaine-version.md#bordeaux-montaigne-joué-le-2026-11-11) :
+   les Blueprints, la ligne, les bâtiments. Juger d'abord sur l'iPhone la liste ci-dessus.~~ Fait le
+   2026-11-18 : les Blueprints embarqués par la 6.3.1, la ligne et les quatorze bâtiments publiés, la
+   sonde verte.
 2. Demander le logo au service communication, et au prêteur s'il veut être crédité.
 3. Confronter les alias à quelques étudiants de Montaigne.
 4. Le bâtiment **H** et l'`Amphi N°1` : un relevé sur place dirait lequel des deux H d'OSM est le bon.

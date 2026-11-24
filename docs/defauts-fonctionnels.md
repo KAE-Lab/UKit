@@ -30,7 +30,7 @@ implicite par la permission `ACCESS_WIFI_STATE` qu'une dépendance déclare. Rie
 Remède attendu dans un binaire suivant : les déclarer `android:required="false"` par un greffon de
 configuration, puis vérifier avec `aapt2 dump badging` qu'elles ne sont plus exigées.
 
-### ~~Pendant un cours, sa carte s'allonge et le Planning ne défile plus~~ — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour, vérifié sur iPhone le 2026-11-24
+### ~~Pendant un cours, sa carte s'allonge et le Planning ne défile plus~~ — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour, vérifié sur iPhone le 2026-11-24, sorti en 6.3.2 sur Android le même jour, en examen chez Apple
 
 Signalé par plusieurs étudiants en 6.3.1, captures à l'appui : passé la moitié d'un cours, sa
 carte s'étire bien au-delà de son contenu, un vide s'ouvre sous elle, et la liste ne descend plus
@@ -57,7 +57,7 @@ Vérifié le 2026-11-24 sur l'iPhone de la vidéo, les deux applications côte �
 heure simulée au 23/11/2026 11:48 : l'application du store (6.3.1) refait le défaut à l'identique,
 « UKit Dev » avec le correctif affiche la journée normalement et défile jusqu'au dernier cours.
 
-### Sur Android, des textes perdent leur dernière lettre — constaté de nouveau le 2026-11-16 sur un vrai téléphone, cause trouvée le même jour
+### ~~Sur Android, des textes perdent leur dernière lettre~~ — constaté de nouveau le 2026-11-16 sur un vrai téléphone, cause trouvée le même jour, sorti en 6.3.1 le 2026-11-18
 
 Sur un téléphone Android, dans toutes les langues : « Agend », « Confidentialit » dans les Réglages,
 « Clai » et « Sombr » dans l'apparence, et d'autres écrans. Le défaut était déjà revenu, corrigé
@@ -76,7 +76,7 @@ la 6.3.1, qui remplace la 6.3.0 avant sa publication.
 Vérifié le 2026-11-16 sur `ukit` avec le build de développement EAS qui le porte, gras activé : les
 Réglages et l'écran Apparence entiers (« Agenda », « Confidentialité », « Clair », « Sombre »,
 « Réinitialiser l'application »). Confirmé le même jour sur le téléphone qui l'avait montré, gras
-activé. Reste ouvert jusqu'à la sortie de la 6.3.1.
+activé. Clos le 2026-11-24 : la 6.3.1, qui porte le remède, est sur les deux stores depuis le 2026-11-18.
 
 ### ~~Sur iPhone, quitter le navigateur intégré arrêtait un build de développement~~ — constaté le 2026-11-12, corrigé le 2026-11-14
 

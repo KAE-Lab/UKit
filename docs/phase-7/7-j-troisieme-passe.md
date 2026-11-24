@@ -43,10 +43,11 @@ parcours froid, chargements.
   qui ne tenait pas, c'était l'horaire brut tronqué d'un restaurant, désormais résumé
   (`resumeDHoraires`, testé), et la distance en pastille d'accent sur chaque carte, passée au ton
   neutre.
-- [ ] T7 — en attente du propriétaire : la copie du jeu du dinosaure de Chrome n'est pas faite (le
+- [x] T7 — en attente du propriétaire : la copie du jeu du dinosaure de Chrome n'est pas faite (le
   personnage, le décor et les graphismes appartiennent à un jeu existant de Google). Trois options
   lui sont proposées : un coureur en pixel art avec nos propres personnage et décor, la mécanique
-  restant la même ; le jeu actuel poli ; ou plus de jeu, une attente sobre.
+  restant la même ; le jeu actuel poli ; ou plus de jeu, une attente sobre. *Tranché à la review du
+  2026-11-06 : le coureur en pixel art, Encre ([les retouches](#les-retouches-après-la-review-du-2026-11-06)).*
 
 ## Les retouches après la review du 2026-11-06
 

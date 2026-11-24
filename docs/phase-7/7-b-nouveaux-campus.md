@@ -200,6 +200,10 @@ deux précédents auront appris.
   déroulées — Blueprints vérifiés sur le compte prêté et sur les deux appareils, publiés dans l'ordre,
   sondés sans identifiants, la personne créditée si elle le veut —, la fiche du campus close, et la ligne
   du lot livrée dans le [README de la phase](README.md#létat).
+  *Lots 2 et 4 livrés hors de ce jalon, au lot 3 de [la prochaine version](../prochaine-version.md#lot-3--les-deux-campus) :
+  vérifiés au banc Android et sur l'iPhone, embarqués par la 6.3.1, lignes publiées et sondées le
+  2026-11-18. Ce qui manque à la définition : les prêteurs ne sont pas encore crédités, et les deux
+  fiches gardent leur « Ce qui reste ». Lot 3 non ouvert, faute de compte.*
 
 ## Plan de test
 

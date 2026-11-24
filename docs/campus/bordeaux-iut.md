@@ -115,6 +115,8 @@ personnel proposé, Planning ADE, fiche et carte), puis « Autre campus ».
 Ce que le banc ne joue pas, à juger sur l'iPhone : la touche Entrée envoyée par l'agent dans
 WKWebView (le seul geste propre à ce Blueprint) ; le bandeau « Information » de PRONOTE, jamais vu au
 banc ; la relecture du lien au lancement sur iOS, où l'arrière-plan coupe les sessions plus tôt.
+*La touche Entrée jugée du 2026-11-12 au 14 : l'emploi du temps arrive sans rien coller ; le bandeau et la
+relecture au lancement, sans trace ([le passage sur iPhone](../prochaine-version.md#le-passage-sur-iphone-du-2026-11-12-au-2026-11-14)).*
 
 ## Ce qui se fait sans compte, et ce qui ne se fait pas
 
@@ -143,8 +145,9 @@ la projection des intitulés. Quand le campus partage le portail de l'universit�
 ceux du Collège ST, ce qu'aucune mesure publique ne disait.
 
 ## Ce qui reste
-1. Publier, dans l'ordre : le Blueprint, puis la ligne ([prochaine-version.md](../prochaine-version.md#lot-3--les-deux-campus)).
-   Juger d'abord sur l'iPhone la touche Entrée dans WKWebView.
+1. ~~Publier, dans l'ordre : le Blueprint, puis la ligne ([prochaine-version.md](../prochaine-version.md#lot-3--les-deux-campus)).
+   Juger d'abord sur l'iPhone la touche Entrée dans WKWebView.~~ Fait le 2026-11-18 : le Blueprint
+   embarqué par la 6.3.1, la ligne publiée, la sonde verte.
 2. Rouvrir `notes` et `examens` quand Apogée sortira de maintenance, sur le compte prêté.
 3. Demander le logo au service communication, et au prêteur s'il veut être crédité.
 4. Confronter les alias à quelques étudiants de l'IUT.
