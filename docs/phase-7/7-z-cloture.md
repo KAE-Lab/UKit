@@ -1,5 +1,8 @@
 # 7-Z — Clôture de la phase 7
 
+> **Remplacée le 2026-11-24 par la mise à plat de la [phase 8](../phase-8/README.md#ce-que-la-phase-reprend-de-la-phase-7)**,
+> qui reprend ce qui restait ouvert ; les vérifications ci-dessous vont à son lot 0.
+
 > **Cadre.** La phase se clôt quand chaque jalon est livré, ou explicitement reporté, et que la vérification
 > ci-dessous passe. La mise à plat de la phase suivante s'écrit à ce moment-là.
 

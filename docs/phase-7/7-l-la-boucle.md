@@ -1,5 +1,9 @@
 # 7-L — La boucle
 
+> **Repris le 2026-11-24 par la [phase 8](../phase-8/README.md#ce-que-la-phase-reprend-de-la-phase-7)** :
+> la 6.4 n'existe plus ; le formulaire natif part en 7.0, le reste en 7.1. Le cadre ci-dessous en reste
+> la base.
+
 > **Cadre, pas encore spécification.** Publication : **6.4**. Renommée le 2026-09-14
 > ([mise à plat](7-mise-a-plat.md)) : cette version s'appelait « le contenu » et rangeait ce qui attendait
 > des annonces réelles et des dossiers remplis. Elle ferme désormais **la boucle** entre l'application,

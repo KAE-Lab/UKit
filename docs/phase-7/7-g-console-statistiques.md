@@ -1,5 +1,8 @@
 # 7-G — Les statistiques
 
+> **Repris le 2026-11-24 par le lot 0 de la [phase 8](../phase-8/README.md)**, avec la refonte de la
+> console. La spécification ci-dessous en reste la base.
+
 > **Spécification, ouverte le 2026-09-14, pas encore livrée.** Aucune publication. Le troisième des quatre
 > jalons de la console, sur le socle de [7-E](7-e-console-socle.md) : lire la mesure posée par
 > [7-D](7-d-la-mesure.md). Il s'ouvre quand la 6.3, qui porte la mesure depuis le 2026-09-21, est en

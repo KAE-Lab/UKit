@@ -304,8 +304,8 @@ livré ; elle est mise à jour à chaque contribution.
   **6.2.2** le 2026-09-21 (économie et socle). La suite est la [phase 7](docs/phase-7/README.md),
   découpée en jalons : la mesure et le mouvement de l'interface sont sortis ensemble dans la **6.3**,
   en 6.3.1, en ligne au 2026-11-18, avec l'IUT de Bordeaux et Bordeaux Montaigne, puis la 6.3.2, un
-  correctif envoyé le 2026-11-24 ;
-  la boucle suit en 6.4.
+  correctif envoyé le 2026-11-24. La suite est la [phase 8](docs/phase-8/README.md), la communauté,
+  en 7.0, 7.1 et 7.2.
 - [x] **Base de publication** — un projet Supabase mince, en lecture publique seule, dont le schéma et
   les politiques s'appliquent depuis les fichiers du dépôt. Aucun compte, aucune donnée personnelle,
   et l'application démarre et s'utilise sans jamais la joindre. Elle porte aussi, depuis la passe de
