@@ -470,6 +470,12 @@ neuf », l'envoi en examen et le déploiement se font dans les deux consoles.
 Secrets requis : `EXPO_TOKEN`, `GOOGLE_PLAY_KEY` et `GOOGLE_SERVICES_JSON`, écrits en fichiers à
 l'exécution.
 
+**Relancer après un échec Android rebâtit aussi l'iOS.** Tout tient dans un seul job : « Re-run failed
+jobs » rejoue l'étape iOS, qui lance un second build sur EAS. Le 2026-11-24, la 6.3.2 est tombée sur
+une panne passagère du portail des greffons Gradle (`foojay-resolver-convention` introuvable,
+servi à nouveau quelques minutes plus tard) ; relancée, elle a produit un build iOS 19 en double,
+annulé aussitôt par `npx eas-cli build:cancel <id>` pour garder le 18 déjà soumis.
+
 ## La console de pilotage
 
 [`.github/workflows/console.yml`](../.github/workflows/console.yml) construit
