@@ -7,6 +7,7 @@ import { Bell, Inbox, Megaphone } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { ErreurDeLecture } from '../../composants/ui/ErreurDeLecture';
+import { Pastille } from '../../composants/ui/Pastille';
 import { SqueletteBloc, SqueletteTexte } from '../../composants/ui/Squelette';
 import { formaterDate } from '../../lib/dates';
 import { useCampusChoisi } from '../../composants/campus';
@@ -96,7 +97,7 @@ export function CarteDesAnnonces() {
         <li key={String(a.id)}>
             <span className="quand">{quand}</span>
             <a className="texte" href={`#/annonces/${String(a.id)}`}>{String(a.titre)}</a>
-            {a.audience === 'testeurs' ? <span className="pastille avert">testeurs</span> : null}
+            {a.audience === 'testeurs' ? <Pastille>testeurs</Pastille> : null}
         </li>
     );
     return (

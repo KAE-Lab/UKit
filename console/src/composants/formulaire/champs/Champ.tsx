@@ -5,6 +5,7 @@
 import { TriangleAlert } from 'lucide-react';
 import { useId, type ComponentType } from 'react';
 
+import { InfoBulle } from '../../ui/InfoBulle';
 import { Selecteur } from '../../ui/Selecteur';
 import { ChampCases, ChampEtablissements } from './Cases';
 import { ChampCreneaux } from './Creneaux';
@@ -82,9 +83,13 @@ export function ChampEditeur(props: Omit<ChampProps, 'id'> & { readonly erreur?:
     return (
         // `data-champ` : le formulaire sait quel champ a le focus, et l'apercu montre ce qu'on edite.
         <div className={`champ ${erreur === undefined ? '' : 'en-erreur'}`} data-champ={champ.nom}>
-            {libelleAPart ? <label htmlFor={id}>{champ.libelle}{champ.obligatoire === true ? ' *' : ''}</label> : null}
+            {libelleAPart || champ.aide !== undefined ? (
+                <div className="etiquette-de-champ">
+                    {libelleAPart ? <label htmlFor={id}>{champ.libelle}{champ.obligatoire === true ? ' *' : ''}</label> : <span />}
+                    {champ.aide !== undefined ? <InfoBulle id={`${id}-aide`} libelle={champ.libelle} texte={champ.aide} /> : null}
+                </div>
+            ) : null}
             <Saisisseur {...props} id={id} enErreur={erreur !== undefined} />
-            {champ.aide !== undefined ? <span className="aide" id={`${id}-aide`}>{champ.aide}</span> : null}
             {erreur !== undefined ? <span className="erreur" role="alert"><TriangleAlert className="icone" aria-hidden="true" />{erreur}</span> : null}
         </div>
     );

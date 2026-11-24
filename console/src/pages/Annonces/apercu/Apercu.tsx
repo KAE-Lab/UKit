@@ -70,7 +70,7 @@ export function Apercu({ valeurs, activite }: { readonly valeurs: Ligne; readonl
                 <Segments valeur={theme} options={THEMES} onChange={setTheme} etiquette="Thème de l’aperçu" />
             </div>
             <p className="petit secondaire apercu-note">
-                Approximation du téléphone : police, ombres et arrondis diffèrent. Cette carte 4:5 est celle de la 6.3 ; aujourd’hui, le téléphone montre l’affiche 1:1 entière.
+                Approximation : police, ombres et arrondis diffèrent. La carte 4:5 est celle de la 6.3 ; le téléphone montre encore l’affiche 1:1 entière.
             </p>
             <Tabs.Panel value="carte" className="apercu-vue">
                 <Ecran titre="Tableau de bord, le carrousel">

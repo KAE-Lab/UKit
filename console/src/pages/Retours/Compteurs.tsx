@@ -35,25 +35,25 @@ export function BlocDeCompteurs({ compteurs, filtreEtat, poserEtat }: {
                 ))}
             </div>
             <div className="trois-colonnes">
-                <div>
+                <section className="carte compacte">
                     <h3>Par nature</h3>
                     <table className="tableau-compact"><tbody>
                         {NATURES_DE_RETOUR.map((n) => <tr key={n.valeur}><td>{n.libelle}</td><td className="nombre">{compteurs.parNature[n.valeur] ?? 0}</td></tr>)}
                     </tbody></table>
-                </div>
-                <div>
+                </section>
+                <section className="carte compacte">
                     <h3>Par campus demandé</h3>
                     <table className="tableau-compact"><tbody>
                         {compteurs.parCampus.length === 0 ? <tr><td className="secondaire">—</td></tr> : compteurs.parCampus.slice(0, 6).map((c) => <tr key={c.campus}><td>{c.campus}</td><td className="nombre">{c.n}</td></tr>)}
                     </tbody></table>
-                </div>
-                <div>
+                </section>
+                <section className="carte compacte">
                     <h3>Les huit dernières semaines</h3>
                     <div className="barres" role="img" aria-label={compteurs.parSemaine.map((s) => `semaine du ${s.debut} : ${s.n}`).join(', ')}>
                         {compteurs.parSemaine.map((s) => <div key={s.debut} className="barre-semaine" style={{ height: `${Math.max(3, (s.n / max) * 100)}%` }}><span>{s.n}</span></div>)}
                     </div>
                     <div className="legende-semaines">{compteurs.parSemaine.map((s) => <span key={s.debut}>{s.debut.slice(8, 10)}/{s.debut.slice(5, 7)}</span>)}</div>
-                </div>
+                </section>
             </div>
         </div>
     );

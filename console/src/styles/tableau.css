@@ -21,18 +21,21 @@
 /* Une liste dense a filets, a la maniere des listes de la Bourse d'Apple : une carte au contour discret, des lignes separees par un filet fin, aucun cadre de colonne. */
 .defilable { overflow-x: auto; background: var(--surface); border: 1px solid var(--contour); border-radius: var(--rayon-lg); }
 .tableau { width: 100%; border-collapse: collapse; font-size: var(--taille-sm); table-layout: auto; font-variant-numeric: tabular-nums; }
-.tableau th { text-align: left; font-weight: 500; font-size: var(--taille-xs); color: var(--texte-3); padding: 0 var(--espace-md); height: 40px; border-bottom: 1px solid var(--bordure); white-space: nowrap; }
+.tableau th { text-align: left; font-weight: 500; font-size: var(--taille-xs); color: var(--texte-3); padding: 0 var(--espace-sm); height: 40px; border-bottom: 1px solid var(--bordure); white-space: nowrap; }
 .tableau th .tri { appearance: none; border: 0; background: none; font: inherit; color: inherit; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: var(--espace-xs); border-radius: var(--rayon-sm); }
 .tableau th .tri:hover { color: var(--texte-2); }
 .tableau th .tri .icone { width: 14px; height: 14px; opacity: 0.5; }
 .tableau th[aria-sort] { color: var(--texte); }
 .tableau th[aria-sort] .tri .icone { opacity: 1; color: var(--accent); }
-.tableau td { padding: 0 var(--espace-md); height: var(--hauteur-ligne); border-bottom: 1px solid var(--bordure); vertical-align: middle; }
+.tableau td { padding: 0 var(--espace-sm); height: var(--hauteur-ligne); border-bottom: 1px solid var(--bordure); vertical-align: middle; }
 .tableau tr:last-child td { border-bottom: 0; }
+.tableau th:first-child, .tableau td:first-child { padding-left: var(--espace-md); }
+.tableau th:last-child, .tableau td:last-child { padding-right: var(--espace-md); }
+.tableau td { white-space: nowrap; }
 .tableau tbody tr.cliquable { cursor: pointer; }
 .tableau tbody tr.cliquable:hover td { background: var(--surface-2); }
 .tableau tbody tr.cliquable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 0; }
-.tableau td.tronque { max-width: 320px; }
+.tableau td.tronque { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
 .tableau td.date { white-space: nowrap; color: var(--texte-2); }
 .tableau .vignette { width: 36px; height: 36px; object-fit: cover; border-radius: var(--rayon-sm); background: var(--surface-2); display: block; }
 .tableau tbody.perime { opacity: 0.6; transition: opacity var(--duree-courte); }
@@ -48,6 +51,7 @@
 .pagination .espace { flex: 1; }
 
 /* ---- Compteurs (retours, tableau de bord) ------------------------------------------------- */
+.trois-colonnes > .carte { margin-top: 0; }
 .compteurs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--espace-sm); }
 .compteur { background: var(--surface); border: 1px solid var(--contour); border-radius: var(--rayon-lg); padding: var(--espace-md); display: grid; gap: 2px; min-height: 84px; }
 .compteur .valeur { font-size: var(--taille-xxl); font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
@@ -56,9 +60,9 @@
 .compteur .bouton-nu { display: grid; gap: 2px; text-align: left; width: 100%; }
 .barres { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); align-items: end; height: 64px; }
 .barres .barre-semaine { background: var(--accent-doux); border-radius: var(--rayon-sm) var(--rayon-sm) 0 0; position: relative; min-height: 2px; }
-.barres .barre-semaine span { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--texte-2); }
-.legende-semaines { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); font-size: 11px; color: var(--texte-2); text-align: center; margin-top: var(--espace-xs); }
+.barres .barre-semaine span { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: var(--taille-xs); color: var(--texte-2); }
+.legende-semaines { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); font-size: var(--taille-xs); color: var(--texte-2); text-align: center; margin-top: var(--espace-xs); }
 .tableau-compact { width: 100%; border-collapse: collapse; font-size: var(--taille-sm); }
-.tableau-compact td, .tableau-compact th { padding: 6px var(--espace-sm); border-bottom: 1px solid var(--bordure); text-align: left; }
+.tableau-compact td, .tableau-compact th { padding: 6px 0; border-bottom: 1px solid var(--bordure); text-align: left; }
 .tableau-compact td.nombre, .tableau-compact th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
 .tableau-compact tr:last-child td { border-bottom: 0; }

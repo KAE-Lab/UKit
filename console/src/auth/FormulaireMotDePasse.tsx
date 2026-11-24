@@ -48,12 +48,14 @@ export function FormulaireMotDePasse({ titre, bouton, poser, succes }: Formulair
 
     return (
         <form className="carte formulaire" onSubmit={(evenement) => { void changer(evenement); }}>
-            <h2>{titre}</h2>
+            <div>
+                <h2>{titre}</h2>
+                <p className="secondaire">Douze caractères au moins ; un mot de passe connu des fuites de données est refusé.</p>
+            </div>
             <div className="deux-colonnes">
                 <div className="champ">
                     <label htmlFor="nouveau">Nouveau mot de passe</label>
                     <input id="nouveau" type="password" autoComplete="new-password" minLength={LONGUEUR_MINIMALE} value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} required />
-                    <span className="aide">Douze caractères au moins. Un mot de passe connu des fuites de données est refusé.</span>
                 </div>
                 <div className="champ">
                     <label htmlFor="confirmation">Encore une fois</label>

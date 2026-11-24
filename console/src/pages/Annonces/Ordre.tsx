@@ -61,7 +61,7 @@ export function Ordre() {
             </div>
             <div className="carte">
                 <div className="filtres ordre-controles">
-                    <label className="filtre"><span>Instant</span><input type="datetime-local" value={instant} onChange={(e) => setInstant(e.target.value)} /></label>
+                    <label className="filtre"><span className="etiquette">Instant</span><input type="datetime-local" value={instant} onChange={(e) => setInstant(e.target.value)} /></label>
                     <div className="filtre"><span className="etiquette">Campus</span>
                         <Selecteur valeur={campus} options={etablissements.map((e) => ({ valeur: e.code, libelle: e.nom }))} onChange={setEtablissement} etiquette="Campus" />
                     </div>

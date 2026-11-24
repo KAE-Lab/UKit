@@ -39,25 +39,22 @@ export function Retours({ reste }: { readonly reste: string | null }) {
     return (
         <>
             <div className="entete-page">
-                <div><h1>Retours</h1><p className="sous-titre">{RETOURS.description}</p></div>
+                <div><h1>Retours</h1><p className="sous-titre">{RETOURS.description}</p><p className="sous-titre">{RETOURS.avertissement}</p></div>
             </div>
             <BandeauDeDroits table="retours" />
             {reste !== null ? <FicheDeRetour id={reste} retour={() => naviguer('/retours', params)} /> : (
                 <>
-                    <div className="carte">
+                    <div className="espace-bas">
                         <BlocDeCompteurs compteurs={calcules} filtreEtat={Array.isArray(filtreEtat) ? filtreEtat : (typeof filtreEtat === 'string' ? [filtreEtat] : null)} poserEtat={poserEtat} />
                         {requete.isError ? <Encart ton="erreur">Les compteurs n’ont pas pu être lus ; la liste, elle, se relit seule.</Encart> : null}
                     </div>
-                    <div className="carte compacte espace-bas"><Encart ton="avert">{RETOURS.avertissement}</Encart></div>
-                    <div className="carte">
-                        <ListeDeRessource
-                            descripteur={RETOURS}
-                            defauts={DEFAUTS}
-                            complements={[{ id: 'campus', libelle: 'Campus demandé', options: optionsDeCampus }]}
-                            optionsEnPlus={OPTIONS_EN_PLUS}
-                            lienDe={(ligne) => `/retours/${String(ligne.id)}${params.size > 0 ? `?${params.toString()}` : ''}`}
-                        />
-                    </div>
+                    <ListeDeRessource
+                        descripteur={RETOURS}
+                        defauts={DEFAUTS}
+                        complements={[{ id: 'campus', libelle: 'Campus demandé', options: optionsDeCampus }]}
+                        optionsEnPlus={OPTIONS_EN_PLUS}
+                        lienDe={(ligne) => `/retours/${String(ligne.id)}${params.size > 0 ? `?${params.toString()}` : ''}`}
+                    />
                 </>
             )}
         </>

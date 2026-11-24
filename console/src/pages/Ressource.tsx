@@ -19,7 +19,7 @@ import { BandeauDeDroits } from '../composants/BandeauDeDroits';
 import { Formulaire, type Activite } from '../composants/formulaire/Formulaire';
 import { ListeDeRessource } from '../composants/liste/ListeDeRessource';
 import { Bouton } from '../composants/ui/Bouton';
-import { Encart, type RetourDeGeste } from '../composants/ui/Encart';
+import { type RetourDeGeste } from '../composants/ui/Encart';
 import { ErreurDeLecture } from '../composants/ui/ErreurDeLecture';
 import { EtatVide } from '../composants/ui/EtatVide';
 import { SqueletteBloc, SqueletteTexte } from '../composants/ui/Squelette';
@@ -92,6 +92,7 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
                     <div>
                         <h1>{descripteur.titre}</h1>
                         <p className="sous-titre">{descripteur.description}</p>
+                        {descripteur.avertissement !== undefined ? <p className="sous-titre">{descripteur.avertissement}</p> : null}
                     </div>
                     <div className="boutons">
                         {boutons}
@@ -108,9 +109,9 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
                 </nav>
             )}
             {descripteur.creation !== false || descripteur.table === 'retours' ? <BandeauDeDroits table={descripteur.table} /> : null}
-            {descripteur.avertissement !== undefined ? <div className="carte compacte espace-bas"><Encart ton="avert">{descripteur.avertissement}</Encart></div> : null}
+            {reste !== null && descripteur.avertissement !== undefined ? <p className="sous-titre espace-bas">{descripteur.avertissement}</p> : null}
             {reste === null ? (
-                <div className="carte"><ListeDeRessource descripteur={descripteur} lienDe={descripteur.ouvrable === false ? undefined : (ligne) => `${chemin}/${cleVersUrl(descripteur, ligne)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
+                <ListeDeRessource descripteur={descripteur} lienDe={descripteur.ouvrable === false ? undefined : (ligne) => `${chemin}/${cleVersUrl(descripteur, ligne)}${params.size > 0 ? `?${params.toString()}` : ''}`} />
             ) : reste === NOUVEAU ? (
                 <Formulaire descripteur={descripteur} existante={null} apercu={apercu} etat={etatDeLigne} titreDePage onEnregistre={apresEcriture} onSupprime={retourALaListe} onAnnule={retourALaListe} />
             ) : (

@@ -7,7 +7,6 @@
 import { Activity } from 'lucide-react';
 
 import { TableDesSondes } from './TableauDeBord/Sondes';
-import { Encart } from '../composants/ui/Encart';
 import { EtatVide } from '../composants/ui/EtatVide';
 
 export function Sources() {
@@ -22,8 +21,8 @@ export function Sources() {
             </div>
             <div className="carte">
                 <h2><Activity className="icone" aria-hidden="true" />Les échecs mesurés par l’application</h2>
-                <Encart ton="info">Depuis la 6.3, chaque source qui ne répond pas sur un téléphone se compte (<code>source.echec</code>, docs/mesure.md), par hôte et par heure. Les tableaux arrivent avec le jalon 7-G, deux semaines après la sortie.</Encart>
-                <EtatVide>Rien à montrer encore : la place est réservée.</EtatVide>
+                <p className="secondaire">Chaque source qui ne répond pas sur un téléphone se compte (<code>source.echec</code>, docs/mesure.md), par hôte et par heure.</p>
+                <EtatVide>Rien à montrer encore : les tableaux arrivent avec les statistiques.</EtatVide>
             </div>
         </>
     );

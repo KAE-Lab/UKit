@@ -32,8 +32,10 @@ export function TableauDeBord() {
             <div className="bord">
                 <CarteDuParc />
                 <CarteDesSources />
-                <CarteDesRetours />
-                <CarteDesAnnonces />
+                <div className="bord-colonne">
+                    <CarteDesRetours />
+                    <CarteDesAnnonces />
+                </div>
             </div>
         </>
     );

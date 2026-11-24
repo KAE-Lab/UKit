@@ -44,7 +44,7 @@ function etatDeLigne(valeurs: Ligne, existante: Ligne | null) {
             {enregistre !== null && change ? <><Pastille ton={enregistre.ton} point>{enregistre.libelle}</Pastille><ArrowRight className="icone secondaire" aria-label="devient" /></> : null}
             <Pastille ton={aVenir.ton} point>{aVenir.libelle}</Pastille>
             {change ? <span className="petit secondaire">une fois enregistrée</span> : null}
-            {valeurs.audience === 'testeurs' ? <Pastille ton="avert">Testeurs seulement</Pastille> : null}
+            {valeurs.audience === 'testeurs' ? <Pastille>Testeurs seulement</Pastille> : null}
             {aVenir.phrase !== null ? <span className="petit secondaire">{aVenir.phrase}</span> : null}
         </div>
     );

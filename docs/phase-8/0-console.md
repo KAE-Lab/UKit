@@ -50,19 +50,19 @@ expliquent l'interface. La refonte lui donne la langue de UKit, et en fait un ou
 
 Chaque écran se refait, dans les deux thèmes, et se coche à la livraison.
 
-- [ ] Connexion, première connexion
-- [ ] Tableau de bord
+- [x] Connexion, première connexion
+- [x] Tableau de bord
 - [ ] Statistiques : vue d'ensemble, annonces, sources, réglages, rapport partenaire (nouveaux)
 - [ ] Sources (la carte réservée aux échecs de `source.echec` se remplit)
-- [ ] Retours, fiche d'un retour, compteurs
-- [ ] Jetons push
-- [ ] Journal
-- [ ] Annonces : liste, éditeur, aperçu du téléphone, ordre du carrousel, point focal, galerie
-- [ ] Messages de service, testeurs, visuels, établissements, salutations, bâtiments, version publiée
-- [ ] Équipe et invitation, compte
-- [ ] Les états partagés : conflit d'écriture, garde de sortie, lecture seule, erreur de lecture,
+- [x] Retours, fiche d'un retour, compteurs
+- [x] Jetons push
+- [x] Journal
+- [x] Annonces : liste, éditeur, aperçu du téléphone, ordre du carrousel, point focal, galerie
+- [x] Messages de service, testeurs, visuels, établissements, salutations, bâtiments, version publiée
+- [x] Équipe et invitation, compte
+- [x] Les états partagés : conflit d'écriture, garde de sortie, lecture seule, erreur de lecture,
   valeur inconnue, téléversement
-- [ ] Le menu mobile
+- [x] Le menu mobile
 
 ### 3. Les statistiques
 

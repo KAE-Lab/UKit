@@ -19,7 +19,7 @@ export function estVide(valeur: unknown): boolean {
 const Tiret = () => <span className="secondaire">—</span>;
 
 function celluleBooleen(valeur: unknown) {
-    return <Pastille ton={valeur === true ? 'ok' : 'neutre'}>{valeur === true ? 'oui' : 'non'}</Pastille>;
+    return valeur === true ? <>oui</> : <span className="secondaire">non</span>;
 }
 
 function celluleImage(valeur: unknown) {

@@ -22,7 +22,7 @@ body {
 a { color: var(--accent); text-decoration: none; }
 code, .mono { font-family: var(--mono); font-size: var(--taille-xs); }
 h1 { font-size: var(--taille-xxl); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
-h2 { font-size: var(--taille-lg); font-weight: 600; margin: 0 0 var(--espace-sm); }
+h2 { font-size: var(--taille-lg); font-weight: 600; letter-spacing: var(--approche-titre-de-carte); margin: 0 0 var(--espace-sm); }
 h3 { font-size: var(--taille-sm); font-weight: 600; margin: 0 0 var(--espace-xs); color: var(--texte-2); }
 p { margin: 0 0 var(--espace-sm); }
 .secondaire { color: var(--texte-2); }

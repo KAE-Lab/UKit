@@ -7,6 +7,7 @@
  * page le dit.
  */
 
+import logoUKit from '../../../docs/identite/logo-ukit.svg';
 import { LogIn } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
@@ -33,7 +34,8 @@ export function Connexion() {
         <div className="connexion">
             <form className="carte formulaire" onSubmit={(evenement) => { void soumettre(evenement); }}>
                 <div>
-                    <h1>Console UKit</h1>
+                    <img className="logo-connexion" src={logoUKit} alt="UKit" />
+                    <h1>Console</h1>
                     <p className="secondaire">Publier sans requête SQL, avec un compte, en laissant une trace.</p>
                 </div>
                 <div className="champ">
@@ -46,10 +48,7 @@ export function Connexion() {
                 </div>
                 <PlaceDEncart retour={retour} />
                 <Bouton variante="plein" type="submit" enAttente={enCours} icone={<LogIn className="icone" aria-hidden="true" />}>Se connecter</Bouton>
-                <p className="secondaire petit">
-                    Pas d’inscription ici : un compte se crée sur invitation d’un admin de la console. Un mot de passe
-                    oublié se remplace aussi par un admin, qui t’en donne un provisoire.
-                </p>
+                <p className="secondaire petit">Un compte se crée sur invitation d’un admin, qui remplace aussi un mot de passe oublié.</p>
             </form>
         </div>
     );

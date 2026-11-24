@@ -88,7 +88,6 @@ export function ChampGalerie({ champ, id, saisie, onChange, desactive }: ChampPr
                     <span className="contenu-bouton"><Upload className="icone" aria-hidden="true" />{enCours ? 'Téléversement…' : 'Téléverser des images'}</span>
                     <input id={id} type="file" accept="image/*" multiple hidden disabled={desactive || enCours} onChange={(evenement) => { void choisir(evenement); }} />
                 </label>
-                <span className="petit secondaire">Plusieurs fichiers d’un coup ; glisser pour réordonner.</span>
             </div>
             {retour !== null ? <span className={retour.ton === 'erreur' ? 'erreur' : 'petit secondaire'} role={retour.ton === 'erreur' ? 'alert' : 'status'}>{retour.texte}</span> : null}
         </div>

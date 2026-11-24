@@ -55,7 +55,6 @@ export function ChampCreneaux({ saisie, onChange, desactive }: ChampProps) {
                 <Bouton variante="tonal" compact disabled={desactive} onClick={() => onChange([...plages, PLAGE_NEUVE])} icone={<Plus className="icone" aria-hidden="true" />}>
                     {plages.length === 0 ? 'Ajouter un créneau' : 'Un autre créneau'}
                 </Bouton>
-                <span className="petit secondaire">Heure de Paris. La fin est exclue ; une plage peut passer minuit.</span>
             </div>
         </div>
     );

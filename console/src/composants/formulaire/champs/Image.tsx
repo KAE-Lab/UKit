@@ -66,7 +66,6 @@ export function ChampImage({ champ, id, saisie, onChange, poserAutre, ligne, des
             <div className="cadre">{adresse !== '' ? <img src={adresse} alt="" /> : <IconeImage className="icone" aria-hidden="true" />}</div>
             <div className="details">
                 <div className="adresse" title={adresse === '' ? undefined : adresse}>{libelleDAdresse(adresse, champ.videEstValeur === true)}</div>
-                <div className="petit secondaire">dossier {dossier} — réduite et compressée avant l’envoi, cache d’un an</div>
                 <div className="boutons">
                     <label className={`bouton tonal ${desactive || enCours ? 'attente' : ''}`} htmlFor={id}>
                         <span className="contenu-bouton"><Upload className="icone" aria-hidden="true" />{enCours ? 'Téléversement…' : 'Téléverser une image'}</span>

@@ -23,18 +23,28 @@ details pre { margin: var(--espace-sm) 0 0; padding: var(--espace-sm); border-ra
 .contact-du-retour .valeur a { display: inline-flex; align-items: center; gap: var(--espace-xs); }
 .contact-du-retour .erreur-en-ligne { color: var(--danger); font-size: var(--taille-xs); }
 
-/* Le tableau de bord. */
-.bord { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--espace-md); align-items: start; }
+/* Le tableau de bord : le parc sur toute la largeur, puis les sources a gauche, les retours et les annonces a droite. */
+.bord { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espace-md); align-items: start; }
 .bord .carte + .carte { margin-top: 0; }
-.bord .carte { min-height: 220px; display: flex; flex-direction: column; }
-.bord .carte h2 { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); }
-.bord .carte h2 a { font-size: var(--taille-xs); font-weight: 500; }
-.bord .corps { flex: 1; display: grid; align-content: start; gap: var(--espace-sm); }
-.liste-simple { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.liste-simple li { display: flex; gap: var(--espace-sm); align-items: baseline; min-width: 0; }
-.liste-simple li .quand { color: var(--texte-2); font-size: var(--taille-xs); white-space: nowrap; }
-.liste-simple li .texte { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chiffre-cle { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.bord .carte { display: flex; flex-direction: column; min-width: 0; }
+.bord > .carte:first-child { grid-column: 1 / -1; }
+.bord .carte h2 { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); margin-bottom: var(--espace-md); }
+.bord .carte h2 > span { display: inline-flex; align-items: center; gap: var(--espace-sm); }
+.bord .carte h2 a { font-size: var(--taille-sm); font-weight: 500; }
+.bord .corps { flex: 1; display: grid; align-content: start; gap: var(--espace-md); min-width: 0; }
+.bord-colonne { display: grid; gap: var(--espace-md); align-content: start; min-width: 0; }
+.bord-colonne .carte + .carte { margin-top: 0; }
+.liste-simple { display: grid; gap: var(--espace-sm); margin: 0; padding: 0; list-style: none; }
+.liste-simple li { display: flex; gap: var(--espace-md); align-items: baseline; min-width: 0; padding-bottom: var(--espace-sm); border-bottom: 1px solid var(--bordure); }
+.liste-simple li:last-child { border-bottom: 0; padding-bottom: 0; }
+.liste-simple li .quand { color: var(--texte-3); font-size: var(--taille-xs); white-space: nowrap; min-width: 124px; font-variant-numeric: tabular-nums; }
+.liste-simple li .texte { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texte); }
+.chiffre-cle { font-size: var(--taille-titre); font-weight: 700; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
 .chiffre-cle small { font-size: var(--taille-sm); font-weight: 500; color: var(--texte-2); margin-left: var(--espace-sm); letter-spacing: 0; }
-.trois-colonnes { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--espace-md); }
-@media (max-width: 640px) { .trois-colonnes { grid-template-columns: 1fr; } }
+.trois-colonnes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--espace-lg); }
+@media (max-width: 900px) { .bord { grid-template-columns: 1fr; } .trois-colonnes { grid-template-columns: 1fr; } }
+
+/* Une liste dans une carte : pas de second contour, les filets suffisent. */
+.carte .defilable { border: 0; background: none; border-radius: 0; }
+.carte .tableau th:first-child, .carte .tableau td:first-child { padding-left: 0; }
+.carte .tableau th:last-child, .carte .tableau td:last-child { padding-right: 0; }

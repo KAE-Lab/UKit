@@ -239,7 +239,7 @@ export const CIBLAGE: readonly Champ[] = [
     {
         nom: 'audience',
         libelle: 'Audience',
-        type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement', ton: 'avert' }] },
+        type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement' }] },
         defaut: 'tous',
         aide: 'Les testeurs sont les appareils enregistrés dans la table Testeurs : de quoi regarder un contenu sur son téléphone avant de l’envoyer à tout le monde.',
     },

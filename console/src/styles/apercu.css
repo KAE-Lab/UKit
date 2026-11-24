@@ -91,6 +91,7 @@
 .ap-fin span { width: 6px; height: 6px; border-radius: 999px; opacity: 0.6; }
 
 /* ---- Le panneau « ordre du carrousel » ---------------------------------------------------- */
+.ordre-controles { align-items: flex-end; }
 .ordre-controles .filtre { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .ordre-liste { margin: var(--espace-md) 0 0; padding: 0; list-style: none; display: grid; gap: var(--espace-xs); }
 .ordre-liste li { display: flex; align-items: center; gap: var(--espace-md); min-height: var(--hauteur-ligne); padding: 0 var(--espace-md); border-radius: var(--rayon-md); background: var(--fond); flex-wrap: wrap; }
