@@ -8,7 +8,9 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
-## [Non publié]
+## [6.3.2] - 2026-11-24
+
+Un correctif, signalé par plusieurs étudiants la première semaine de la 6.3.1.
 
 ### Corrigé
 

@@ -35,7 +35,7 @@ mesure de la carte. Sorti du flux (position absolue) : 160 dp à 84 %, défileme
 carrousel de cours superposés compris. La fin de l'accueil, qui montre la vraie journée à l'heure
 réelle, avait la même carte et en profite aussi ; la vitrine, figée à 10:35 avant tout cours
 d'exemple, n'était pas touchée. JavaScript seul, mais sans mise à jour OTA : il n'arrive qu'avec une
-version des stores : les utilisateurs l'ont jusqu'à la suivante.
+version des stores : il arrive avec la 6.3.2.
 
 La vidéo d'un iPhone (cours de 10:15 à 12:15, vue à 11:48, 77 %) montre la forme iOS du même défaut :
 la carte garde sa hauteur, mais un vide plus haut qu'elle la sépare de la pause, et la liste
