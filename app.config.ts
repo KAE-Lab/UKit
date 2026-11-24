@@ -18,7 +18,7 @@ export default {
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],
-	version: '6.3.1',
+	version: '6.3.2',
 	orientation: 'portrait',
 	// `automatic` et non le defaut `light` : l'application impose son theme au natif par
 	// `Appearance.setColorScheme` (AppCore.setTheme), ce qu'un style force par la configuration
