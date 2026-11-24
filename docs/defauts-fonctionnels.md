@@ -19,6 +19,17 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Google Play exclut les appareils sans mode portrait ni Wi-Fi — signalé par la Play Console le 2026-11-24
+
+À l'envoi de la 6.3.2 en examen, la Play Console avertit que deux fonctionnalités matérielles sont
+exigées et restreignent la disponibilité (téléphone, tablette, ordinateur, Android XR) :
+`android.hardware.screen.portrait`, implicite parce que l'activité est verrouillée en portrait
+(`orientation: 'portrait'`, [`app.config.ts`](../app.config.ts)), et `android.hardware.wifi`,
+implicite par la permission `ACCESS_WIFI_STATE` qu'une dépendance déclare. Rien de neuf : l'APK de la
+6.3.1 porte les deux mêmes (`aapt2 dump badging`), la 6.3.2 est partie avec « Proceed anyway ».
+Remède attendu dans un binaire suivant : les déclarer `android:required="false"` par un greffon de
+configuration, puis vérifier avec `aapt2 dump badging` qu'elles ne sont plus exigées.
+
 ### ~~Pendant un cours, sa carte s'allonge et le Planning ne défile plus~~ — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour, vérifié sur iPhone le 2026-11-24
 
 Signalé par plusieurs étudiants en 6.3.1, captures à l'appui : passé la moitié d'un cours, sa
