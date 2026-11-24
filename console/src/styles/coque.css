@@ -33,7 +33,7 @@
 /* L'adresse sur une ligne, coupee en fin : a cote de la pastille du role (7-H), elle se brisait au milieu des mots. */
 .lien-nav .compte { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--taille-sm); font-weight: 500; }
 .laterale .pied { margin-top: auto; padding: var(--espace-md) var(--espace-md) 0; display: grid; gap: var(--espace-sm); }
-.laterale .projet { font-size: var(--taille-xs); color: var(--texte-3); overflow-wrap: anywhere; }
+.laterale .projet { font-size: var(--taille-xs); color: var(--texte-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* La colonne : la teinte du domaine en tete, comme l'en-tete d'onglet de l'application. */
 .colonne { display: flex; flex-direction: column; min-width: 0; position: relative; isolation: isolate; }

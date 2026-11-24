@@ -194,3 +194,5 @@
 .info-declencheur:hover, .info-declencheur[data-popup-open] { color: var(--accent); }
 .info-popup { max-width: 320px; min-width: 0; padding: var(--espace-sm) var(--espace-md); font-size: var(--taille-xs); line-height: 1.5; color: var(--texte-2); }
 .logo-connexion { height: 28px; width: auto; display: block; margin-bottom: var(--espace-sm); }
+/* Le premier groupe suit déjà le filet de l'en-tête. */
+.formulaire .groupe:first-of-type { border-top: 0; padding-top: 0; }
