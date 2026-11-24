@@ -19,7 +19,7 @@ de la leur laisser en travers.
 
 ## Ouverts
 
-### Pendant un cours, sa carte s'allonge et le Planning ne défile plus — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour
+### ~~Pendant un cours, sa carte s'allonge et le Planning ne défile plus~~ — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour, vérifié sur iPhone le 2026-11-24
 
 Signalé par plusieurs étudiants en 6.3.1, captures à l'appui : passé la moitié d'un cours, sa
 carte s'étire bien au-delà de son contenu, un vide s'ouvre sous elle, et la liste ne descend plus
@@ -35,12 +35,16 @@ mesure de la carte. Sorti du flux (position absolue) : 160 dp à 84 %, défileme
 carrousel de cours superposés compris. La fin de l'accueil, qui montre la vraie journée à l'heure
 réelle, avait la même carte et en profite aussi ; la vitrine, figée à 10:35 avant tout cours
 d'exemple, n'était pas touchée. JavaScript seul, mais sans mise à jour OTA : il n'arrive qu'avec une
-version des stores. Reste ouvert jusqu'à sa sortie.
+version des stores : les utilisateurs l'ont jusqu'à la suivante.
 
 La vidéo d'un iPhone (cours de 10:15 à 12:15, vue à 11:48, 77 %) montre la forme iOS du même défaut :
 la carte garde sa hauteur, mais un vide plus haut qu'elle la sépare de la pause, et la liste
 revient d'elle-même en haut quand on la lâche. Le lendemain, sans cours en cours, la journée
 s'affiche normalement. Observé à 64, 77, 82, 84 et 88 % d'un cours, jamais à 18 %.
+
+Vérifié le 2026-11-24 sur l'iPhone de la vidéo, les deux applications côte à côte, même groupe,
+heure simulée au 23/11/2026 11:48 : l'application du store (6.3.1) refait le défaut à l'identique,
+« UKit Dev » avec le correctif affiche la journée normalement et défile jusqu'au dernier cours.
 
 ### Sur Android, des textes perdent leur dernière lettre — constaté de nouveau le 2026-11-16 sur un vrai téléphone, cause trouvée le même jour
 
