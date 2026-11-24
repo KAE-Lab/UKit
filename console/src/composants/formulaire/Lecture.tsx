@@ -23,7 +23,7 @@ export function Lecture({ champs, ligne }: { readonly champs: readonly Champ[]; 
     return (
         <dl className="lecture">
             {champs.map((champ) => (
-                <div key={champ.nom} style={{ display: 'contents' }}>
+                <div key={champ.nom} className="direct">
                     <dt>{champ.libelle}</dt>
                     <dd className={champ.type.type === 'json' ? 'mono' : undefined}>{texteDe(champ, ligne[champ.nom])}</dd>
                 </div>

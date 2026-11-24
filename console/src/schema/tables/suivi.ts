@@ -24,8 +24,8 @@ export const JOURNAL: Descripteur = {
     champs: [
         { nom: 'id', libelle: 'Numéro', type: { type: 'nombre' }, lectureSeule: true },
         { nom: 'quand', libelle: 'Quand', type: { type: 'date' }, lectureSeule: true },
-        { nom: 'table_name', libelle: 'Table', type: { type: 'choix', options: TABLES_JOURNALISEES.map((table) => ({ valeur: table, libelle: table, ton: 'accent' as const })) }, lectureSeule: true },
-        { nom: 'operation', libelle: 'Opération', type: { type: 'choix', options: [{ valeur: 'INSERT', libelle: 'INSERT', ton: 'ok' }, { valeur: 'UPDATE', libelle: 'UPDATE' }, { valeur: 'DELETE', libelle: 'DELETE', ton: 'panne' }] }, lectureSeule: true },
+        { nom: 'table_name', libelle: 'Table', type: { type: 'choix', options: TABLES_JOURNALISEES.map((table) => ({ valeur: table, libelle: table })) }, lectureSeule: true },
+        { nom: 'operation', libelle: 'Opération', type: { type: 'choix', options: [{ valeur: 'INSERT', libelle: 'INSERT' }, { valeur: 'UPDATE', libelle: 'UPDATE' }, { valeur: 'DELETE', libelle: 'DELETE' }] }, lectureSeule: true },
         { nom: 'ligne_id', libelle: 'Ligne', type: { type: 'texte' }, lectureSeule: true },
         { nom: 'par', libelle: 'Par', type: { type: 'texte' }, lectureSeule: true },
         { nom: 'avant', libelle: 'Avant', type: { type: 'json' }, lectureSeule: true },

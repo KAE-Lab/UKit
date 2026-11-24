@@ -3,7 +3,7 @@ import { CAMPUS_PAR_CIBLAGE, CIBLAGE, type Descripteur } from '../descripteurs';
 import { MAINTENANT, PLATEFORMES_D_APPAREIL } from './commun';
 
 const NIVEAUX = [
-    { valeur: 'info', libelle: 'Information', ton: 'accent' as const },
+    { valeur: 'info', libelle: 'Information' },
     { valeur: 'avertissement', libelle: 'Avertissement', ton: 'avert' as const },
     { valeur: 'incident', libelle: 'Incident', ton: 'panne' as const },
 ];

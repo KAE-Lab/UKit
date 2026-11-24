@@ -1,11 +1,12 @@
 /**
  * Les outils au-dessus d'une liste : la recherche, les filtres declares par le descripteur, le total.
- * Des `select` natifs, styles : accessibles au clavier sans rien ajouter.
+ * Les filtres sont des `Selecteur` : la valeur vide (« Tous ») est l'option `null`.
  */
 
 import { Search } from 'lucide-react';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { Selecteur } from '../ui/Selecteur';
 import type { EtatDeTable } from '../../lib/requete';
 import { champDe, type Descripteur, type Option } from '../../schema/descripteurs';
 
@@ -41,7 +42,6 @@ export interface FiltresProps {
 }
 
 export function Filtres({ descripteur, etat, poser, total, complements = [], optionsEnPlus = {} }: FiltresProps) {
-    const idBase = useId();
     const filtres = [
         ...(descripteur.filtres ?? []).map((nom) => {
             const champ = champDe(descripteur, nom);
@@ -67,18 +67,20 @@ export function Filtres({ descripteur, etat, poser, total, complements = [], opt
             {descripteur.recherche !== undefined && descripteur.recherche.length > 0 ? (
                 <Recherche valeur={etat.globalFilter} onChange={chercher} placeholder={`Chercher dans ${colonnesCherchees.join(', ')}`} />
             ) : null}
-            {filtres.map((filtre, index) => {
+            {filtres.map((filtre) => {
                 const courante = valeurDe(filtre.id);
                 const optionsAffichees = courante.startsWith('liste:') && !filtre.options.some((o) => o.valeur === courante)
                     ? [...filtre.options, { valeur: courante, libelle: 'Plusieurs' }]
                     : filtre.options;
                 return (
                     <div className="filtre" key={filtre.id}>
-                        <label htmlFor={`${idBase}-${index}`}>{filtre.libelle}</label>
-                        <select id={`${idBase}-${index}`} value={courante} onChange={(e) => changerFiltre(filtre.id, e.target.value)}>
-                            <option value="">Tous</option>
-                            {optionsAffichees.map((option) => <option key={option.valeur} value={option.valeur}>{option.libelle}</option>)}
-                        </select>
+                        <span className="etiquette">{filtre.libelle}</span>
+                        <Selecteur
+                            valeur={courante === '' ? null : courante}
+                            options={[{ valeur: null, libelle: 'Tous' }, ...optionsAffichees.map((option) => ({ valeur: option.valeur as string | null, libelle: option.libelle }))]}
+                            onChange={(valeur) => changerFiltre(filtre.id, valeur ?? '')}
+                            etiquette={filtre.libelle}
+                        />
                     </div>
                 );
             })}

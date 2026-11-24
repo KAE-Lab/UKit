@@ -41,7 +41,7 @@ export function TableDesSondes({ detail = false }: { readonly detail?: boolean }
             <table className="tableau">
                 <thead><tr><th>Source</th><th>État</th><th>Depuis</th>{detail ? <><th>Dernière mesure</th><th>Détail</th></> : null}</tr></thead>
                 {requete.isPending ? <SqueletteDeLignes lignes={6} colonnes={colonnes} /> : null}
-                {requete.isError ? <tbody><tr><td colSpan={colonnes} style={{ height: 'calc(var(--hauteur-ligne) * 6)' }}><ErreurDeLecture erreur={requete.error} reessayer={() => { void requete.refetch(); }} enCours={requete.isFetching} /></td></tr></tbody> : null}
+                {requete.isError ? <tbody><tr><td colSpan={colonnes} className="corps-erreur"><ErreurDeLecture erreur={requete.error} reessayer={() => { void requete.refetch(); }} enCours={requete.isFetching} /></td></tr></tbody> : null}
                 {requete.data !== undefined && requete.data.length === 0 ? <tbody><tr><td colSpan={colonnes}><EtatVide>Aucune mesure encore : les sondes écrivent ici chaque matin, dès que le workflow tourne.</EtatVide></td></tr></tbody> : null}
                 {requete.data !== undefined && requete.data.length > 0 ? (
                     <tbody>

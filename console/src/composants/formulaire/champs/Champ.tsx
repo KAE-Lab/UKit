@@ -5,6 +5,7 @@
 import { TriangleAlert } from 'lucide-react';
 import { useId, type ComponentType } from 'react';
 
+import { Selecteur } from '../../ui/Selecteur';
 import { ChampCases, ChampEtablissements } from './Cases';
 import { ChampCreneaux } from './Creneaux';
 import { ChampDescription } from './Description';
@@ -22,11 +23,18 @@ function Choix({ champ, id, saisie, onChange, desactive }: ChampProps) {
     const valeur = typeof saisie === 'string' ? saisie : '';
     const inconnue = valeur !== '' && !options.some((option) => option.valeur === valeur);
     return (
-        <select id={id} value={valeur} disabled={desactive} onChange={(e) => onChange(e.target.value)}>
-            {champ.obligatoire === true && !inconnue ? null : <option value="">—</option>}
-            {inconnue ? <option value={valeur}>{valeur} (valeur inconnue)</option> : null}
-            {options.map((option) => <option key={option.valeur} value={option.valeur}>{option.libelle}</option>)}
-        </select>
+        <Selecteur
+            id={id}
+            valeur={valeur === '' ? null : valeur}
+            desactive={desactive}
+            etiquette={champ.libelle}
+            onChange={(v) => onChange(v ?? '')}
+            options={[
+                ...(champ.obligatoire === true && !inconnue ? [] : [{ valeur: null as string | null, libelle: '—' }]),
+                ...(inconnue ? [{ valeur: valeur as string | null, libelle: `${valeur} (valeur inconnue)` }] : []),
+                ...options.map((option) => ({ valeur: option.valeur as string | null, libelle: option.libelle })),
+            ]}
+        />
     );
 }
 

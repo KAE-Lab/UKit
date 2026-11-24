@@ -14,6 +14,9 @@ import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 
 import { FOCALE_PAR_DEFAUT, lireFocale, type Focale } from '../../../../../src/shared/annonces/carte';
 import { focaleDepuisPointeur, zoneGardee } from '../../../lib/cadrage';
+import { Bouton } from '../../ui/Bouton';
+import { BoutonNu } from '../../ui/BoutonNu';
+import { Segments } from '../../ui/Segments';
 import type { ChampProps } from './types';
 
 const PAS_CLAVIER = 0.05;
@@ -90,24 +93,9 @@ function Commandes({ focale, ajustement, desactive, onChange, poserAjustement }:
     return (
         <div className="focale-controles">
             <span className="petit secondaire">x {Math.round(focale.x * 100)} %, y {Math.round(focale.y * 100)} %</span>
-            <button type="button" className="bouton discret compact" disabled={desactive || auDefaut} onClick={() => onChange(FOCALE_PAR_DEFAUT)}>Recentrer</button>
+            <Bouton variante="discret" compact disabled={desactive || auDefaut} onClick={() => onChange(FOCALE_PAR_DEFAUT)}>Recentrer</Bouton>
             <span className="espace" />
-            <div className="bascule" role="radiogroup" aria-label="Ajustement de l’image">
-                {AJUSTEMENTS.map((option) => (
-                    <button
-                        key={option.valeur}
-                        type="button"
-                        role="radio"
-                        aria-checked={ajustement === option.valeur}
-                        className={`segment ${ajustement === option.valeur ? 'actif' : ''}`}
-                        title={option.aide}
-                        disabled={desactive}
-                        onClick={() => poserAjustement(option.valeur)}
-                    >
-                        {option.libelle}
-                    </button>
-                ))}
-            </div>
+            <Segments valeur={ajustement} options={AJUSTEMENTS.map((o) => ({ valeur: o.valeur, libelle: o.libelle }))} onChange={poserAjustement} etiquette="Ajustement de l’image" desactive={desactive} />
         </div>
     );
 }
@@ -136,9 +124,8 @@ export function ChampFocale({ champ, id, saisie, onChange, poserAutre, ligne, de
             <div className={`focale-cadre ${enGlisse ? 'en-glisse' : ''} ${ajustement === 'contenir' ? 'contient' : ''}`} {...gestes}>
                 <img ref={refImage} src={image} alt="" draggable={false} onLoad={(e) => setMesure({ image, ratio: e.currentTarget.naturalWidth / e.currentTarget.naturalHeight })} />
                 {zone !== null ? <div className="focale-zone" aria-hidden="true" style={{ left: pourcent(zone.gauche), top: pourcent(zone.haut), width: pourcent(zone.largeur), height: pourcent(zone.hauteur) }} /> : null}
-                <button
+                <BoutonNu
                     ref={refRepere}
-                    type="button"
                     id={id}
                     className="focale-repere"
                     style={{ left: pourcent(focale.x), top: pourcent(focale.y) }}
@@ -147,7 +134,7 @@ export function ChampFocale({ champ, id, saisie, onChange, poserAutre, ligne, de
                     onKeyDown={clavier}
                 >
                     <Crosshair className="icone" aria-hidden="true" />
-                </button>
+                </BoutonNu>
             </div>
             <Commandes
                 focale={focale}
@@ -156,7 +143,6 @@ export function ChampFocale({ champ, id, saisie, onChange, poserAutre, ligne, de
                 onChange={onChange}
                 poserAjustement={(valeur) => { if (colonneAjustement !== null) poserAutre(colonneAjustement, valeur); }}
             />
-            {ajustement === 'contenir' ? <span className="petit secondaire">En « contenir », l’image s’affiche entière sur un fond flou : le point focal ne sert pas.</span> : null}
         </div>
     );
 }

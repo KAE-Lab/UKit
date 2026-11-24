@@ -15,6 +15,7 @@
 import { useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 
+import { BoutonNu } from '../../ui/BoutonNu';
 import type { ChampProps } from './types';
 
 interface Marqueur {
@@ -82,9 +83,9 @@ export function ChampDescription({ id, saisie, onChange, desactive, champ, signa
         <div className="description-editeur">
             <div className="barre-marqueurs" role="toolbar" aria-label="Marqueurs de la description">
                 {MARQUEURS.map((marqueur) => (
-                    <button key={marqueur.libelle} type="button" className="marqueur" title={marqueur.titre} disabled={desactive} onClick={() => poser(marqueur)}>
+                    <BoutonNu key={marqueur.libelle} className="marqueur" title={marqueur.titre} disabled={desactive} onClick={() => poser(marqueur)}>
                         {marqueur.libelle}
-                    </button>
+                    </BoutonNu>
                 ))}
             </div>
             <TextareaAutosize

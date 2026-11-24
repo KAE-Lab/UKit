@@ -41,11 +41,11 @@ function Entree({ numero, retour }: { readonly numero: string; readonly retour: 
         <div className="carte">
             <h2>Entrée {numero} — {formaterDate(ligne.quand)}</h2>
             <Lecture champs={JOURNAL.champs.filter((c) => ['table_name', 'operation', 'ligne_id', 'par'].includes(c.nom))} ligne={ligne} />
-            <div className="diff" style={{ marginTop: 'var(--espace-md)' }}>
+            <div className="diff espace-haut">
                 <div><div className="titre">Avant</div><pre>{ligne.avant === null ? '—' : JSON.stringify(ligne.avant, null, 2)}</pre></div>
                 <div><div className="titre">Après</div><pre>{ligne.apres === null ? '—' : JSON.stringify(ligne.apres, null, 2)}</pre></div>
             </div>
-            <div className="boutons" style={{ marginTop: 'var(--espace-md)' }}><Bouton variante="discret" onClick={retour}>Retour au journal</Bouton></div>
+            <div className="boutons espace-haut"><Bouton variante="discret" onClick={retour}>Retour au journal</Bouton></div>
         </div>
     );
 }

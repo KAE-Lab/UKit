@@ -5,8 +5,12 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { App } from './App';
 import { Panne } from './composants/Panne';
+import { installerTheme } from './lib/theme';
 import { clientDeRequetes } from './requetes/client';
 import './styles/index.css';
+
+// Les variables du theme avant le premier rendu : aucune page ne se dessine sans ses couleurs.
+installerTheme();
 
 const racine = document.getElementById('racine');
 if (racine === null) throw new Error('index.html ne porte pas de #racine');

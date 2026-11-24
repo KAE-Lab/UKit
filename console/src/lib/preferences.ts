@@ -31,3 +31,17 @@ export function campusRetenu(): string | null {
 export function retenirCampus(code: string | null): void {
     ecrire(CLE_CAMPUS, code);
 }
+
+const CLE_THEME = 'console.theme@1';
+
+/** Le theme choisi : celui du systeme par defaut, ou un theme fixe retenu sur ce poste (lot 0). */
+export type ChoixDeTheme = 'systeme' | 'clair' | 'sombre';
+
+export function themeRetenu(): ChoixDeTheme {
+    const valeur = lire(CLE_THEME);
+    return valeur === 'clair' || valeur === 'sombre' ? valeur : 'systeme';
+}
+
+export function retenirTheme(choix: ChoixDeTheme): void {
+    ecrire(CLE_THEME, choix === 'systeme' ? null : choix);
+}

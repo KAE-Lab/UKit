@@ -41,3 +41,18 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 
 @keyframes rotation { to { transform: rotate(360deg); } }
 @keyframes scintillement { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+
+/* Un bouton sans peau (composants/ui/BoutonNu) : la remise a zero, la peau vient de la classe de celui qui l'emploie. */
+.bouton-nu { appearance: none; border: 0; background: none; font: inherit; color: inherit; padding: 0; margin: 0; cursor: pointer; }
+.bouton-nu:disabled { cursor: default; }
+
+/* Les petits gabarits que les pages composent. */
+.pile { display: grid; gap: var(--espace-md); }
+.pile-etroite { display: grid; gap: var(--espace-sm); width: 100%; }
+.direct { display: contents; }
+.espace-haut { margin-top: var(--espace-md); }
+.espace-bas { margin-bottom: var(--espace-md); }
+.boutons.centre { justify-content: center; }
+.corps-erreur { height: calc(var(--hauteur-ligne) * 6); }
+.carte.panne { display: grid; gap: var(--espace-md); justify-items: start; }
+.carte.panne .icone { color: var(--danger); }

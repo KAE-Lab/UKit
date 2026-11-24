@@ -52,7 +52,7 @@ function LigneExistante({ descripteur, segment, retour, onEnregistre, retourInit
     const cle = cleDepuisUrl(descripteur, segment);
     const requete = useLigne(descripteur, cle);
     if (cle === null || (requete.isSuccess && requete.data === null)) {
-        return <div className="carte"><EtatVide>Cette ligne n’existe pas, ou plus.</EtatVide><div className="boutons" style={{ justifyContent: 'center' }}><Bouton variante="tonal" onClick={retour}>Retour à la liste</Bouton></div></div>;
+        return <div className="carte"><EtatVide>Cette ligne n’existe pas, ou plus.</EtatVide><div className="boutons centre"><Bouton variante="tonal" onClick={retour}>Retour à la liste</Bouton></div></div>;
     }
     if (requete.isError) return <div className="carte"><ErreurDeLecture erreur={requete.error} reessayer={() => { void requete.refetch(); }} enCours={requete.isFetching} /></div>;
     if (requete.data === undefined || requete.data === null) {
@@ -108,7 +108,7 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
                 </nav>
             )}
             {descripteur.creation !== false || descripteur.table === 'retours' ? <BandeauDeDroits table={descripteur.table} /> : null}
-            {descripteur.avertissement !== undefined ? <div className="carte compacte" style={{ marginBottom: 'var(--espace-md)' }}><Encart ton="avert">{descripteur.avertissement}</Encart></div> : null}
+            {descripteur.avertissement !== undefined ? <div className="carte compacte espace-bas"><Encart ton="avert">{descripteur.avertissement}</Encart></div> : null}
             {reste === null ? (
                 <div className="carte"><ListeDeRessource descripteur={descripteur} lienDe={descripteur.ouvrable === false ? undefined : (ligne) => `${chemin}/${cleVersUrl(descripteur, ligne)}${params.size > 0 ? `?${params.toString()}` : ''}`} /></div>
             ) : reste === NOUVEAU ? (

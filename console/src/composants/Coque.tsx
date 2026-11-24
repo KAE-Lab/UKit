@@ -10,13 +10,16 @@
 import {
     Activity, Bell, BookOpen, Building2, Image, Inbox, KeyRound, LayoutDashboard, Megaphone, MessageSquare, School, ScrollText, Smile, Tag, UserCog, Users, type LucideIcon,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import { estAdmin, ROLES, type DroitsDeSession } from '../auth/droits';
 import type { Session } from '../auth/session';
 import { GUIDE_DE_LA_CONSOLE } from '../lib/liens';
 import { RESSOURCES } from '../schema/tables';
+import logoUKit from '../../../docs/identite/logo-ukit.svg';
+import type { Domaine } from '../lib/theme';
 import { NOM_DU_PROJET } from '../supabase';
+import { BasculeDeTheme } from './BasculeDeTheme';
 import { FiltreCampus } from './FiltreCampus';
 import { NavigationMobile } from './NavigationMobile';
 import { Pastille } from './ui/Pastille';
@@ -34,6 +37,7 @@ export interface Entree {
 
 export interface SectionDeNavigation {
     readonly titre: string;
+    readonly domaine: Domaine;
     readonly entrees: readonly Entree[];
 }
 
@@ -41,6 +45,7 @@ export interface SectionDeNavigation {
 export const NAVIGATION: readonly SectionDeNavigation[] = [
     {
         titre: 'Suivre',
+        domaine: 'suivre',
         entrees: [
             { vers: '/', libelle: 'Tableau de bord' },
             { vers: '/sources', libelle: 'Sources' },
@@ -48,7 +53,7 @@ export const NAVIGATION: readonly SectionDeNavigation[] = [
             { vers: '/journal', libelle: 'Journal' },
         ],
     },
-    { titre: 'Publier', entrees: RESSOURCES.filter((r) => r.section === undefined || r.section === 'publier').map((r) => ({ vers: `/${r.chemin}`, libelle: r.titre })) },
+    { titre: 'Publier', domaine: 'publier', entrees: RESSOURCES.filter((r) => r.section === undefined || r.section === 'publier').map((r) => ({ vers: `/${r.chemin}`, libelle: r.titre })) },
 ];
 
 /** Les entrees de la section du compte : l'equipe pour un admin, puis le guide, ouvert hors de la console. */
@@ -83,6 +88,29 @@ function Lien({ vers, chemin, children }: { readonly vers: string; readonly chem
     );
 }
 
+/** Le domaine de la page : celui de la section qui la porte ; le compte et l'equipe ont le leur. */
+export function domaineDe(chemin: string): Domaine {
+    if (estActif('/compte', chemin) || estActif('/equipe', chemin)) return 'compte';
+    const section = NAVIGATION.find((s) => s.entrees.some((e) => estActif(e.vers, chemin)));
+    return section?.domaine ?? 'suivre';
+}
+
+/** La barre prend le fond des que la page defile, pour que le contenu passe dessous sans s'y meler. */
+function useDefilement(): boolean {
+    const [defile, setDefile] = useState(false);
+    useEffect(() => {
+        const suivre = () => setDefile(window.scrollY > 4);
+        suivre();
+        window.addEventListener('scroll', suivre, { passive: true });
+        return () => window.removeEventListener('scroll', suivre);
+    }, []);
+    return defile;
+}
+
+function Marque() {
+    return <div className="marque"><img src={logoUKit} alt="UKit" /><span>console</span></div>;
+}
+
 export interface CoqueProps {
     readonly session: Session | null;
     readonly chemin: string;
@@ -90,10 +118,11 @@ export interface CoqueProps {
 }
 
 export function Coque({ session, chemin, children }: CoqueProps) {
+    const defile = useDefilement();
     return (
-        <div className="coque">
+        <div className="coque" data-domaine={domaineDe(chemin)}>
             <nav className="laterale" aria-label="Navigation">
-                <div className="marque"><strong>UKit</strong><span>console</span></div>
+                <Marque />
                 {NAVIGATION.map((section) => (
                     <div key={section.titre}>
                         <div className="section">{section.titre}</div>
@@ -107,12 +136,15 @@ export function Coque({ session, chemin, children }: CoqueProps) {
                     <span className="compte" title={session?.email}>{session === null ? 'Vérification…' : session.email}</span>
                     <PastilleDuRole droits={session?.droits} />
                 </Lien>
-                <div className="pied">{NOM_DU_PROJET}</div>
+                <div className="pied">
+                    <BasculeDeTheme />
+                    <div className="projet">{NOM_DU_PROJET}</div>
+                </div>
             </nav>
             <div className="colonne">
-                <header className="barre">
+                <header className="barre" data-defile={defile ? 'oui' : 'non'}>
                     <NavigationMobile chemin={chemin} droits={session?.droits} />
-                    <div className="marque"><strong>UKit</strong><span>console</span></div>
+                    <Marque />
                     <span className="espace" />
                     <FiltreCampus />
                 </header>

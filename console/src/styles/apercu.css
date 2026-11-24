@@ -17,7 +17,7 @@
 .apercu-vue { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: var(--espace-md); align-content: start; outline: none; }
 .apercu-vue.vue-fiche { overflow: hidden; display: flex; flex-direction: column; align-items: center; }
 .ap-ecran { display: grid; gap: var(--espace-xs); }
-.ap-ecran-titre { margin: 0; font-size: var(--taille-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-2); }
+.ap-ecran-titre { margin: 0; font-size: var(--taille-xs); font-weight: 500; color: var(--texte-3); }
 .ap-telephone { width: 390px; max-width: 100%; background: var(--app-fond); border-radius: var(--rayon-lg); padding: var(--app-espace-md) 0; overflow: hidden; -webkit-font-smoothing: antialiased; }
 .ap-telephone.plein { flex: 1; min-height: 0; max-height: 844px; padding-bottom: 0; }
 @media (max-width: 1100px) { .apercu-vue.vue-fiche { height: 760px; flex: none; } }
@@ -64,7 +64,7 @@
 .ap-lieu { margin-top: var(--app-espace-xl); display: grid; gap: var(--app-espace-sm); }
 .ap-plan { height: 160px; border-radius: var(--app-rayon-lg); background: var(--app-gris); display: grid; place-items: center; color: var(--app-texte-2); font-size: 40px; }
 .ap-pied-action { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--app-espace-md); padding-top: var(--app-espace-xl); background: linear-gradient(to top, var(--app-fond) 55%, transparent); }
-.ap-bouton { display: flex; align-items: center; justify-content: center; height: 50px; border-radius: var(--app-rayon-md); background: var(--app-accent); color: #fff; font-size: var(--app-taille-md); font-weight: 600; box-shadow: var(--app-ombre); }
+.ap-bouton { display: flex; align-items: center; justify-content: center; height: 50px; border-radius: var(--app-rayon-md); background: var(--app-accent); color: var(--sur-image); font-size: var(--app-taille-md); font-weight: 600; box-shadow: var(--app-ombre); }
 
 /* ---- La description : la grammaire des fiches -------------------------------------------- */
 .ap-description { display: grid; gap: var(--app-espace-xl); }
@@ -96,4 +96,4 @@
 .ordre-liste li { display: flex; align-items: center; gap: var(--espace-md); min-height: var(--hauteur-ligne); padding: 0 var(--espace-md); border-radius: var(--rayon-md); background: var(--fond); flex-wrap: wrap; }
 .ordre-rang { width: 28px; height: 28px; border-radius: var(--rayon-sm); background: var(--accent-doux); color: var(--accent); font-weight: 700; display: grid; place-items: center; font-variant-numeric: tabular-nums; flex: none; }
 .ordre-titre { font-weight: 600; color: var(--texte); }
-.ordre-liste li:first-child .ordre-rang { background: var(--accent); color: var(--texte-inverse); }
+.ordre-liste li:first-child .ordre-rang { background: var(--accent); color: var(--texte-sur-accent); }

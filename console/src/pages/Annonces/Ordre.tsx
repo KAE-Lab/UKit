@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react';
 import { Bouton } from '../../composants/ui/Bouton';
 import { ErreurDeLecture } from '../../composants/ui/ErreurDeLecture';
 import { EtatVide } from '../../composants/ui/EtatVide';
+import { Selecteur } from '../../composants/ui/Selecteur';
 import { Pastille } from '../../composants/ui/Pastille';
 import { SqueletteBloc } from '../../composants/ui/Squelette';
 import { versSaisie } from '../../lib/dates';
@@ -54,29 +55,24 @@ export function Ordre() {
             <div className="entete-page">
                 <div>
                     <h1>Ordre du carrousel</h1>
-                    <p className="sous-titre">Ce qu’un téléphone montre à cet instant, dans cet ordre : les épinglées, puis les créneaux actifs, puis la priorité, puis une rotation par heure.</p>
+                    <p className="sous-titre">Ce qu’un téléphone montre à cet instant, dans cet ordre : les épinglées, puis les créneaux actifs, puis la priorité, puis une rotation par heure pour les annonces à égalité (heure de Paris, à partir de la 6.3).</p>
                 </div>
                 <a className="bouton discret" href={lienVers('/annonces')}><span className="contenu-bouton"><Undo2 className="icone" aria-hidden="true" />Retour aux annonces</span></a>
             </div>
             <div className="carte">
                 <div className="filtres ordre-controles">
                     <label className="filtre"><span>Instant</span><input type="datetime-local" value={instant} onChange={(e) => setInstant(e.target.value)} /></label>
-                    <label className="filtre"><span>Campus</span>
-                        <select value={campus} onChange={(e) => setEtablissement(e.target.value)}>
-                            {etablissements.map((e) => <option key={e.code} value={e.code}>{e.nom}</option>)}
-                        </select>
-                    </label>
-                    <label className="filtre"><span>Plateforme</span>
-                        <select value={plateforme} onChange={(e) => setPlateforme(e.target.value as ContexteDuPanneau['plateforme'])}>
-                            {PLATEFORMES.map((p) => <option key={p} value={p}>{p === 'ios' ? 'iOS' : 'Android'}</option>)}
-                        </select>
-                    </label>
-                    <label className="filtre"><span>Version</span><input type="text" placeholder="6.3.0 — vide : sans borne" value={version} onChange={(e) => setVersion(e.target.value)} style={{ width: 170 }} /></label>
+                    <div className="filtre"><span className="etiquette">Campus</span>
+                        <Selecteur valeur={campus} options={etablissements.map((e) => ({ valeur: e.code, libelle: e.nom }))} onChange={setEtablissement} etiquette="Campus" />
+                    </div>
+                    <div className="filtre"><span className="etiquette">Plateforme</span>
+                        <Selecteur valeur={plateforme} options={PLATEFORMES.map((p) => ({ valeur: p, libelle: p === 'ios' ? 'iOS' : 'Android' }))} onChange={setPlateforme} etiquette="Plateforme" />
+                    </div>
+                    <label className="filtre"><span className="etiquette">Version</span><input className="champ-version" type="text" placeholder="6.3.0, vide : sans borne" value={version} onChange={(e) => setVersion(e.target.value)} /></label>
                     <label className="case"><input type="checkbox" checked={testeur} onChange={(e) => setTesteur(e.target.checked)} /> Appareil testeur</label>
                     <span className="espace" />
                     <Bouton variante="discret" compact onClick={() => setInstant(versSaisie(new Date().toISOString()))} icone={<Timer className="icone" aria-hidden="true" />}>Maintenant</Bouton>
                 </div>
-                <p className="petit secondaire">Heure de Paris. L’ordre change à chaque heure pleine pour les annonces à égalité ; l’application l’applique à partir de la 6.3.</p>
                 {requete.isError ? <ErreurDeLecture erreur={requete.error} reessayer={() => { void requete.refetch(); }} enCours={requete.isFetching} /> : null}
                 {ordre === null && !requete.isError ? (
                     <div className="ordre-liste" aria-busy="true" aria-label="Lecture en cours">{[0, 1, 2, 3, 4].map((i) => <SqueletteBloc key={i} hauteur={48} />)}</div>

@@ -24,6 +24,7 @@ import { useMemo, type KeyboardEvent } from 'react';
 import type { EtatDeTable } from '../../lib/requete';
 import { champDe, cleDeLigne, cleVersUrl, colonneCalculee, colonnesTriables, type Descripteur } from '../../schema/descripteurs';
 import type { Ligne } from '../../supabase';
+import { BoutonNu } from '../ui/BoutonNu';
 import { EtatVide } from '../ui/EtatVide';
 import { ErreurDeLecture } from '../ui/ErreurDeLecture';
 import { SqueletteDeLignes } from '../ui/Squelette';
@@ -99,9 +100,9 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
                                 const Fleche = tri === 'asc' ? ArrowUp : tri === 'desc' ? ArrowDown : ArrowUpDown;
                                 return (
                                     <th key={entete.id} aria-sort={tri === 'asc' ? 'ascending' : tri === 'desc' ? 'descending' : undefined}>
-                                        <button type="button" className="tri" onClick={entete.column.getToggleSortingHandler()} aria-pressed={tri !== false}>
+                                        <BoutonNu className="tri" onClick={entete.column.getToggleSortingHandler()} aria-pressed={tri !== false}>
                                             {libelle}<Fleche className="icone" aria-hidden="true" />
-                                        </button>
+                                        </BoutonNu>
                                     </th>
                                 );
                             })}

@@ -5,6 +5,7 @@
 
 import type { Compteurs } from './compteurs';
 import { ETATS_DE_RETOUR, NATURES_DE_RETOUR } from '../../schema/tables/retours';
+import { BoutonNu } from '../../composants/ui/BoutonNu';
 import { SqueletteBloc } from '../../composants/ui/Squelette';
 
 export function BlocDeCompteurs({ compteurs, filtreEtat, poserEtat }: {
@@ -18,18 +19,18 @@ export function BlocDeCompteurs({ compteurs, filtreEtat, poserEtat }: {
     const max = Math.max(1, ...compteurs.parSemaine.map((s) => s.n));
     const actif = (etats: readonly string[] | null) => JSON.stringify(filtreEtat) === JSON.stringify(etats);
     return (
-        <div style={{ display: 'grid', gap: 'var(--espace-md)' }}>
+        <div className="pile">
             <div className="compteurs">
                 <div className={`compteur ${actif(null) ? 'actif' : ''}`}>
-                    <button type="button" onClick={() => poserEtat(null)} aria-pressed={actif(null)}>
+                    <BoutonNu onClick={() => poserEtat(null)} aria-pressed={actif(null)}>
                         <span className="valeur">{compteurs.total}</span><span className="libelle">Tous les retours</span>
-                    </button>
+                    </BoutonNu>
                 </div>
                 {ETATS_DE_RETOUR.map((etat) => (
                     <div key={etat.valeur} className={`compteur ${actif([etat.valeur]) ? 'actif' : ''}`}>
-                        <button type="button" onClick={() => poserEtat([etat.valeur])} aria-pressed={actif([etat.valeur])}>
+                        <BoutonNu onClick={() => poserEtat([etat.valeur])} aria-pressed={actif([etat.valeur])}>
                             <span className="valeur">{compteurs.parEtat[etat.valeur] ?? 0}</span><span className="libelle">{etat.libelle}</span>
-                        </button>
+                        </BoutonNu>
                     </div>
                 ))}
             </div>

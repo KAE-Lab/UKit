@@ -22,9 +22,9 @@ const STATUTS = [
  */
 const LIBELLES_DE_TYPE: Readonly<Record<TypeDAnnonce, Omit<Option, 'valeur'>>> = {
     evenement: { libelle: 'Événement' },
-    info: { libelle: 'Information', ton: 'accent' },
-    bon_plan: { libelle: 'Bon plan', ton: 'ok' },
-    partenaire: { libelle: 'Partenaire', ton: 'avert' },
+    info: { libelle: 'Information' },
+    bon_plan: { libelle: 'Bon plan' },
+    partenaire: { libelle: 'Partenaire' },
 };
 const TYPES_D_ANNONCE: readonly Option[] = CODES_DE_TYPE.map((valeur) => ({ valeur, ...LIBELLES_DE_TYPE[valeur] }));
 

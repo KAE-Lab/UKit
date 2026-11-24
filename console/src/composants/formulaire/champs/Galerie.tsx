@@ -12,6 +12,7 @@ import { GripVertical, Upload, X } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 
 import { messageDErreur } from '../../../lib/erreurs';
+import { BoutonNu } from '../../ui/BoutonNu';
 import type { ChampProps } from './types';
 
 const KO = 1024;
@@ -21,12 +22,12 @@ function Vignette({ url, rang, desactive, onRetirer }: { readonly url: string; r
     return (
         <li ref={setNodeRef} className={`galerie-vignette ${isDragging ? 'en-vol' : ''}`} style={{ transform: CSS.Transform.toString(transform), transition }}>
             <img src={url} alt={`Image ${rang + 1}`} loading="lazy" />
-            <button type="button" className="poignee" aria-label={`Déplacer l’image ${rang + 1}`} disabled={desactive} {...attributes} {...listeners}>
+            <BoutonNu className="poignee" aria-label={`Déplacer l’image ${rang + 1}`} disabled={desactive} {...attributes} {...listeners}>
                 <GripVertical className="icone" aria-hidden="true" />
-            </button>
-            <button type="button" className="retrait" aria-label={`Retirer l’image ${rang + 1}`} disabled={desactive} onClick={onRetirer}>
+            </BoutonNu>
+            <BoutonNu className="retrait" aria-label={`Retirer l’image ${rang + 1}`} disabled={desactive} onClick={onRetirer}>
                 <X className="icone" aria-hidden="true" />
-            </button>
+            </BoutonNu>
             <span className="rang">{rang + 1}</span>
         </li>
     );

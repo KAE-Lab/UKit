@@ -4,24 +4,20 @@
  */
 
 import { Funnel } from 'lucide-react';
-import { useContext, useId } from 'react';
+import { useContext } from 'react';
 
 import { useEtablissements } from '../requetes/useEtablissements';
 import { CampusContexte } from './campus';
+import { Selecteur, type OptionDeSelecteur } from './ui/Selecteur';
 
 export function FiltreCampus() {
     const { code, choisir } = useContext(CampusContexte);
     const { etablissements } = useEtablissements();
-    const id = useId();
-    return (
-        <div className="filtre-campus">
-            <Funnel className="icone" aria-hidden="true" />
-            <label htmlFor={id} className="visuellement-cache">Filtrer par campus</label>
-            <select id={id} value={code ?? ''} onChange={(e) => choisir(e.target.value === '' ? null : e.target.value)} title="Filtre par campus, retenu d’une page à l’autre">
-                <option value="">Tous les campus</option>
-                {etablissements.map((e) => <option key={e.code} value={e.code}>{e.nom}</option>)}
-                {code !== null && !etablissements.some((e) => e.code === code) ? <option value={code}>{code}</option> : null}
-            </select>
-        </div>
-    );
+    const options: OptionDeSelecteur<string | null>[] = [
+        { valeur: null, libelle: 'Tous les campus' },
+        ...etablissements.map((e) => ({ valeur: e.code, libelle: e.nom })),
+    ];
+    // Un campus retenu que le catalogue ne connait plus reste choisi, sous son code.
+    if (code !== null && !etablissements.some((e) => e.code === code)) options.push({ valeur: code, libelle: code });
+    return <Selecteur valeur={code} options={options} onChange={choisir} etiquette="Filtrer par campus" Icone={Funnel} />;
 }

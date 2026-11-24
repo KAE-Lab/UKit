@@ -48,7 +48,7 @@ export function Retours({ reste }: { readonly reste: string | null }) {
                         <BlocDeCompteurs compteurs={calcules} filtreEtat={Array.isArray(filtreEtat) ? filtreEtat : (typeof filtreEtat === 'string' ? [filtreEtat] : null)} poserEtat={poserEtat} />
                         {requete.isError ? <Encart ton="erreur">Les compteurs n’ont pas pu être lus ; la liste, elle, se relit seule.</Encart> : null}
                     </div>
-                    <div className="carte compacte" style={{ marginBottom: 'var(--espace-md)' }}><Encart ton="avert">{RETOURS.avertissement}</Encart></div>
+                    <div className="carte compacte espace-bas"><Encart ton="avert">{RETOURS.avertissement}</Encart></div>
                     <div className="carte">
                         <ListeDeRessource
                             descripteur={RETOURS}

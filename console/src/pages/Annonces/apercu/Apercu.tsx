@@ -20,11 +20,17 @@ import { useEffect, useState } from 'react';
 
 import { blocDeLaLigne } from '../../../../../src/shared/annonces/grammaire';
 import type { Activite } from '../../../composants/formulaire/Formulaire';
+import { Segments, type OptionDeSegment } from '../../../composants/ui/Segments';
 import type { Ligne } from '../../../supabase';
 import { Carte, CarteVoisine } from './Carte';
 import { Fiche } from './Fiche';
 import { annonceDApercu, carrouselsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, teinteDe, vueDuChamp, zoneDuChamp, type Vue } from './modele';
 import { paletteDe, variablesDApercu, type ThemeDApercu } from './palette';
+
+const THEMES: readonly OptionDeSegment<ThemeDApercu>[] = [
+    { valeur: 'light', libelle: 'Clair', Icone: Sun },
+    { valeur: 'dark', libelle: 'Sombre', Icone: Moon },
+];
 
 function Ecran({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {
     return (
@@ -57,14 +63,11 @@ export function Apercu({ valeurs, activite }: { readonly valeurs: Ligne; readonl
     return (
         <Tabs.Root className={`apercu theme-${theme}`} style={variablesDApercu(theme)} value={vue} onValueChange={(valeur) => setVue(valeur === 'fiche' ? 'fiche' : 'carte')}>
             <div className="apercu-entete">
-                <Tabs.List className="bascule" aria-label="Vue de l’aperçu">
+                <Tabs.List className="segments" aria-label="Vue de l’aperçu">
                     <Tabs.Tab value="carte" className="segment"><WalletCards className="icone" aria-hidden="true" />Carte</Tabs.Tab>
                     <Tabs.Tab value="fiche" className="segment"><Newspaper className="icone" aria-hidden="true" />Fiche</Tabs.Tab>
                 </Tabs.List>
-                <div className="bascule" role="radiogroup" aria-label="Thème de l’aperçu">
-                    <button type="button" role="radio" aria-checked={theme === 'light'} className={`segment ${theme === 'light' ? 'actif' : ''}`} onClick={() => setTheme('light')}><Sun className="icone" aria-hidden="true" />Clair</button>
-                    <button type="button" role="radio" aria-checked={theme === 'dark'} className={`segment ${theme === 'dark' ? 'actif' : ''}`} onClick={() => setTheme('dark')}><Moon className="icone" aria-hidden="true" />Sombre</button>
-                </div>
+                <Segments valeur={theme} options={THEMES} onChange={setTheme} etiquette="Thème de l’aperçu" />
             </div>
             <p className="petit secondaire apercu-note">
                 Approximation du téléphone : police, ombres et arrondis diffèrent. Cette carte 4:5 est celle de la 6.3 ; aujourd’hui, le téléphone montre l’affiche 1:1 entière.

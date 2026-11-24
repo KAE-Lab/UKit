@@ -47,7 +47,7 @@ function Page({ chemin, session }: { readonly chemin: string; readonly session: 
 function SquelettePage() {
     return (
         <div aria-busy="true" aria-label="Vérification de la session">
-            <div className="entete-page"><div style={{ width: '100%' }}><SqueletteTexte largeur="30%" /><div style={{ height: 8 }} /><SqueletteTexte largeur="55%" /></div></div>
+            <div className="entete-page"><div className="pile-etroite"><SqueletteTexte largeur="30%" /><SqueletteTexte largeur="55%" /></div></div>
             <div className="carte"><SqueletteBloc hauteur={220} /></div>
         </div>
     );
