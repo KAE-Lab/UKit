@@ -200,4 +200,21 @@ console qui lit les données d'un lot part sur `main` avec lui.
 | 4. Sondages, boîte à idées et notation | les votes du lot 1, la fiche native du système | **livré le 2026-11-25** : base en production, fonction redéployée, sondage dans l'éditeur, page Idées et section Communauté en ligne, fiche, boîte à idées et « Noter UKit » joués au banc ; reste la fiche de notation sur la piste de test interne et le chemin attesté (lot 1) ([spécification](4-sondages-idees-notation.md)) |
 | 5. Les événements dans le Planning | l'annonce datée, « Ajouter à mon planning », l'abonnement | **livré le 2026-11-25** : base en production, champs de l'événement et aperçu dans la console en ligne, fiche, Planning, retrait, abonnement et synchronisation joués au banc ; reste le passage sur iPhone ([spécification](5-evenements.md)) |
 | 6. L'intelligence | où manger, les changements détectés, la journée en une carte | **livré le 2026-11-25** : la carte du jour, midi et les changements dans le Planning, banc joué sauf le week-end ; reste le passage sur iPhone ([spécification](6-intelligence.md)) |
-| 7. Le natif, les documents, les règles | la barre de navigation d'Android 9, les fonctionnalités matérielles déclarées pour Google Play ; `PRIVACY.md`, les fiches des stores, le README ; les règles de la communauté publiées | à ouvrir, en dernier |
+| 7. Le natif, les documents, les règles | la barre de navigation d'Android 9, les fonctionnalités matérielles déclarées pour Google Play ; `PRIVACY.md`, les fiches des stores, le README ; les règles de la communauté publiées | **livré le 2026-11-25** : la barre suit le thème et les deux fonctionnalités sont facultatives (build de développement `f843dc86`, `aapt2` et banc joués, [registre](../defauts-fonctionnels.md)) ; `PRIVACY.md`, README, [backend.md](../backend.md), [mesure.md](../mesure.md) et le [CHANGELOG](../../CHANGELOG.md) à jour ; les règles publiées sur https://ukit-bordeaux.fr/communaute ; reste la saisie des [fiches des stores](fiches-des-stores.md) et la relecture juridique |
+
+**Ce qui reste avant la sortie de la 7.0**, les sept lots livrés :
+
+- **Le chemin attesté**, jamais joué : App Attest sur un iPhone (build de développement refait), Play
+  Integrity configuré par Kylian puis joué sur un build de la piste de test interne
+  ([lot 1](1-base-communautaire.md#le-protocole-sur-téléphone)), et son quota comparé à la croissance
+  visée. D'ici là, aucune contribution Android ne compte.
+- **Le passage sur iPhone** de toute la 7.0, points de 7-J compris : les lots 2 à 6 n'y ont jamais
+  été vus.
+- **Les appareils réels Android** : la barre de navigation sur un Android à trois boutons (le Galaxy
+  A8), la fiche de notation sur la piste de test interne.
+- **La relecture juridique** de `PRIVACY.md`, des règles et des fiches
+  ([ce qu'un juriste doit relire](fiches-des-stores.md#ce-quun-juriste-doit-relire)).
+- **Le numéro de version** (`version` d'[`app.config.ts`](../../app.config.ts) dit encore 6.3.2) et la
+  section « Non publié » du CHANGELOG datée, au moment de la release.
+- **À l'envoi** : `PRIVACY.md` porté sur `main` avant l'examen, les deux fiches saisies, puis, la 7.0
+  en ligne sur les deux stores, la [bascule du formulaire](3-formulaire.md).

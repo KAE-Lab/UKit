@@ -19,6 +19,14 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### La vitrine de l'accueil se chevauche en grande police — relevé au banc par le lot 7 le 2026-11-25
+
+Sur `ukit-a8` (Android 9), police du système à 1,3 (`banc.sh police 1.3`), installation neuve : le
+premier écran de l'accueil empile ses trois cartes sur le logo, et « Ton campus, » passe sur la
+carte de la bibliothèque. À 1, rien ne se chevauche. Hors du lot 7, qui ne touche pas l'accueil :
+à reprendre avec [`VitrineDAccueil`](../src/features/Onboarding/components/VitrineDAccueil.tsx), en
+mesurant la hauteur disponible plutôt qu'une hauteur fixe des cartes (cause non vérifiée).
+
 ### Un changement fait pendant une synchronisation attend le passage suivant — relevé par la relecture du lot 5 le 2026-11-25
 
 `differer` finit dans `jouerEntretien`, qui **rejoint** l'entretien en cours
@@ -121,7 +129,7 @@ sonde vérifie qu'un service répond, pas que le parcours de l'application about
 des mots de passe faux (qu'aucune mesure ne distingue aujourd'hui), le parcours du portail au banc sur
 `ukit`, et ce que la famille `blocked` recouvre. Les chiffres sont dans la console, page Sources.
 
-### Google Play exclut les appareils sans mode portrait ni Wi-Fi — signalé par la Play Console le 2026-11-24
+### ~~Google Play exclut les appareils sans mode portrait ni Wi-Fi~~ — signalé par la Play Console le 2026-11-24, corrigé le 2026-11-25 dans le binaire de la 7.0
 
 À l'envoi de la 6.3.2 en examen, la Play Console avertit que deux fonctionnalités matérielles sont
 exigées et restreignent la disponibilité (téléphone, tablette, ordinateur, Android XR) :
@@ -131,6 +139,14 @@ implicite par la permission `ACCESS_WIFI_STATE` qu'une dépendance déclare. Rie
 6.3.1 porte les deux mêmes (`aapt2 dump badging`), et l'avertissement n'empêche pas l'envoi (« Proceed anyway »).
 Remède attendu dans un binaire suivant : les déclarer `android:required="false"` par un greffon de
 configuration, puis vérifier avec `aapt2 dump badging` qu'elles ne sont plus exigées.
+
+*Lot 7, 2026-11-25.* Le greffon [`fonctionnalites-facultatives`](../tools/expo/fonctionnalites-facultatives.js)
+déclare les deux `android:required="false"`. Sur l'APK du build de développement `f843dc86`,
+`aapt2 dump badging` ne les montre plus qu'en `uses-feature-not-required`, sans ligne
+`uses-implied-feature` ; celui d'avant (`ukit-dev-2026-11-25-store-review.apk`) les portait exigées.
+Restent exigées, à raison : `android.hardware.faketouch` (par défaut) et `android.hardware.location`
+(la permission de position). **Reste à voir** : l'avertissement absent de la Play Console à l'envoi
+de la 7.0, et le nombre d'appareils compatibles dans *Catalogue des appareils*.
 
 ### ~~Pendant un cours, sa carte s'allonge et le Planning ne défile plus~~ — signalé le 2026-11-23 sur Android et iPhone, corrigé le même jour, vérifié sur iPhone le 2026-11-24, sorti en 6.3.2 sur Android le même jour, en examen chez Apple
 
@@ -727,7 +743,16 @@ page de connexion du portail. Vérifié sur `ukit` : `ukit.portail.deconnexion s
 aucun nœud de messagerie après, la vue cachée sur « Connexion - Université de Bordeaux ». La
 réinitialisation complète du menu de développement recharge l'application, ce qui détruit la vue.
 
-### La barre de navigation d'Android 9 reste claire sous l'application sombre — constaté le 2026-11-05
+### ~~La barre de navigation d'Android 9 reste claire sous l'application sombre~~ — constaté le 2026-11-05, corrigé le 2026-11-25 dans le binaire de la 7.0
+
+*Lot 7, 2026-11-25.* `expo-navigation-bar` 57.0.3 (la version du SDK 57, vérifiée ce jour) : le
+composant de la barre d'état ([`StatusBar`](../src/shared/ui/AppUI.tsx)) pose aussi le style de la
+barre de navigation, au premier rendu et à chaque changement de thème. Sur `ukit-a8`, build
+`f843dc86` : thème sombre, la barre passe de `#E6E6E6` à `#131317` (le voile sombre du système sur
+le fond de l'application), boutons blancs ; thème clair, `#FEFEFE`, boutons gris foncé ; le choix
+de l'accueil la fait basculer dans les deux sens sans relancer. Le module se charge à la demande : un
+build d'avant lui garde sa barre claire sans planter. **Reste à voir** sur un vrai Android à trois
+boutons (le Galaxy A8) : la teinte avec la surcouche du constructeur.
 
 *Lot 1, 2026-11-10 — reste ouvert, par décision.* La correction demande une dépendance native
 (`expo-navigation-bar`) et un build de développement puis de production ; ce lot n'en lance aucun.
