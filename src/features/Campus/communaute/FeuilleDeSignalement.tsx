@@ -10,8 +10,8 @@
  */
 
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import React, { useContext, useEffect, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, useWindowDimensions } from 'react-native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
 import { ecrireCorrection, formaterMinutes, type Creneau, type ServiceHoraire } from '../../../shared/communaute/horaires';
 import { jourDeParis } from '../../../shared/communaute/donnees';
@@ -282,10 +282,36 @@ function PiedDeFeuille({ theme, feuille, surPlace, fermer }: { theme: AppThemeTy
     );
 }
 
+/**
+ * Ce qu'un choix demande de plus (un plat, une date, des heures) s'ouvre sous lui, et le dernier choix de
+ * la liste l'ouvrait hors de la vue : sur l'A8, « Recommander un plat » coche ne montrait rien de
+ * nouveau, et « Envoyer » restait eteint sans raison visible (recette d'ensemble de la 7.0). La liste
+ * defile jusqu'au detail quand il depasse ; un detail plus haut que la vue en montre le debut.
+ */
+function useDefilementJusquAuDetail() {
+    const liste = useRef<ScrollView>(null);
+    const vue = useRef({ hauteur: 0, haut: 0 });
+    return {
+        liste,
+        // La liste renait en haut a chaque ouverture (le `Modal` ferme ne rend rien) : la position
+        // gardee de l'ouverture precedente ferait croire le detail deja visible.
+        surLaListe: (e: LayoutChangeEvent) => { vue.current = { hauteur: e.nativeEvent.layout.height, haut: 0 }; },
+        surLeDefilement: (e: NativeSyntheticEvent<NativeScrollEvent>) => { vue.current.haut = e.nativeEvent.contentOffset.y; },
+        surLeDetail: (e: LayoutChangeEvent) => {
+            // `y` est compte depuis le haut du contenu de la liste : le detail en est un enfant direct.
+            const { y, height } = e.nativeEvent.layout;
+            const { hauteur, haut } = vue.current;
+            if (hauteur === 0 || y + height <= haut + hauteur) return;
+            liste.current?.scrollTo({ y: Math.min(y, y + height - hauteur), animated: true });
+        },
+    };
+}
+
 export function FeuilleDeSignalement({ theme, visible, fermer, sujets, horaires, plats, surPlace, ouvrirLesRegles }: FeuilleDeSignalementProps) {
     const popup = theme.settings.popup;
     const { height } = useWindowDimensions();
     const feuille = useFeuille({ visible, horaires, surPlace, fermer });
+    const defilement = useDefilementJusquAuDetail();
 
     return (
         <Modal animationType="fade" transparent visible={visible} onRequestClose={feuille.quitter}>
@@ -308,12 +334,12 @@ export function FeuilleDeSignalement({ theme, visible, fermer, sujets, horaires,
                                     </TouchableOpacity>
                                 </>
                             ) : (
-                                <ScrollView style={{ maxHeight: height * 0.55 }} contentContainerStyle={styles.liste}>
+                                <ScrollView ref={defilement.liste} onLayout={defilement.surLaListe} onScroll={defilement.surLeDefilement} onScrollEndDrag={defilement.surLeDefilement} onMomentumScrollEnd={defilement.surLeDefilement} scrollEventThrottle={32} style={{ maxHeight: height * 0.55 }} contentContainerStyle={styles.liste}>
                                     {sujets.map((sujet) => (
                                         <React.Fragment key={sujet.sujet}>
                                             <Option theme={theme} libelle={libelleDOption(sujet)} choisie={feuille.choisi?.sujet === sujet.sujet} onPress={() => feuille.choisir(sujet)} />
                                             {feuille.choisi?.sujet === sujet.sujet ? (
-                                                <View style={styles.detail}><SaisieDuChoix theme={theme} feuille={feuille} horaires={horaires} plats={plats} /></View>
+                                                <View style={styles.detail} onLayout={defilement.surLeDetail}><SaisieDuChoix theme={theme} feuille={feuille} horaires={horaires} plats={plats} /></View>
                                             ) : null}
                                         </React.Fragment>
                                     ))}
