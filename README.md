@@ -47,21 +47,27 @@ Trois principes portent le projet :
 
 - **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
   MapLibre sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
-- **Rien de vous ne transite.** Aucun compte UKit n'est requis, aucune donnée personnelle ne quitte
-  l'appareil : l'application interroge les sources **directement depuis l'appareil**, avec la
-  connexion de l'utilisateur, et conserve tout localement. Ce qui relève du compte universitaire est
-  chiffré par le trousseau de l'appareil et ne le quitte jamais — c'est d'ailleurs la raison pour
-  laquelle le moteur d'automatisation est *embarqué* plutôt qu'hébergé.
+- **Rien de vous ne transite en silence.** Aucun compte UKit n'est requis, aucune donnée
+  personnelle ne quitte l'appareil d'elle-même : l'application interroge les sources
+  **directement depuis l'appareil**, avec la connexion de l'utilisateur, et conserve tout localement.
+  Ce qui relève du compte universitaire est chiffré par le trousseau de l'appareil et ne le quitte
+  jamais — c'est d'ailleurs la raison pour laquelle le moteur d'automatisation est *embarqué* plutôt
+  qu'hébergé. Ce que l'application déduit de l'emploi du temps (la carte du jour, où manger, les
+  changements détectés) se calcule sur le téléphone.
 
   UKit a bien une base distante, et il faut dire laquelle : elle porte **ce que nous publions** —
-  annonces, référentiels, fichiers d'instructions — jamais ce qui appartient à l'utilisateur. Les
-  requêtes qui l'atteignent sont anonymes et en lecture seule, et l'application **fonctionne sans
-  jamais la joindre** : tout ce qu'elle publie existe déjà dans le binaire, et n'y est que mis à
-  jour. C'est un point de publication, pas une dorsale. Deux choses remontent de l'appareil, et
-  chacune se coupe d'un interrupteur : le jeton de notification (6.1.x-E), avec le campus, la version
-  et la plateforme qu'il faut pour ne notifier que les appareils concernés ; et, depuis 7-D, des
-  **nombres** — combien d'ouvertures, d'onglets vus, d'annonces ouvertes, par jour et par campus —,
-  jamais qui. Les deux sont dits dans [PRIVACY.md](PRIVACY.md).
+  annonces, référentiels, fichiers d'instructions — et ce que l'étudiant choisit d'y écrire. Les
+  lectures qui l'atteignent sont anonymes, et l'application **fonctionne sans jamais la joindre** :
+  tout ce qu'elle publie existe déjà dans le binaire, et n'y est que mis à jour. C'est un point de
+  publication, pas une dorsale. Deux choses remontent d'elles-mêmes, et chacune se coupe d'un
+  interrupteur : le jeton de notification (6.1.x-E), avec le campus, la version et la plateforme
+  qu'il faut pour ne notifier que les appareils concernés ; et, depuis 7-D, des **nombres** —
+  combien d'ouvertures, d'onglets vus, d'annonces ouvertes, par jour et par campus —, jamais qui.
+  Deux autres ne partent que d'un geste, depuis la 7.0 : un **retour** écrit dans l'application, avec
+  le contexte montré avant l'envoi ; une **contribution** à la communauté — un signalement choisi dans
+  une liste, sans texte libre, ou un vote —, publiée sans l'appareil, sous une clé propre à
+  l'installation, et qui ne compte que si Apple ou Google atteste l'application. Tout est dit, durées comprises, dans
+  [PRIVACY.md](PRIVACY.md).
   → [docs/backend.md](docs/backend.md)
 - **Un socle lisible.** Découpage par domaine de navigation, TypeScript partout, tokens de design,
   aucune chaîne en dur : le code doit pouvoir être repris sans contexte oral.

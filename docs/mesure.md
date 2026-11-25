@@ -26,6 +26,12 @@ un campus, une version, une plateforme, un booléen « testeur », et un nombre.
 C'est la promesse de la [base de publication](backend.md#ce-que-la-base-est-et-ce-quelle-nest-pas),
 étendue : la base apprend combien, jamais qui.
 
+La promesse est celle de la mesure seule. Depuis la 7.0, la base reçoit aussi ce que l'étudiant
+publie — signalements, votes, retours —, sous une clé d'appareil ou avec un texte
+([PRIVACY.md](../PRIVACY.md), points 5 bis et 5 ter) : ces écritures ne passent pas par `compter`,
+et aucune ligne de `mesures` ne se relie à elles. Une mesure ne compte jamais une contribution par sa
+clé.
+
 ## Les trois lecteurs
 
 | Lecteur | Ce qu'il lit | Où |

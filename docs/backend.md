@@ -20,7 +20,8 @@ UKit s'appuie sur un projet **Supabase** pour publier ce qu'il publie : les
 d'instructions, des annonces, des coordonnées de bâtiments, une liste d'universités.
 
 **Elle n'est pas un intermédiaire.** Aucune requête vers une source universitaire ne passe par elle,
-aucun identifiant ne la traverse, aucune donnée personnelle n'y est écrite. L'application fonctionne
+aucun identifiant universitaire ne la traverse, et rien n'y est écrit que l'étudiant n'ait choisi
+d'envoyer ou qu'un interrupteur ne coupe. L'application fonctionne
 sans jamais la joindre : chaque chose qu'elle publie a un **socle embarqué** dans le binaire, et la
 base ne fait que le mettre à jour.
 
@@ -29,11 +30,15 @@ appareil, avec ce qu'il faut pour le cibler — campus, version, plateforme, sta
 deux fonctions `security definer` et jamais par la table. Pseudonyme, effacé par l'interrupteur des
 Réglages, dit dans [PRIVACY.md](../PRIVACY.md). La mesure de [7-D](phase-7/7-d-la-mesure.md) en est
 la deuxième ; **la communauté**, depuis le [lot 1 de la phase 8](phase-8/1-base-communautaire.md), la
-troisième, et la seule qui passe par une Edge Function ([plus bas](#le-chemin-décriture-de-la-communauté)).
-Tout le reste de cette page tient : la base ne relaie rien, et l'application vit sans elle.
+troisième — signalements et votes —, et les **retours** écrits dans l'application, depuis le
+[lot 3](phase-8/3-formulaire.md), la quatrième ; ces deux-là passent par une Edge Function qui atteste
+l'appareil ([plus bas](#le-chemin-décriture-de-la-communauté)). Tout le reste de cette page tient : la
+base ne relaie rien, et l'application vit sans elle.
 
-C'est ce qui permet au [README](../README.md) de continuer à promettre ce qu'il promettait : aucun
-compte n'est requis, et rien de ce qui appartient à l'utilisateur ne quitte son appareil. Le moteur
+C'est ce qui permet au [README](../README.md) de promettre que rien ne transite en silence : aucun
+compte n'est requis, les deux écritures automatiques se coupent d'un interrupteur, et les deux autres
+ne partent que d'un geste de l'étudiant — un signalement d'une liste fermée, un vote, un retour dont
+le contexte se montre avant l'envoi —, ce que [PRIVACY.md](../PRIVACY.md) décrit avec ses durées. Le moteur
 est embarqué précisément pour ça — un moteur hébergé aurait fait sortir toutes les requêtes d'une
 seule adresse et fait transiter les identifiants CAS par une machine tierce.
 
@@ -94,7 +99,7 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `sondes` | l'état de chaque source tierce, mesuré chaque matin | la console ; l'application pas encore | 6.1-B | — |
 | `journal` | la trace de chaque écriture dans une table publiable : avant, après, qui, quand ; les lignes qui copient un retour ou un membre de l'équipe ne se lisent que par un admin (7-H) | la console seule | 6.1-B | — |
 | `editeurs` | l'équipe de la console : l'e-mail, le `role` (`admin`, `redacteur`, `lecteur`), la borne `etablissements` d'un rédacteur (nulle : tous les campus ; jamais vide, jamais pour un autre rôle), et `provisoire_le`, le dernier mot de passe provisoire donné ; la donnée depuis 7-C, **lue par les politiques depuis [7-H](phase-7/7-h-console-roles.md)**, journalisée, et la base garde toujours au moins un admin | les politiques, la page Équipe | 6.1-B | — |
-| `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses ; depuis 7-H, l'adresse laissée ne vit que dans `contact`, que seul un admin lit, par `contact_du_retour()` | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
+| `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses, ou déposé par la fonction `communaute` depuis le formulaire natif (phase 8, lot 3) ; depuis 7-H, l'adresse laissée ne vit que dans `contact`, que seul un admin lit, par `contact_du_retour()` | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
 | `sujets` | le vocabulaire fermé de la communauté : un sujet, sa nature (signalement ou vote), son domaine, sa famille de durée, ses valeurs ou sa forme ; chaque lot y ajoute ses lignes par migration | la fonction `contribuer`, les éditeurs | [phase 8, lot 1](phase-8/1-base-communautaire.md) | — |
@@ -288,8 +293,9 @@ bucket, et la table n'a d'ailleurs aucune politique de lecture pour `anon`. Elle
 publieur — la trace de ce qui est en ligne, et la colonne `desactive`, qui est la surface d'édition
 du premier interrupteur d'arrêt ([blueprints.md](blueprints.md#revenir-en-arrière)).
 
-`retours` est la seule table dont le contenu **vient des utilisateurs** — copié par nous, jamais écrit
-par l'application ([PRIVACY.md](../PRIVACY.md), point 5 bis). Sa clé primaire est l'identifiant
+`retours` est la table dont le contenu **vient des utilisateurs** : copié par nous depuis l'ancien
+formulaire, ou, depuis la 7.0, déposé par la fonction `communaute` (`source = 'app'`, [lot 3](phase-8/3-formulaire.md)),
+jamais par une écriture directe de l'application ([PRIVACY.md](../PRIVACY.md), point 5 bis). Sa clé primaire est l'identifiant
 stable de la réponse, une empreinte calculée par l'importeur ([pilotage.md](pilotage.md#les-retours)),
 et l'écriture se fait en `on conflict do nothing` : le dédoublonnage est une propriété du schéma, et
 une ligne reclassée garde son état au passage suivant. Aucune politique de lecture pour `anon`, et la
@@ -383,7 +389,7 @@ premier usage** et non à l'import. Aucun service ne construit le sien.
 | [`client.ts`](../src/shared/supabase/client.ts) | la configuration lue dans `extra`, et le client paresseux |
 | [`types.ts`](../src/shared/supabase/types.ts) | les tables telles que la base les rend, et le type `Database` |
 | [`failures.ts`](../src/shared/supabase/failures.ts) | une erreur de lecture rangée dans une famille d'écran |
-| [`rpc.ts`](../src/shared/supabase/rpc.ts) | l'appel typé d'une fonction SQL : la porte des deux écritures de l'application |
+| [`rpc.ts`](../src/shared/supabase/rpc.ts) | l'appel typé d'une fonction SQL : la porte des deux écritures directes de l'application |
 | [`index.ts`](../src/shared/supabase/index.ts) | la porte d'entrée : un service importe d'ici |
 
 **Ce que l'application écrit, et rien d'autre.** Deux choses, par deux portes `security definer` et
@@ -392,8 +398,8 @@ jamais par une table : le jeton push ([6.1.x-E](phase-6/6-1-x-e-notifications-pu
 l'application vers la base : des nombres sans identifiant, par jour ou par heure, campus, version et
 plateforme, envoyés par lots au passage en arrière-plan et à l'entretien, jamais au démarrage
 ([mesure.md](mesure.md)). Les deux se coupent d'un interrupteur, et `anon` ne peut rien lire de ce
-qu'il a écrit. La troisième, depuis le [lot 1 de la phase 8](phase-8/1-base-communautaire.md), ne passe
-pas par la base mais par une fonction qui atteste l'appareil : ce que l'étudiant publie
+qu'il a écrit. Les deux suivantes, depuis la [phase 8](phase-8/README.md), ne passent pas par la base
+mais par une fonction qui atteste l'appareil : ce que l'étudiant publie, et ce qu'il nous écrit
 ([ci-dessous](#le-chemin-décriture-de-la-communauté)).
 
 **La paresse n'est pas un détail de style.** Instancier au chargement du module mettrait la base sur
@@ -426,6 +432,15 @@ l'attestation. Le chemin a trois étages.
 Une contribution sans attestation passe sous un plafond bas, avec un poids nul : elle s'affiche en
 retrait et ne compte jamais. La lecture reste celle de la clé publiable, anonyme : tous les
 signalements du jour, triés sur l'appareil.
+
+**Le même chemin porte les retours** ([lot 3](phase-8/3-formulaire.md)) : l'action `deposer` de la
+fonction prend le même défi, la même preuve et le même compte de l'adresse, puis appelle
+`public.deposer_retour`, et rend une URL signée par capture, téléversée dans l'espace privé `retours`.
+Un retour **ne porte pas la clé** de l'appareil : son plafond se compte sur un jeton du jour, vidé le
+lendemain, pour qu'aucun retour — qui peut porter une adresse de volontaire — ne se relie aux
+signalements du même appareil. L'appareil relit la réponse par une clé propre au retour, en POST
+(`lire_mes_retours`). Ce qui part, ce qui se garde et combien de temps : [PRIVACY.md](../PRIVACY.md),
+points 5 bis, 5 ter et 6.
 
 ### Le modèle d'erreur
 
@@ -639,7 +654,7 @@ que le parc ait migré.
 |---|---|---|
 | `annonces` | `notifiee_le` et `notifies` | [7-L](phase-7/7-l-la-boucle.md) |
 | `jetons_push` | `annonces boolean` (défaut faux) : l'accord pour les annonces en notification | [7-L](phase-7/7-l-la-boucle.md) |
-| `retours` | `source` (`formulaire` ou `app` ; défaut `formulaire`), `installation` (nul sauf accord) ; RPC `deposer_retour` | [7-L](phase-7/7-l-la-boucle.md) |
+| `retours` | `installation` (nul sauf accord) ; `source` et `deposer_retour` sont en base depuis le [lot 3 de la phase 8](phase-8/3-formulaire.md), qui n'a pas eu besoin de l'identifiant d'installation | [7-L](phase-7/7-l-la-boucle.md) |
 | `soutien` | `(campus, jour, montant, repas)`, agrégée, lecture publique | [7-N](phase-7/7-n-le-soutien.md) |
 | bucket `media` | *fait le 2026-09-22 par [7-E](phase-7/7-e-console-socle.md)* : ce que la console téléverse se nomme `<dossier>/<identifiant court>-<slug>.webp`, avec un cache d'un an et son blurhash dans `annonces.blurhash` ; `?v=N` reste la règle de remplacement de ce qui est posé à la main ([`tools/media/versionner.mjs`](../tools/media/versionner.mjs)), et les objets déjà en ligne gardent leur nom | — |
 
