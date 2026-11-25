@@ -19,6 +19,8 @@ import { Icon } from '../../../shared/ui/Icon';
 import { useSondage } from './useSondage';
 
 const TRAIT = 3;
+/** Le jour sans l'annee, dans la grammaire de chaque langue : « 28 novembre », « November 28 », « 28 de noviembre ». */
+const FORMAT_DU_JOUR = { fr: 'D MMMM', en: 'MMMM D', es: 'D [de] MMMM' } as const;
 
 function Part({ theme, part }: { theme: AppThemeType; part: number | null }) {
     return (
@@ -60,7 +62,7 @@ function Rangee({ theme, libelle, premiere, coche, part, apresVote, enCours, onP
 
 /** Ce qui se dit sous les choix, une phrase par ligne : la cloture, puis le nombre de voix ou pourquoi rien ne se montre. */
 function pied(ouvert: boolean, closLe: number, montrer: boolean, resultats: ResultatsDeSondage | null | undefined): string[] {
-    const quand = Translator.get(ouvert ? 'SONDAGE_JUSQU_AU' : 'SONDAGE_CLOS_LE', moment(closLe).format('D MMMM'));
+    const quand = Translator.get(ouvert ? 'SONDAGE_JUSQU_AU' : 'SONDAGE_CLOS_LE', moment(closLe).format(FORMAT_DU_JOUR[Translator.getLanguage()]));
     if (!montrer || resultats === undefined) return [quand];
     if (resultats === null) return [quand, Translator.get('SONDAGE_RESULTATS_INDISPONIBLES')];
     if (!resultats.assez) return [quand, Translator.get('SONDAGE_PAS_ASSEZ')];
