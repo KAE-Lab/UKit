@@ -7,10 +7,28 @@ import Translator from '../i18n/Translator';
 import { getSupabase, type AppReleaseRow } from '../supabase';
 import style from '../theme/Theme';
 
-// ── BARRE DE STATUT ─────────────────────────────────────────
+// ── BARRES DU SYSTEME ───────────────────────────────────────
+/**
+ * La barre de navigation d'Android suit le theme de l'application, comme la barre d'etat. Elle ne
+ * se voit qu'avec les trois boutons : en navigation par gestes elle est transparente. Sur Android 9,
+ * le module y pose le voile du systeme, clair ou sombre selon le style ; sans lui, le voile clair
+ * restait sous l'application sombre (registre, 2026-11-05). `light` veut dire des boutons clairs,
+ * donc un fond sombre.
+ *
+ * Le module est charge a la demande, comme `@expo/app-integrity` : un build de developpement
+ * d'avant lui garde sa barre claire au lieu de planter au lancement.
+ */
+const suivreLeThemeSurLaBarreDeNavigation = (theme: string) => {
+    if (Platform.OS !== 'android') return;
+    import('expo-navigation-bar')
+        .then(({ NavigationBar }) => NavigationBar.setStyle(theme === 'dark' ? 'light' : 'dark'))
+        .catch(() => { /* module absent d'un ancien build : la barre garde le style du systeme */ });
+};
+
 export const StatusBar = () => {
     const AppContextValues = useContext(AppContext);
     const theme = AppContextValues.themeName;
+    useEffect(() => { suivreLeThemeSurLaBarreDeNavigation(theme); }, [theme]);
     return (
         <RNStatusBar
             barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
