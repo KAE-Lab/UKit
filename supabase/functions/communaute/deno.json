@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "@peculiar/x509": "npm:@peculiar/x509@3.1.0",
+    "cborg": "npm:cborg@7.0.0",
+    "reflect-metadata": "npm:reflect-metadata@0.2.2"
+  }
+}

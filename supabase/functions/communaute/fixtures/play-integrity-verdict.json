@@ -1,0 +1,27 @@
+{
+  "origin": "documentation",
+  "source": "https://developer.android.com/google/play/integrity/verdicts et https://developer.android.com/google/play/integrity/standard",
+  "releve": "2026-11-25",
+  "note": "La reponse de decodeIntegrityToken pour une demande standard, composee des exemples de la documentation : tokenPayloadExternal porte requestDetails, appIntegrity, deviceIntegrity et accountDetails. Le paquet est celui de UKit, l'empreinte et l'instant sont remplaces par le test. timestampMillis est une chaine, comme dans la documentation.",
+  "reponse": {
+    "tokenPayloadExternal": {
+      "requestDetails": {
+        "requestPackageName": "com.bordeaux1.emplois",
+        "requestHash": "REMPLACE_PAR_LE_TEST",
+        "timestampMillis": "1675655009345"
+      },
+      "appIntegrity": {
+        "appRecognitionVerdict": "PLAY_RECOGNIZED",
+        "packageName": "com.bordeaux1.emplois",
+        "certificateSha256Digest": ["6a6a1474b5cbbb2b1aa57e0bc3"],
+        "versionCode": "551"
+      },
+      "deviceIntegrity": {
+        "deviceRecognitionVerdict": ["MEETS_DEVICE_INTEGRITY"]
+      },
+      "accountDetails": {
+        "appLicensingVerdict": "LICENSED"
+      }
+    }
+  }
+}
