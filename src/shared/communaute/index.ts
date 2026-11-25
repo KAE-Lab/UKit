@@ -8,7 +8,8 @@
  * la base ne sait pas quel lieu l'etudiant regarde, ni quel campus il a choisi. Elle ne redemande que ce
  * qui a bouge depuis la lecture precedente, et garde le jour en cache pour le hors-ligne.
  *
- * Rien ici ne part au demarrage : les lots suivants appellent ces fonctions depuis leurs ecrans.
+ * Rien ici ne part au demarrage : les lots suivants appellent ces fonctions depuis leurs ecrans. Le
+ * formulaire de retour (lot 3) passe par le meme envoi signe, `envoyerSigne`.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -38,55 +39,71 @@ const TAILLE_DE_PAGE = 1000;
 // L'envoi
 // ---------------------------------------------------------------------------
 
-async function corpsDeLaDemande(identite: Identite, donnees: string): Promise<Record<string, unknown> | null> {
+async function corpsDeLaDemande(action: ActionSignee, identite: Identite, donnees: string): Promise<Record<string, unknown> | null> {
     if (identite.nature === 'app_attest') {
         const signee = await assertion(identite.cle, donnees);
-        return signee === null ? null : { action: 'contribuer', donnees, appareil: { nature: 'app_attest', cle: identite.cle }, preuve: { assertion: signee } };
+        return signee === null ? null : { action, donnees, appareil: { nature: 'app_attest', cle: identite.cle }, preuve: { assertion: signee } };
     }
     const jeton = identite.plateforme === 'android' ? await jetonPlayIntegrity(donnees) : null;
     return {
-        action: 'contribuer',
+        action,
         donnees,
         appareil: { nature: 'secret', plateforme: identite.plateforme, secret: identite.secret },
         preuve: jeton === null ? null : { jeton },
     };
 }
 
-async function unEnvoi(contribution: Contribution, essai: boolean): Promise<ResultatDeContribution> {
-    if (getSupabase() === null) return { etat: 'sans-base' };
+/** Ce qui se prouve par l'appareil : une contribution, ou un retour natif (lot 3). */
+export type ActionSignee = 'contribuer' | 'deposer';
+
+/** Ce qu'un envoi signe est devenu, et le corps de la reponse, quand il y en a une. */
+export interface IssueDEnvoi {
+    readonly resultat: ResultatDeContribution;
+    readonly corps: unknown;
+}
+
+async function unEnvoi(action: ActionSignee, serialiser: (defi: string, cle: string) => string): Promise<IssueDEnvoi> {
+    if (getSupabase() === null) return { resultat: { etat: 'sans-base' }, corps: null };
     // L'identite d'abord : enregistrer une cle App Attest passe par Apple, et le defi ne vaut que
     // cinq minutes.
     const identite = await identiteDeLAppareil();
     const defi = await demanderUnDefi();
-    if (defi === null) return { etat: 'echec', raison: 'defi' };
-    const donnees = serialiserDonnees(defi, identite.cle, contribution, essai);
-    const corps = await corpsDeLaDemande(identite, donnees);
+    if (defi === null) return { resultat: { etat: 'echec', raison: 'defi' }, corps: null };
+    const corps = await corpsDeLaDemande(action, identite, serialiser(defi, identite.cle));
     // Une cle App Attest devenue inutilisable a ete oubliee : l'envoi suivant partira par le secret.
-    if (corps === null) return { etat: 'a-refaire', raison: 'assertion' };
+    if (corps === null) return { resultat: { etat: 'a-refaire', raison: 'assertion' }, corps: null };
     const reponse = await appelerLaFonction(corps);
-    return reponse === null ? { etat: 'sans-base' } : lireResultat(reponse.statut, reponse.corps);
+    return reponse === null ? { resultat: { etat: 'sans-base' }, corps: null } : { resultat: lireResultat(reponse.statut, reponse.corps), corps: reponse.corps };
 }
 
 let envoiEnCours: Promise<unknown> = Promise.resolve();
 
 /**
- * Envoie une contribution. Une cle App Attest que la base ne connait plus se reenregistre, et une
- * assertion devancee se refait : une fois chacune, jamais en boucle. `essai` joue tout sans rien
- * ecrire d'autre que l'appareil — le menu de developpement et le protocole sur telephone. Les envois
- * se suivent, un a la fois : deux assertions simultanees se disputeraient le compteur.
+ * Envoie un texte signe par l'appareil, que `serialiser` ecrit a partir du defi et de la cle serveur.
+ * Une cle App Attest que la base ne connait plus se reenregistre, et une assertion devancee se refait :
+ * une fois chacune, jamais en boucle. Les envois se suivent, un a la fois, contributions et retours
+ * confondus : deux assertions simultanees se disputeraient le compteur.
  */
-export function envoyerUneContribution(contribution: Contribution, options: { readonly essai?: boolean } = {}): Promise<ResultatDeContribution> {
-    const essai = options.essai === true;
-    const envoi = envoiEnCours.then(async () => {
-        const premier = await unEnvoi(contribution, essai);
-        if (premier.etat !== 'a-refaire') return premier;
-        if (premier.raison === 'appareil_inconnu') await oublierLaCleAppAttest('enregistrement');
-        if (premier.raison === 'assertion') await oublierLaCleAppAttest('tout');
-        const second = await unEnvoi(contribution, essai);
-        return second.etat === 'a-refaire' ? { etat: 'echec', raison: second.raison } as const : second;
+export function envoyerSigne(action: ActionSignee, serialiser: (defi: string, cle: string) => string): Promise<IssueDEnvoi> {
+    const envoi = envoiEnCours.then(async (): Promise<IssueDEnvoi> => {
+        const premier = await unEnvoi(action, serialiser);
+        if (premier.resultat.etat !== 'a-refaire') return premier;
+        if (premier.resultat.raison === 'appareil_inconnu') await oublierLaCleAppAttest('enregistrement');
+        if (premier.resultat.raison === 'assertion') await oublierLaCleAppAttest('tout');
+        const second = await unEnvoi(action, serialiser);
+        return second.resultat.etat === 'a-refaire' ? { resultat: { etat: 'echec', raison: second.resultat.raison }, corps: second.corps } : second;
     });
     envoiEnCours = envoi.catch(() => undefined);
     return envoi;
+}
+
+/**
+ * Envoie une contribution. `essai` joue tout sans rien ecrire d'autre que l'appareil — le menu de
+ * developpement et le protocole sur telephone.
+ */
+export async function envoyerUneContribution(contribution: Contribution, options: { readonly essai?: boolean } = {}): Promise<ResultatDeContribution> {
+    const essai = options.essai === true;
+    return (await envoyerSigne('contribuer', (defi, cle) => serialiserDonnees(defi, cle, contribution, essai))).resultat;
 }
 
 // ---------------------------------------------------------------------------
