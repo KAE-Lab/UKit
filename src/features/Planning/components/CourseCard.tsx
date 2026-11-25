@@ -26,6 +26,8 @@ export interface CourseData {
 	/** `telephone` pour un evenement d'un calendrier de l'appareil ; absent pour un cours (PlanningAssembly.ts). */
 	source?: 'telephone';
 	journeeEntiere?: boolean;
+	/** Ce que le cours etait avant un changement detecte (PlanningAssembly.ts, lot 6). */
+	avant?: string;
 	idTelephone?: string;
 	/** L'annonce d'un evenement du campus, qui s'affiche comme un calendrier du telephone (lot 5, PlanningAssembly.ts). */
 	annonce?: string;

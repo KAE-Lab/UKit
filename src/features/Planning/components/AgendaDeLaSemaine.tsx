@@ -18,7 +18,7 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-na
 import Reanimated from 'react-native-reanimated';
 import moment from 'moment';
 
-import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { tokens, toneColor, type AppThemeType } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
 import { upperCaseFirstLetter } from '../../../shared/services/AppCore';
 import { maintenant } from '../../../shared/services/Temps';
@@ -44,6 +44,7 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
     const enfoncement = useEnfoncement();
     const salle = lignesDuCreneau(cours.description, cours.lieu, cours.natures).find((ligne) => ligne.icone === 'room')?.texte;
     const type = cours.category !== '' && cours.category !== cours.subject ? cours.category : null;
+    const avant = cours.avant !== undefined ? Translator.get('COURS_AVANT', cours.avant) : null;
     const ouvrir = () => {
         if (navigation === undefined) return;
         requestAnimationFrame(() => navigation.navigate('Course', { data: cours }));
@@ -54,7 +55,7 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
             onPressIn={enfoncement.onPressIn}
             onPressOut={enfoncement.onPressOut}
             accessibilityRole="button"
-            accessibilityLabel={[cours.subject, cours.endtime === '' ? cours.starttime : `${cours.starttime} – ${cours.endtime}`, salle].filter(Boolean).join(', ')}
+            accessibilityLabel={[cours.subject, cours.endtime === '' ? cours.starttime : `${cours.starttime} – ${cours.endtime}`, salle, avant].filter(Boolean).join(', ')}
         >
             <Reanimated.View style={[styles.rangee, enfoncement.style]}>
                 <View style={[styles.heures, { width: largeurDesHeures }]}>
@@ -66,6 +67,10 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
                     <Text numberOfLines={1} style={[styles.intitule, { color: theme.font }]}>{cours.subject}</Text>
                     {salle !== undefined ? (
                         <Text numberOfLines={1} style={[styles.salle, { color: theme.fontSecondary }]}>{salle}</Text>
+                    ) : null}
+                    {/* Ce que le cours etait avant un changement detecte (lot 6), au ton de la carte du jour. */}
+                    {avant !== null ? (
+                        <Text numberOfLines={1} style={[styles.salle, tokens.texte.chiffres, { color: toneColor(theme, 'warning') }]}>{avant}</Text>
                     ) : null}
                 </View>
                 {type !== null ? (

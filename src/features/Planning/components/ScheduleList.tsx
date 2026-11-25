@@ -1,19 +1,15 @@
 import React from 'react';
-import { Animated, DeviceEventEmitter, View, type EmitterSubscription } from 'react-native';
+import { DeviceEventEmitter, View, type EmitterSubscription } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 
-import { tokens } from '../../../shared/theme/Theme';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { JourneeEnFrise } from './Frise';
-import { AgendaDeLaSemaine } from './AgendaDeLaSemaine';
-import { HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
-import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
 import { groupOverlappingCourses } from './ScheduleListUtils';
 
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { ApparitionEnFondu } from '../../../shared/ui/ApparitionEnFondu';
-import { ChargementPlanning, EtatPlanning, FavorisVides, JourneeVide, NoticesPlanning } from './ScheduleListEtats';
+import { ChargementPlanning, EnTeteDeLaJournee, EtatPlanning, FavorisVides, JourneeVide, NoticesPlanning, VueDeLaSemaine } from './ScheduleListEtats';
 import { LienAttendu } from './LienAttendu';
 import { SourceFailureNotice, type NoticeAction } from '../../../shared/ui/SourceFailureNotice';
 import Translator from '../../../shared/i18n/Translator';
@@ -31,6 +27,10 @@ import { CLE_JOUR } from '../services/TelephoneMapping';
 import { relectureInutile, type DerniereLecture } from '../services/fraicheur';
 import { lireAnneeDesFavoris } from '../services/anneeDesFavoris';
 import { estGroupeInactif } from '../services/groupeInactif';
+import { annoterLaVue, type Changement, type ChangementsParJour } from '../services/changements';
+import { cadreDeLecture, changementsDeLaLecture, oublierLesLectures, type CadreDeLecture } from '../services/lectures';
+import { estMasque } from '../services/filtresUe';
+import { maintenant } from '../../../shared/services/Temps';
 
 export interface ScheduleListProps {
     groupName: string | string[];
@@ -64,6 +64,8 @@ export interface ScheduleListState {
     loading: boolean;
     /** La journee vide des favoris tombe dans un groupe sans cours depuis des semaines (groupeInactif.ts). */
     groupeInactif: boolean;
+    /** Les changements du jour affiche depuis la derniere lecture, ceux que l'etudiant verrait (lot 6). */
+    changementsDuJour: readonly Changement[];
 }
 
 type ScheduleData =
@@ -82,6 +84,8 @@ interface ScheduleIssue {
     cacheDate: moment.MomentInput | null;
     manquants?: readonly string[];
     failure: UkitFailure | null;
+    /** Ce qui a change depuis la lecture precedente, par jour `AAAA-MM-JJ` (lot 6) ; la vue des favoris seule. */
+    changements?: ChangementsParJour;
 }
 
 export class ScheduleList extends React.Component<ScheduleListProps, ScheduleListState> {
@@ -106,6 +110,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             failure: null,
             loading: false,
             groupeInactif: false,
+            changementsDuJour: [],
         };
     }
 
@@ -117,6 +122,9 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // laissait a l'ecran la journee du lien precedent.
         this.abonnementLien = DeviceEventEmitter.addListener(EVENEMENT_LIEN_EDT, () => {
             this.derniereLecture = null;
+            // Un autre lien n'est plus le meme emploi du temps : comparer les deux ne dirait que des
+            // faux changements (lot 6). L'oubli passe avant la lecture, dans la file du magasin.
+            void oublierLesLectures();
             this.fetchSchedule('automatique');
         });
         if (this.props.mode === 'day' && this.props.navigation) {
@@ -300,27 +308,41 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         signal: AbortSignal,
         origine: Origine,
     ): Promise<ScheduleIssue | null> => {
+        // Ce que la lecture compare, pris avant le reseau (lot 6).
+        const cadre = cadreDeLecture(groupName, this.joursAffiches());
         if (!(await isConnected())) {
             new ErrorAlert(Translator.get('NO_CONNECTION'), ErrorAlert.durations.SHORT).show();
-            return this.cacheOrFailure(id, ukitFailure('unavailable', 'hors ligne, aucun cache pour cette date'));
+            return this.avecChangements(cadre, await this.cacheOrFailure(id, ukitFailure('unavailable', 'hors ligne, aucun cache pour cette date')), null);
         }
 
+        // Une lecture a laquelle des favoris manquent ne se compare pas : leurs cours n'ont pas ete
+        // retires, l'application ne sait plus les lire (lot 6).
         if (this.props.mode === 'day') {
             const dateStr = moment(this.state.target).format('YYYY-MM-DD');
             const resultat = await FetchManager.fetchCalendarDay(groupName, dateStr, { signal, origine });
             if (resultat.ok === false) {
-                return resultat.failure.silent === true ? null : this.cacheOrFailure(id, resultat.failure);
+                return resultat.failure.silent === true ? null : this.avecChangements(cadre, await this.cacheOrFailure(id, resultat.failure), null);
             }
-            return this.keep(id, resultat.courses, resultat.manquants ?? []);
+            return this.avecChangements(cadre, this.keep(id, resultat.courses, resultat.manquants ?? []), resultat.manquants?.length ? null : resultat.courses);
         }
 
         const semaine = this.state.target as { week: number; year: number };
         const resultat = await FetchManager.fetchCalendarWeek(groupName, semaine, { signal, origine });
         if (resultat.ok === false) {
-            return resultat.failure.silent === true ? null : this.cacheOrFailure(id, resultat.failure);
+            return resultat.failure.silent === true ? null : this.avecChangements(cadre, await this.cacheOrFailure(id, resultat.failure), null);
         }
-        return this.keep(id, resultat.week, resultat.manquants ?? []);
+        return this.avecChangements(cadre, this.keep(id, resultat.week, resultat.manquants ?? []), resultat.manquants?.length ? null : resultat.week.flatMap((jour) => jour.courses));
     };
+
+    /**
+     * Les changements depuis la lecture precedente (lot 6, changements.ts) : une lecture fraiche se note
+     * et se compare a la base gardee, un cache servi rend ce qui etait deja connu. La vue des favoris
+     * seulement — le planning d'un groupe cherche est celui de quelqu'un d'autre —, et l'empreinte se
+     * prend ici, sur la lecture brute, avant que `preparerPourAffichage` ne mute les intitules.
+     */
+    avecChangements = async (cadre: CadreDeLecture | null, issue: ScheduleIssue, lus: PlanningEvent[] | null): Promise<ScheduleIssue> => (
+        cadre === null || issue.data === null ? issue : { ...issue, changements: await changementsDeLaLecture(cadre, lus) }
+    );
 
     /** Une reponse fraiche : elle alimente le cache, comme avant. */
     keep(id: string, data: ScheduleData, manquants: readonly string[] = []): ScheduleIssue {
@@ -353,7 +375,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         if (issue.data == null) {
             this.idAffiche = null;
             this.derniereIssue = null;
-            this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, manquants: [], failure: issue.failure });
+            this.setState({ schedule: null, loading: false, controller: null, cacheDate: null, manquants: [], failure: issue.failure, changementsDuJour: [] });
             return;
         }
 
@@ -377,9 +399,14 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             NotificationManager.scheduleCourseNotifications(schedule).catch(e => console.warn('Notification scheduling error:', e));
         }
 
-        const affiche: ScheduleData = this.props.mode === 'day'
-            ? fusionnerJour(schedule as PlanningEvent[], telephone.get(moment(this.state.target).format(CLE_JOUR)))
-            : fusionnerSemaine(schedule as PlanningWeekDay[], this.joursAffiches(), telephone);
+        // Ce qui a change se pose apres les filtres, sur les cours affiches seulement (lot 6).
+        const jours = this.joursAffiches();
+        const vue = this.props.mode === 'day' ? { jour: schedule as PlanningEvent[] } : { semaine: schedule as PlanningWeekDay[] };
+        const annote = annoterLaVue(vue, jours.map((jour) => jour.format('YYYY-MM-DD')), issue.changements, (cours) => isFavorite && estMasque(cours, this.props.filtersList ?? []));
+
+        const affiche: ScheduleData = annote.jour !== undefined
+            ? fusionnerJour(annote.jour, telephone.get(moment(this.state.target).format(CLE_JOUR)))
+            : fusionnerSemaine(annote.semaine ?? [], jours, telephone);
 
         // La cle de ce qui est desormais a l'ecran : c'est elle qui decidera si le prochain
         // chargement remplace le contenu ou se contente de le relire (voir `fetchSchedule`).
@@ -389,6 +416,7 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         this.setState({
             schedule: affiche, loading: false, controller: null,
             cacheDate: issue.cacheDate, manquants: issue.manquants ?? [], failure: null, groupeInactif: false,
+            changementsDuJour: annote.duJour,
         });
         if (this.props.mode === 'day' && affiche.length === 0) void this.verifierGroupeInactif();
     }
@@ -460,12 +488,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // Les journees entieres du telephone en tete, hors carrousel (6.1.x-D).
         const { bandeaux, horaires } = separerJourneeEntiere(daySchedule);
         const groupedDaySchedule = groupOverlappingCourses(horaires);
-        const enTete = (
-            <>
-                {listHeader}
-                {bandeaux.map((evenement) => <BandeauJourneeEntiere key={evenement.id} evenement={evenement} theme={theme} />)}
-            </>
-        );
+        // La journee en une carte, aujourd'hui, dans la vue des favoris (lot 6) : elle porte aussi les
+        // cours retires du jour, que les bandeaux taisent alors (`render`).
+        const carte = this.carteDuJourVisible() ? { horaires, changements: this.state.changementsDuJour, jour: this.state.target as moment.MomentInput } : null;
+        const enTete = <EnTeteDeLaJournee listHeader={listHeader} carte={carte} bandeaux={bandeaux} theme={theme} navigation={this.props.navigation} />;
 
         // La frise : les cartes, les pauses cotees et, aujourd'hui, le repere de l'heure (Frise.tsx, 7-J).
         return (
@@ -479,27 +505,21 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         );
     }
 
-    renderWeekMode(listHeader: React.ReactNode) {
-        const { theme, navigation } = this.props;
-        const lundi = joursDeLaSemaine(this.state.target as { week: number; year: number })[0];
-        const weekSchedule = this.state.schedule as PlanningWeekDay[];
+    /** La carte du jour a sa place : aujourd'hui, la vue des favoris, une journee qui a de quoi se montrer. */
+    carteDuJourVisible = () => this.props.mode === 'day' && Array.isArray(this.state.groupName)
+        && aDuContenu(this.state.schedule) && moment(this.state.target).isSame(maintenant(), 'day');
 
+    renderWeekMode(listHeader: React.ReactNode) {
+        // Sortie dans ScheduleListEtats quand le lot 6 a fait repasser ce fichier au-dela de 400 lignes.
         return (
-            <Animated.ScrollView 
-                showsVerticalScrollIndicator={false} 
-                style={{ flex: 1, backgroundColor: theme.courseBackground }}
-                contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU, paddingBottom: tokens.space.xxl + 80 }}
+            <VueDeLaSemaine
+                listHeader={listHeader}
+                jours={this.state.schedule as PlanningWeekDay[]}
+                lundi={joursDeLaSemaine(this.state.target as { week: number; year: number })[0]}
+                theme={this.props.theme}
+                navigation={this.props.navigation}
                 onScroll={this.props.onAnimatedScroll}
-                scrollEventThrottle={16}
-            >
-                {listHeader}
-                <AgendaDeLaSemaine
-                    jours={weekSchedule}
-                    repli={(rang) => lundi.clone().add(rang, 'days')}
-                    theme={theme}
-                    navigation={navigation as { navigate: (route: string, params?: object) => void } | undefined}
-                />
-            </Animated.ScrollView>
+            />
         );
     }
 
@@ -597,7 +617,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
 
     render() {
         const { theme } = this.props;
-        const listHeader = <NoticesPlanning cacheDate={this.state.cacheDate} manquants={this.state.manquants} mode={this.props.mode} theme={theme} />;
+        // Un cours retire ne se voit plus dans la journee : un bandeau le dit, sauf quand la carte du jour
+        // le porte deja (lot 6).
+        const listHeader = <NoticesPlanning cacheDate={this.state.cacheDate} manquants={this.state.manquants}
+            changements={this.carteDuJourVisible() ? [] : this.state.changementsDuJour} mode={this.props.mode} theme={theme} />;
 
         return (
             <View style={{ flex: 1, backgroundColor: theme.courseBackground }}>

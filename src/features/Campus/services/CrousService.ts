@@ -13,7 +13,7 @@
  */
 
 import Translator from '../../../shared/i18n/Translator';
-import { BLUEPRINT, reportFailure, runBlueprint, serviceAbsent, type UkitFailure } from '../../../shared/aetherius';
+import { BLUEPRINT, reportFailure, runBlueprint, serviceAbsent, type Origine, type UkitFailure } from '../../../shared/aetherius';
 import { crousRegionActive } from '../../../shared/etablissements';
 import { appliquerVisuel } from '../../../shared/visuels';
 import {
@@ -70,7 +70,11 @@ class CrousServiceManager {
      * Le tri et la distance restent applicatifs : ce sont des calculs, et un calcul dans un Blueprint
      * devrait etre reimplemente a l'identique dans les deux moteurs.
      */
-    async fetchRestaurantsBordeaux(userLat?: number, userLon?: number): Promise<CrousRestaurantsResult> {
+    /**
+     * `origine` : `automatique` pour une lecture qu'aucun geste ne demande — la carte du jour du
+     * Planning (lot 6 de la 7.0) —, que le disjoncteur peut alors retenir quand l'hote est en panne.
+     */
+    async fetchRestaurantsBordeaux(userLat?: number, userLon?: number, origine: Origine = 'utilisateur'): Promise<CrousRestaurantsResult> {
         // La region vient du catalogue depuis le jalon 6-J. `null` n'est pas une panne : c'est un
         // etablissement qui ne declare pas de restaurants, et l'ecran fait alors disparaitre la
         // section — meme regle que la messagerie et que les salles libres.
@@ -79,7 +83,7 @@ class CrousServiceManager {
             return { ok: false, failure: restaurantsAbsents() };
         }
 
-        const run = await runBlueprint(BLUEPRINT.CAMPUS_RESTAURANTS, { inputs: { region } });
+        const run = await runBlueprint(BLUEPRINT.CAMPUS_RESTAURANTS, { inputs: { region }, origine });
         if (run.ok === false) {
             reportFailure(BLUEPRINT.CAMPUS_RESTAURANTS, run.failure);
             return { ok: false, failure: run.failure };
@@ -115,8 +119,9 @@ class CrousServiceManager {
      * aucun menu, et le Blueprint accepte explicitement ce cas (statut 404) plutot que d'en faire une
      * panne. L'ecran affiche alors son etat vide, comme avant la migration.
      */
-    async fetchRestaurantMenu(restaurantId: string): Promise<CrousMenuResult> {
+    async fetchRestaurantMenu(restaurantId: string, origine: Origine = 'utilisateur'): Promise<CrousMenuResult> {
         const run = await runBlueprint(BLUEPRINT.CAMPUS_RESTAURANT_MENU, {
+            origine,
             inputs: { restaurant: String(restaurantId) },
         });
         if (run.ok === false) {

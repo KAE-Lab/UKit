@@ -38,8 +38,11 @@ export function creneauxDeService(lignes: readonly string[]): readonly CreneauDe
     return creneaux;
 }
 
-/** Le jour de la semaine (0 dimanche) est-il dans la portee « du lundi au vendredi » des lignes ? Sans portee, oui. */
-function jourOuvre(lignes: readonly string[], jour: number): boolean {
+/**
+ * Le jour de la semaine (0 dimanche) est-il dans la portee « du lundi au vendredi » des lignes ? Sans
+ * portee, oui. Lu aussi par le trou de midi du Planning (ouManger.ts), qui juge un restaurant ouvert.
+ */
+export function jourOuvre(lignes: readonly string[], jour: number): boolean {
     for (const ligne of lignes) {
         const m = PORTEE.exec(ligne);
         if (m === null) continue;

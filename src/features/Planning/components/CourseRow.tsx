@@ -25,7 +25,8 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-na
 import { useNavigation } from '@react-navigation/native';
 import Reanimated from 'react-native-reanimated';
 
-import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
+import { tokens, toneColor, type AppThemeType } from '../../../shared/theme/Theme';
+import Translator from '../../../shared/i18n/Translator';
 import { useEnfoncement } from '../../../shared/ui/useEnfoncement';
 import { CourseData } from './CourseCard';
 import { lignesDuCreneau, type LigneDeCreneau } from './CourseAnnotations';
@@ -115,6 +116,54 @@ function LigneDInfo({ ligne, theme, couleur, uneLigne, cedeALIndicateur }: {
             </Text>
         </View>
     );
+}
+
+/** « Avant : 10:00–12:00, A22 », ou rien sans changement. */
+function avantDit(avant: string | undefined): string {
+    return avant === undefined ? '' : Translator.get('COURS_AVANT', avant);
+}
+
+/**
+ * Ce que le cours etait avant un changement detecte entre deux lectures (lot 6 de la 7.0) : sous le
+ * titre, au ton d'avertissement, parce que c'est ce qu'un etudiant qui connaissait sa salle doit voir.
+ */
+function LigneDAvant({ avant, theme, uneLigne, cedeALIndicateur }: { avant: string | undefined; theme: AppThemeType; uneLigne: boolean; cedeALIndicateur: boolean }) {
+    if (avant === undefined) return null;
+    const couleur = toneColor(theme, 'warning');
+    return (
+        <View style={[styles.ligne, cedeALIndicateur && { marginRight: RESERVE_INDICATEUR }]}>
+            <Icon icon={{ name: 'update' }} size={ICONE_LIGNE} color={couleur} style={styles.iconeLigne} />
+            <Text numberOfLines={uneLigne ? 1 : undefined} style={[styles.texteLigne, tokens.texte.chiffres, { color: couleur }]}>{avantDit(avant)}</Text>
+        </View>
+    );
+}
+
+/**
+ * Les lignes d'infos, et ce que le cours etait sous ce qu'il est : sous la salle, qui vient toujours
+ * en premier (`lignesDuCreneau`), ou sous le titre quand il n'y en a pas (lot 6).
+ */
+function LignesDuCreneau({ lignes, avant, theme, encre, carouselMode }: {
+    lignes: readonly (LigneDeCreneau | { texte: string; icone: 'code' })[];
+    avant: string | undefined;
+    theme: AppThemeType;
+    encre: string;
+    carouselMode: boolean;
+}) {
+    const rangDeLAvant = lignes[0]?.icone === 'room' ? 1 : 0;
+    // En carrousel, la derniere ligne laisse le coin a l'indicateur de pages : « Avant » l'est parfois.
+    const avantEnDernier = avant !== undefined && rangDeLAvant === lignes.length;
+    const rendues = lignes.map((ligne, index) => (
+        <LigneDInfo
+            key={`${ligne.icone}-${ligne.texte}`}
+            ligne={ligne}
+            theme={theme}
+            couleur={encre}
+            uneLigne={carouselMode}
+            cedeALIndicateur={carouselMode && index === lignes.length - 1 && !avantEnDernier}
+        />
+    ));
+    rendues.splice(rangDeLAvant, 0, <LigneDAvant key="avant" avant={avant} theme={theme} uneLigne={carouselMode} cedeALIndicateur={carouselMode && avantEnDernier} />);
+    return <>{rendues}</>;
 }
 
 /** La colonne des heures : le debut en grand, la fin, et pendant le cours le temps qui reste. */
@@ -226,16 +275,7 @@ export function CourseRow({ data, theme, navigation, carouselMode = false, minut
             <View style={[styles.contenu, carouselMode && styles.etiree]}>
                 <RangeeDuTitre data={data} theme={theme} encre={encre} unSeulRang={carouselMode} />
 
-                {lignes.map((ligne, index) => (
-                    <LigneDInfo
-                        key={`${ligne.icone}-${ligne.texte}`}
-                        ligne={ligne}
-                        theme={theme}
-                        couleur={encre}
-                        uneLigne={carouselMode}
-                        cedeALIndicateur={carouselMode && index === lignes.length - 1}
-                    />
-                ))}
+                <LignesDuCreneau lignes={lignes} avant={data.avant} theme={theme} encre={encre} carouselMode={carouselMode} />
             </View>
         </Reanimated.View>
     );
@@ -252,7 +292,7 @@ export function CourseRow({ data, theme, navigation, carouselMode = false, minut
                 // Un evenement qui vient du calendrier ne s'y ajoute pas : pas d'appui long dessus (6.1.x-D).
                 onLongPress={duTelephone ? undefined : () => setPopupVisible(true)}
                 accessibilityRole="button"
-                accessibilityLabel={[data.subject, `${data.starttime} – ${data.endtime}`, salle].filter(Boolean).join(', ')}
+                accessibilityLabel={[data.subject, `${data.starttime} – ${data.endtime}`, salle, avantDit(data.avant)].filter(Boolean).join(', ')}
             >
                 {carte}
             </Pressable>

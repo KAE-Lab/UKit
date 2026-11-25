@@ -99,6 +99,12 @@ export interface PlanningEvent {
      * prenait l'epingle d'une salle (2026-11-11). Absent pour Celcat, ADE et les anciens caches.
      */
     natures?: Readonly<Record<string, NatureDeLigne>>;
+    /**
+     * Ce que le cours etait avant un changement detecte entre deux lectures (lot 6 de la 7.0,
+     * changements.ts), ecrit pour sa carte : « 10:00–12:00, A22 ». Pose a l'affichage, jamais par une
+     * source ni dans un cache.
+     */
+    avant?: string;
 }
 
 /** La nature d'une ligne de description que la source a nommee. */

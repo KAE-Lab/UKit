@@ -887,6 +887,22 @@ que les cours** (« 2 cours ») et se tait sur un jour qui n'a que des événeme
 jamais par un événement du téléphone ou du campus, qui garde à cheval sur minuit le début de la veille
 ([`agenda.ts`](../../src/features/Planning/services/agenda.ts)).
 
+## La journée en une carte, et ce qui a changé
+
+Le [lot 6 de la phase 8](../phase-8/6-intelligence.md) pose en tête de la frise, aujourd'hui et dans la
+vue des favoris, la [carte du jour](../../src/features/Planning/components/CarteDuJour.tsx) : la journée
+en jauge et ses trous, le trou de midi et les restaurants ouverts près du bâtiment du cours suivant, ce
+qui a changé depuis la dernière lecture. Elle se tait sur une journée sans trou où rien n'a changé.
+
+**Les changements se détectent à la lecture**, toutes sources : chaque lecture fraîche des favoris, jour
+ou semaine, se compare à la base gardée dans `planning-lectures@1`
+([`changements.ts`](../../src/features/Planning/services/changements.ts), [`lectures.ts`](../../src/features/Planning/services/lectures.ts)),
+et un cours se retrouve d'une lecture à l'autre sans se fier à l'identifiant de la source, qui se
+renumérote. L'empreinte se prend sur la lecture brute, dans `ScheduleList.avecChangements`, avant que
+`preparerPourAffichage` ne mute les intitulés ; la clé se purge avec les caches de planning
+([purge.ts](../../src/shared/etablissements/purge.ts)) et s'oublie à chaque lien d'abonnement rangé.
+Un cours changé porte `avant`, posé à l'affichage, jamais en cache.
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ

@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Animated, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import moment from 'moment';
 
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
@@ -19,6 +19,12 @@ import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ChargementPleinePage } from '../../../shared/ui/ChargementPleinePage';
 import { ScreenState } from '../../../shared/ui/ScreenState';
 import { Icon } from '../../../shared/ui/Icon';
+import { intituleDe, type Changement } from '../services/changements';
+import type { PlanningEvent, PlanningWeekDay } from '../services/PlanningAssembly';
+import { HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
+import { AgendaDeLaSemaine } from './AgendaDeLaSemaine';
+import { BandeauJourneeEntiere } from './BandeauJourneeEntiere';
+import { CarteDuJour, type CarteDuJourProps } from './CarteDuJour';
 
 /**
  * L'hote des etats plein ecran du planning.
@@ -55,8 +61,8 @@ function Notice({ texte, icone, theme }: { texte: string; icone: boolean; theme:
     );
 }
 
-export function NoticesPlanning({ cacheDate, manquants, mode, theme }: {
-    cacheDate: moment.MomentInput | null; manquants: readonly string[]; mode: 'day' | 'week'; theme: AppThemeType;
+export function NoticesPlanning({ cacheDate, manquants, changements, mode, theme }: {
+    cacheDate: moment.MomentInput | null; manquants: readonly string[]; changements: readonly Changement[]; mode: 'day' | 'week'; theme: AppThemeType;
 }) {
     const bandeaux: React.ReactNode[] = [];
 
@@ -70,8 +76,64 @@ export function NoticesPlanning({ cacheDate, manquants, mode, theme }: {
         bandeaux.push(<Notice key="manquants" texte={Translator.get('TIMETABLE_GROUPS_MISSING', manquants.join(', '))} icone={false} theme={theme} />);
     }
 
+    // Un cours retire depuis la derniere lecture, ecrit tel que la source le donnait (lot 6, changements.ts).
+    for (const changement of changements) {
+        if (changement.genre !== 'retire') continue;
+        const { debut, fin } = changement.cours;
+        const intitule = intituleDe(changement.cours);
+        bandeaux.push(<Notice key={`retire-${intitule}-${debut}`} texte={Translator.get('PLANNING_RETIRE', intitule, `${debut}–${fin}`)} icone={false} theme={theme} />);
+    }
+
     if (bandeaux.length === 0) return null;
     return <View style={{ paddingBottom: tokens.space.sm }}>{bandeaux}</View>;
+}
+
+/**
+ * L'en-tete de la frise : les bandeaux, la carte du jour quand elle a sa place (lot 6), puis les
+ * journees entieres du telephone (6.1.x-D).
+ */
+export function EnTeteDeLaJournee({ listHeader, carte, bandeaux, theme, navigation }: {
+    listHeader: React.ReactNode;
+    carte: Pick<CarteDuJourProps, 'horaires' | 'changements' | 'jour'> | null;
+    bandeaux: readonly PlanningEvent[];
+    theme: AppThemeType;
+    navigation?: unknown;
+}) {
+    return (
+        <>
+            {listHeader}
+            {carte !== null ? <CarteDuJour {...carte} theme={theme} navigation={navigation as CarteDuJourProps['navigation']} /> : null}
+            {bandeaux.map((evenement) => <BandeauJourneeEntiere key={evenement.id} evenement={evenement} theme={theme} />)}
+        </>
+    );
+}
+
+/** La semaine en agenda, qui defile sous l'en-tete et son fondu (7-J, deuxieme passe). */
+export function VueDeLaSemaine({ listHeader, jours, lundi, theme, navigation, onScroll }: {
+    listHeader: React.ReactNode;
+    jours: PlanningWeekDay[];
+    lundi: moment.Moment;
+    theme: AppThemeType;
+    navigation?: unknown;
+    onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+}) {
+    return (
+        <Animated.ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1, backgroundColor: theme.courseBackground }}
+            contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU, paddingBottom: tokens.space.xxl + 80 }}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+        >
+            {listHeader}
+            <AgendaDeLaSemaine
+                jours={jours}
+                repli={(rang) => lundi.clone().add(rang, 'days')}
+                theme={theme}
+                navigation={navigation as { navigate: (route: string, params?: object) => void } | undefined}
+            />
+        </Animated.ScrollView>
+    );
 }
 
 export function FavorisVides({ theme, onChercher }: { theme: AppThemeType; onChercher: () => void }) {

@@ -41,7 +41,7 @@ function minuteDuJour(jour: moment.MomentInput): number | null {
 }
 
 /** La meme, relue toutes les trente secondes : le repere avance, et une carte passe a son heure. */
-function useMinuteDuJour(jour: moment.MomentInput): number | null {
+export function useMinuteDuJour(jour: moment.MomentInput): number | null {
     const [minute, setMinute] = useState(() => minuteDuJour(jour));
     useEffect(() => {
         setMinute(minuteDuJour(jour));

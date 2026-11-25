@@ -53,9 +53,16 @@ const CLES_CAMPUS_NATIONALES: readonly string[] = [
     'library_filter',
 ];
 
+/**
+ * La base des changements detectes (features/Planning/services/lectures.ts, lot 6 de la 7.0) : les
+ * lectures d'un emploi du temps, qui suivent ses caches. Nommee ici en toutes lettres plutot
+ * qu'importee : `shared` ne tire pas le Planning.
+ */
+const CLE_DES_LECTURES = 'planning-lectures@1';
+
 /** Les caches de planning, dont la cle porte le nom des groupes : `<groupes>@Week<n>`, `<groupes>@AAAA/MM/JJ`. */
 function estCacheDePlanning(cle: string): boolean {
-    return cle.includes('@Week') || /@[0-9]{4}\/[0-9]{2}\/[0-9]{2}/.test(cle);
+    return cle === CLE_DES_LECTURES || cle.includes('@Week') || /@[0-9]{4}\/[0-9]{2}\/[0-9]{2}/.test(cle);
 }
 
 /**
