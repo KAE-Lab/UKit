@@ -70,6 +70,22 @@ describe('un lieu, sujet par sujet', () => {
         expect(sujet.derniereVoix).toBe(attente.creeLe);
     });
 
+    test('une correction d horaires ne compte que pour la source affichee, officielle comprise', () => {
+        const signalements = [
+            voix('restaurant.horaires', 'aaaaaaaa|midi=1130-1400', 0), voix('restaurant.horaires', 'aaaaaaaa|midi=1130-1400', 1),
+            voix('restaurant.horaires', 'bbbbbbbb|soir=ferme', 2),
+        ];
+        const officiels = [officiel('restaurant.horaires', 'aaaaaaaa|midi=1100-1400')];
+        const sur = (empreinte: string | null | undefined) =>
+            lireLeLieu(signalements, officiels, 'restaurant', '21', T0 + 5 * MINUTE, { empreinteDesHoraires: empreinte }).find((e) => e.sujet.sujet === 'restaurant.horaires')!.etat;
+        // La source a change (B) : les corrections de A ne rendent pas B incertain, et l'officiel de A tombe.
+        expect(sur('bbbbbbbb')).toMatchObject({ prime: 'communaute', communaute: { nature: 'etabli', valeur: 'bbbbbbbb|soir=ferme', voix: 1 } });
+        expect(sur('aaaaaaaa')).toMatchObject({ prime: 'officiel', communaute: { nature: 'etabli', valeur: 'aaaaaaaa|midi=1130-1400' } });
+        expect(sur(null).prime).toBe('rien');
+        // Sans empreinte donnee (la console), toutes comptent.
+        expect(sur(undefined).communaute.nature).toBe('incertain');
+    });
+
     test('une voix masquee ne compte pas comme derniere voix', () => {
         const lieu = lireLeLieu([voix('restaurant.attente', 'attente', 0, { statut: 'masquee' })], [], 'restaurant', '21', T0 + 60 * MINUTE);
         expect(lieu.find((s) => s.sujet.sujet === 'restaurant.attente')!.derniereVoix).toBeNull();
