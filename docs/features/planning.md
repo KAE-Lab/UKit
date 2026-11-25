@@ -880,6 +880,13 @@ point de l'annonce s'il y en a un — et porte « Retirer de mon planning » au 
 calendrier ». Seuls les événements ajoutés un par un partent dans l'agenda synchronisé
 ([settings.md](settings.md#la-synchronisation-calendrier)).
 
+Deux règles des états en découlent, et valent pour le téléphone aussi. **L'invitation à choisir un
+groupe ne couvre jamais un jour qui a quelque chose à montrer** : un étudiant sans groupe ni calendrier
+coché qui ajoute un événement le voit ce jour-là, et l'invitation les autres. **La vue semaine ne compte
+que les cours** (« 2 cours ») et se tait sur un jour qui n'a que des événements ; et un jour ne se date
+jamais par un événement du téléphone ou du campus, qui garde à cheval sur minuit le début de la veille
+([`agenda.ts`](../../src/features/Planning/services/agenda.ts)).
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ

@@ -23,7 +23,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { upperCaseFirstLetter } from '../../../shared/services/AppCore';
 import { maintenant } from '../../../shared/services/Temps';
 import { useEnfoncement } from '../../../shared/ui/useEnfoncement';
-import { coursDuJour, dateDuJour, etatDuJour, jourAffiche, type EtatDuJour, type JourDuCache } from '../services/agenda';
+import { coursDuJour, dateDuJour, etatDuJour, jourAffiche, nombreDeCours, type EtatDuJour, type JourDuCache } from '../services/agenda';
 import { couleurDeCours } from '../services/couleurDeCours';
 import type { PlanningEvent } from '../services/PlanningAssembly';
 import { lignesDuCreneau } from './CourseAnnotations';
@@ -89,8 +89,9 @@ function JourDeLAgenda({ date, etat, cours, theme, navigation, largeurDesHeures 
     // les cours : un jour ferie (export PRONOTE) ou un anniversaire du telephone disait « 1 cours ».
     if (!jourAffiche(date, horaires.length + bandeaux.length)) return null;
     const titre = date.isValid() ? upperCaseFirstLetter(date.format('dddd D MMMM')) : '';
-    const nombre = horaires.length;
-    const compte = nombre === 0
+    // Un evenement du telephone ou du campus n'est pas un cours, et son jour n'est pas « libre » (lot 5).
+    const nombre = nombreDeCours(horaires);
+    const compte = nombre === null ? null : nombre === 0
         ? Translator.get('AGENDA_LIBRE')
         : nombre === 1 ? Translator.get('AGENDA_UN_COURS') : Translator.get('AGENDA_N_COURS', nombre);
 
@@ -103,7 +104,7 @@ function JourDeLAgenda({ date, etat, cours, theme, navigation, largeurDesHeures 
         >
             <View style={styles.enTeteDuJour}>
                 <Text style={[styles.titreDuJour, { color: etat === 'aujourdhui' ? theme.accent : theme.font }]}>{titre}</Text>
-                <Text style={[styles.compte, tokens.texte.chiffres, { color: theme.fontTertiary }]}>{compte}</Text>
+                {compte !== null ? <Text style={[styles.compte, tokens.texte.chiffres, { color: theme.fontTertiary }]}>{compte}</Text> : null}
             </View>
             {bandeaux.map((evenement) => <BandeauJourneeEntiere key={evenement.id} evenement={evenement} theme={theme} />)}
             {horaires.length > 0 ? (

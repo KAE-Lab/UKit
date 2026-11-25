@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import moment from 'moment';
 
-import { coursDuJour, dateDuJour, etatDuJour, jourAffiche } from './agenda';
+import { coursDuJour, dateDuJour, etatDuJour, jourAffiche, nombreDeCours } from './agenda';
 import type { PlanningEvent } from './PlanningAssembly';
 
 const cours = (id: string, debut: string, categorie = 'TD', journeeEntiere = false) => ({
@@ -16,6 +16,19 @@ describe('agenda de la semaine', () => {
         expect(dateDuJour({ date: '2026-11-02' }).format('YYYY-MM-DD')).toBe('2026-11-02');
         expect(dateDuJour({ courses: [cours('a', '09:30')] }).format('YYYY-MM-DD')).toBe('2026-11-02');
         expect(dateDuJour({}, moment('2026-11-04')).format('YYYY-MM-DD')).toBe('2026-11-04');
+    });
+
+    it('ne date pas un jour par un evenement du telephone : a cheval sur minuit, il garde le debut de la veille', () => {
+        const soiree = { ...cours('soiree', '22:00'), source: 'telephone' } as PlanningEvent;
+        expect(dateDuJour({ courses: [soiree] }, moment('2026-11-03')).format('YYYY-MM-DD')).toBe('2026-11-03');
+        expect(dateDuJour({ courses: [soiree, cours('a', '09:30')] }).format('YYYY-MM-DD')).toBe('2026-11-02');
+    });
+
+    it('ne compte que les cours, et ne dit pas « libre » un jour qui n’a que des evenements', () => {
+        const evenement = { ...cours('conf', '18:00'), source: 'telephone' } as PlanningEvent;
+        expect(nombreDeCours([cours('a', '09:30'), evenement])).toBe(1);
+        expect(nombreDeCours([evenement])).toBeNull();
+        expect(nombreDeCours([])).toBe(0);
     });
 
     it('situe un jour par rapport a aujourd hui', () => {
