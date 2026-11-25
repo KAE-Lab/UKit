@@ -8,6 +8,67 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
+## [Non publié]
+
+La 7.0, la première publication de la [phase 8](docs/phase-8/README.md) : la communauté. Les
+étudiants disent ce qu'ils voient sur place, votent, écrivent depuis l'application et lisent la
+réponse ; l'application croise ce qu'elle sait déjà pour la journée qui vient. Sans compte, et sans
+rien envoyer de plus que ce que l'étudiant choisit de publier ou de joindre. Sept lots, chacun sa
+spécification dans `docs/phase-8/`.
+
+### Ajouté
+
+- **« Sur place », sur les fiches des restaurants, des bibliothèques et des bâtiments** : fermé
+  aujourd'hui ou jusqu'à une date, un service fermé, des horaires faux et les bons horaires, l'attente
+  au RU en trois niveaux, plus de place assise, Izly en panne, une bibliothèque calme ou qui papote,
+  un bâtiment bloqué ou sans chauffage, et le plat recommandé du menu du jour. Des types proposés,
+  aucun texte libre ; un état tient jusqu'à une voix contraire, demande « toujours vrai ? » quand il
+  vieillit, et s'affiche à côté de l'information officielle, jamais à sa place. « Ça attend ? » ne se
+  demande qu'aux heures du service, et à proximité si la position est accordée.
+- **Le formulaire de retour dans l'application**, à la place de Google Forms : le contexte joint et
+  retirable bloc par bloc, jusqu'à trois captures d'écran, la proposition de signaler après une
+  capture (iOS, Android 14 et plus), les problèmes connus montrés avant d'envoyer un bug, la demande
+  de campus guidée, le brouillon gardé hors ligne. Chaque carte d'erreur y mène, son erreur jointe.
+- **La réponse dans l'application**, sur accord : une notification, un dialogue à l'ouverture et
+  « Mes retours », dans les Réglages.
+- **Les sondages dans les annonces**, un vote par appareil, les résultats après le vote.
+- **La boîte à idées** : les idées retenues par l'équipe, « moi aussi » et « moi aussi, et j'ajoute un
+  détail », comme sur un problème connu ; la sortie d'une idée soutenue s'annonce.
+- **La notation**, par la fiche du système après un usage réussi, et « Noter UKit » dans les Réglages.
+- **Les événements dans le Planning** : une annonce d'événement dit son jour, ses heures et son lieu,
+  « Ajouter à mon planning » la pose dans la journée comme un calendrier du téléphone, et
+  l'abonnement aux événements du campus se propose une fois, désactivé par défaut.
+- **La journée en une carte**, en tête du Planning : le premier et le dernier cours, la forme de la
+  journée, ses trous, où manger dans celui de midi, et les changements détectés depuis la lecture
+  précédente (une salle, une heure, un cours disparu), pour toutes les sources. Tout se calcule sur le
+  téléphone.
+- **Pour l'équipe, un appareil attesté sans compte** : App Attest sur iPhone, Play Integrity sur
+  Android, vérifiés par la fonction `communaute`, seule porte d'écriture de la communauté et des
+  retours ; des plafonds par
+  appareil, par adresse et pour le parc ; une réputation d'appareil qui fait peser davantage une voix
+  souvent confirmée ; une contribution non attestée s'affiche en retrait sans jamais compter.
+- **La console** gagne la modération des signalements (retirer, bloquer un appareil, rendre un état
+  officiel), les retours enrichis et leurs réponses, les problèmes connus, la boîte à idées, les
+  sondages et les événements dans l'éditeur d'annonces, publiés sur `main` avec chaque lot.
+- **Les règles de la communauté** publiées sur le site, [ukit-bordeaux.fr/communaute](https://ukit-bordeaux.fr/communaute),
+  et rappelées une fois, d'un toucher, à la première contribution.
+- **Les durées de conservation** tenues par des tâches planifiées de la base : signalements, appareils,
+  votes, empreintes d'adresse, captures.
+
+### Modifié
+
+- **La confidentialité** ([PRIVACY.md](PRIVACY.md)) dit ce que la communauté et le formulaire envoient,
+  qui le lit et combien de temps c'est gardé ; les fiches des stores suivent
+  ([la marche à suivre](docs/phase-8/fiches-des-stores.md)).
+
+### Corrigé
+
+- **La barre de navigation d'Android suit le thème** de l'application ; sur un Android à trois
+  boutons, elle restait claire sous l'application sombre. Natif : arrive avec un nouveau binaire.
+- **Google Play ne retire plus UKit des appareils sans mode portrait ni Wi-Fi** (tablettes,
+  ordinateurs) : les deux fonctionnalités sont déclarées facultatives
+  ([`fonctionnalites-facultatives`](tools/expo/fonctionnalites-facultatives.js)).
+
 ## [6.3.2] - 2026-11-24
 
 Un correctif, signalé par plusieurs étudiants la première semaine de la 6.3.1.
