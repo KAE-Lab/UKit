@@ -51,7 +51,7 @@ function CarteDeRetour({ theme, retour, vuJusqua }: { theme: AppThemeType; retou
             <View style={styles.corps}>
                 <View style={styles.enTete}>
                     <Badge theme={theme} label={Translator.get(statut.cle)} tone={statut.ton} />
-                    <Text style={[styles.date, tokens.texte.chiffres, { color: theme.fontTertiary }]}>{Translator.get('ENVOYE_LE', moment(retour.envoyeLe).format('LL'))}</Text>
+                    <Text numberOfLines={1} style={[styles.date, tokens.texte.chiffres, { color: theme.fontTertiary }]}>{moment(retour.envoyeLe).format('ll')}</Text>
                 </View>
                 <Text numberOfLines={4} style={[styles.texte, { color: theme.font }]}>{apercu}</Text>
             </View>
@@ -63,7 +63,7 @@ function CarteDeRetour({ theme, retour, vuJusqua }: { theme: AppThemeType; retou
                             <Text style={[tokens.texte.intertitre, { color: nouvelle ? theme.accent : theme.fontSecondary }]}>
                                 {Translator.get(nouvelle ? 'REPONSE_NOUVELLE' : 'REPONSE_DE_L_EQUIPE')}
                             </Text>
-                            <Text style={[styles.date, tokens.texte.chiffres, { color: theme.fontTertiary }]}>{moment(reponse.le).format('LL')}</Text>
+                            <Text numberOfLines={1} style={[styles.date, tokens.texte.chiffres, { color: theme.fontTertiary }]}>{moment(reponse.le).format('ll')}</Text>
                         </View>
                         <Text style={[styles.texte, { color: theme.font }]}>{reponse.texte}</Text>
                     </View>
@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
         gap: tokens.space.sm,
     },
     date: {
+        flexShrink: 1,
         fontSize: tokens.fontSize.xs,
     },
 });

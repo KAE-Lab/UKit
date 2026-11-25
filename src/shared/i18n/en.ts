@@ -678,7 +678,6 @@ const en = {
 	STATUT_CLOS: 'Closed',
 	STATUT_REFUSE_ENVOI: 'Not sent',
 	STATUT_SANS_SUIVI: 'Sent, no follow-up',
-	ENVOYE_LE: 'Sent on $-',
 	REPONSE_DE_L_EQUIPE: 'Reply from the team',
 	REPONSE_NOUVELLE: 'New reply',
 	REPONSE_NOTIFICATION_TITRE: 'The UKit team replied',

@@ -678,7 +678,6 @@ const es: TranslationDict = {
 	STATUT_CLOS: 'Cerrado',
 	STATUT_REFUSE_ENVOI: 'No enviado',
 	STATUT_SANS_SUIVI: 'Enviado, sin seguimiento',
-	ENVOYE_LE: 'Enviado el $-',
 	REPONSE_DE_L_EQUIPE: 'Respuesta del equipo',
 	REPONSE_NOUVELLE: 'Nueva respuesta',
 	REPONSE_NOTIFICATION_TITRE: 'El equipo de UKit ha respondido',
