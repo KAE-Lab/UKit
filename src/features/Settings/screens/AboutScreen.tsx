@@ -18,7 +18,7 @@ import { AppContext } from '../../../shared/services/AppCore';
 import { URL } from '../../../shared/constants/urls';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { LogoUKit } from '../../../shared/ui/epure/LogoUKit';
-import { GroupeDeReglages, RangeeDeReglage } from '../components/GroupeDeReglages';
+import { GroupeDeReglages, RangeeDeReglage } from '../../../shared/ui/GroupeDeReglages';
 
 function ouvrirLien(url: string) {
     Linking.canOpenURL(url).then((supported) => {

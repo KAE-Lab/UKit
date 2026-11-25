@@ -14,7 +14,7 @@ import type { CauseEchecSynchro } from '../../../shared/services/calendrier/cibl
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
-import { GroupeDeReglages, IntroDePage, RangeeDeReglage } from './GroupeDeReglages';
+import { GroupeDeReglages, IntroDePage, RangeeDeReglage } from '../../../shared/ui/GroupeDeReglages';
 import { Icon } from '../../../shared/ui/Icon';
 import { DELAI, delaiVoisin, type PageDeReglage } from '../pagesDeReglages';
 

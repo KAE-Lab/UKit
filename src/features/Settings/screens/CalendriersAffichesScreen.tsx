@@ -31,7 +31,7 @@ import { Interrupteur } from '../../../shared/ui/Interrupteur';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { SettingsTextHeader } from '../components/SettingsSections';
-import { IntroDePage } from '../components/GroupeDeReglages';
+import { IntroDePage } from '../../../shared/ui/GroupeDeReglages';
 import { couleurDeCours } from '../../Planning/services/couleurDeCours';
 import { calendriersLisibles } from '../../Planning/services/TelephoneMapping';
 

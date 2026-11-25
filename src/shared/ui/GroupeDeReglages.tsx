@@ -1,5 +1,6 @@
 /**
- * Le groupe de reglages et sa rangee (jalon 7-J, lot des Reglages).
+ * Le groupe de reglages et sa rangee (jalon 7-J, lot des Reglages). Remonte dans `shared/ui` au lot 3
+ * de la 7.0 : le formulaire de retour et « Mes retours » sont des pages de ce gabarit.
  *
  * **Une pile de rangees est un groupe encadre, pas une pile de cartes** (docs/theme.md) : chaque
  * reglage etait sa propre carte, ombre comprise, et l'ecran se lisait comme une pile d'objets sans
@@ -21,9 +22,9 @@ import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
-import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
-import { Interrupteur } from '../../../shared/ui/Interrupteur';
-import { Icon } from '../../../shared/ui/Icon';
+import { tokens, type AppThemeType } from '../theme/Theme';
+import { Interrupteur } from './Interrupteur';
+import { Icon } from './Icon';
 
 /** La colonne de l'icone : sa largeur aligne les libelles d'une rangee a l'autre. */
 const COLONNE = 24;

@@ -27,7 +27,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { HEADER_OFFSET } from '../../../shared/ui/ScreenState';
 import { withHeaderAnimation } from '../../../shared/navigation/NavHelpers';
 import { SettingsTextHeader } from '../components/SettingsSections';
-import { IntroDePage } from '../components/GroupeDeReglages';
+import { IntroDePage } from '../../../shared/ui/GroupeDeReglages';
 import { PlanningDataManager as DataManager } from '../../Planning/services/PlanningDataManager';
 import type { UeRencontree } from '../../Planning/services/PlanningAssembly';
 import { codeDeFiltreSaisi } from '../../Planning/services/filtresUe';

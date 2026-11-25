@@ -11,10 +11,10 @@ Tout l'état de cet onglet est porté par `SettingsManager`
 L'écran est une suite de **groupes encadrés** ([7-J](../phase-7/7-j-ecrans.md), 2026-11-05) : une
 carte par section, des rangées de 52 points séparées par un filet indenté sous le libellé, l'icône
 blanche dans un carré de la couleur de sa famille
-([`GroupeDeReglages`](../../src/features/Settings/components/GroupeDeReglages.tsx)). **Aucun texte
+([`GroupeDeReglages`](../../src/shared/ui/GroupeDeReglages.tsx)). **Aucun texte
 d'explication sous un réglage** (review du 2026-11-06) : ce qu'il faut savoir d'une page de détail
 tient en un court paragraphe en tête, au-dessus des groupes
-([`IntroDePage`](../../src/features/Settings/components/GroupeDeReglages.tsx)) ; l'accueil, qui ne
+([`IntroDePage`](../../src/shared/ui/GroupeDeReglages.tsx)) ; l'accueil, qui ne
 porte que des rangées qui mènent, n'en a pas. Le pied de groupe ne dit plus qu'un état, comme
 l'établissement que le catalogue a retiré. Chaque réglage
 était sa propre carte : la pile d'objets sans rapport que [theme.md](../theme.md) interdit. Le grand
@@ -731,7 +731,7 @@ réinitialiser serait un résidu, pas un service.
 | [`shared/services/CalendarSyncHelpers.ts`](../../src/shared/services/CalendarSyncHelpers.ts) | les pièces sans état de la synchronisation : projection d'un cours vers un événement, création du calendrier `UKit`, résolution de la cible avant un passage, écriture d'un passage, retrait de ce qu'un passage a écrit |
 | [`shared/services/calendrier/cible.ts`](../../src/shared/services/calendrier/cible.ts) · [`cible.test.ts`](../../src/shared/services/calendrier/cible.test.ts) | où écrire — calendrier en lecture seule ou disparu refusé, UKit en repli — et la cause d'un échec, purs |
 | [`components/SettingsSections.tsx`](../../src/features/Settings/components/SettingsSections.tsx) | les six groupes : établissement, affichage (le thème y est entré en 7-J), notifications, calendrier, confidentialité (7-D — autonome : elle lit le réglage de la mesure par son hook), lancement |
-| [`components/GroupeDeReglages.tsx`](../../src/features/Settings/components/GroupeDeReglages.tsx) | le groupe encadré et sa rangée : carré teinté, valeur qui cède, interrupteur, filets indentés (7-J) |
+| [`shared/ui/GroupeDeReglages.tsx`](../../src/shared/ui/GroupeDeReglages.tsx) | le groupe encadré et sa rangée : carré teinté, valeur qui cède, interrupteur, filets indentés (7-J) |
 | [`components/PageDesReglages.tsx`](../../src/features/Settings/components/PageDesReglages.tsx) | le fond, l'en-tête d'onglet et la vue défilante, en Reanimated (7-J) |
 | [`shared/etablissements/regroupement.ts`](../../src/shared/etablissements/regroupement.ts) · [`regroupement.test.ts`](../../src/shared/etablissements/regroupement.test.ts) | pur : la liste des établissements regroupée par campus, la recherche par nom, code, campus et alias (7-J) |
 | [`components/SettingsModals.tsx`](../../src/features/Settings/components/SettingsModals.tsx) | la modale de choix générique (`SettingsChoicePopup`), ses habillages langue et calendrier, réinitialisation, extinction de la synchronisation |
