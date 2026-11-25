@@ -67,10 +67,17 @@ function depuisBase64Url(texte: string): Uint8Array | null {
     }
 }
 
-/** Un texte affichable : ni caractere de controle, ni espace aux bords. */
+/**
+ * Ce qui ne s'affiche pas et change un texte : les caracteres de controle (C0, DEL, C1), les largeurs
+ * nulles, les inversions de sens et la marque d'ordre des octets. « Le\u200Ba » s'afficherait « Lea »
+ * sans etre le meme prenom (relecture du lot).
+ */
+const INVISIBLES = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/;
+
+/** Un texte affichable : rien d'invisible, ni espace aux bords. */
 function texteSain(valeur: string, maximum: number): string | null {
     const propre = valeur.trim();
-    if (propre === '' || propre.length > maximum || /[\u0000-\u001f\u007f]/.test(propre)) return null;
+    if (propre === '' || propre.length > maximum || INVISIBLES.test(propre)) return null;
     return propre;
 }
 

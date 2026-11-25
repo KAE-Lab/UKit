@@ -7,6 +7,8 @@
  * reste ailleurs, puisque rien n'est jamais parti.
  */
 
+import moment from 'moment';
+
 import { lireLeLien, nomAffichable, fragmentDu, type ContenuPartage, type Partage } from './lienAmi';
 import { dernierJour, estExpire } from './instantane';
 
@@ -110,6 +112,9 @@ export function verdictDuLien(adresse: string, aujourdhui: string, etablissement
     const lecture = lireLeLien(adresse);
     if (lecture.ok === false) return { ok: false, raison: lecture.raison === 'version' ? 'version' : 'illisible' };
     const { contenu, etablissement } = lecture.partage;
+    // Un instantane commence le jour du partage : un premier jour a venir n'expirerait jamais. Un jour de
+    // marge, pour deux horloges qui ne passent pas minuit ensemble.
+    if (contenu.genre === 'instantane' && contenu.premierJour > moment(aujourdhui, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD')) return { ok: false, raison: 'illisible' };
     if (contenu.genre === 'instantane' && estExpire(contenu.premierJour, aujourdhui)) return { ok: false, raison: 'expire', dernierJour: dernierJour(contenu.premierJour) };
     if (contenu.genre === 'groupes' && !etablissementConnu(etablissement)) return { ok: false, raison: 'etablissement-inconnu' };
     return lecture;

@@ -65,3 +65,12 @@ describe('verdictDuLien', () => {
         expect(verdictDuLien('https://ukit-bordeaux.fr/ami#v=1&e=ub', '2026-11-25', connu)).toEqual({ ok: false, raison: 'illisible' });
     });
 });
+
+describe('verdictDuLien, un instantane date de l avenir', () => {
+    it('le refuse au-dela d un jour de marge : il n expirerait jamais', () => {
+        const futur = lienDu({ ...parInstantane, contenu: { ...parInstantane.contenu, premierJour: '2099-12-31' } as Partage['contenu'] }) as string;
+        expect(verdictDuLien(futur, '2026-11-25', () => true)).toEqual({ ok: false, raison: 'illisible' });
+        const demain = lienDu({ ...parInstantane, contenu: { ...parInstantane.contenu, premierJour: '2026-11-26' } as Partage['contenu'] }) as string;
+        expect(verdictDuLien(demain, '2026-11-25', () => true).ok).toBe(true);
+    });
+});

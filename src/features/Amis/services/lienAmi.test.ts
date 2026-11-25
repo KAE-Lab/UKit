@@ -71,6 +71,8 @@ describe('lienDu et lireLeLien', () => {
             'v=1&e=ub&d=20261125&o=A*Ao',
             'v=1&e=ub&g=A&f=4TIN%20501U',
             'v=1&e=ub&g=A%0AB',
+            'v=1&e=ub&g=A%E2%80%8BB',
+            'v=1&e=ub&g=A%C2%85',
             'v=1&e=ub&n=%E0%A4%A&g=A',
             `v=1&e=ub&g=${Array.from({ length: 11 }, (_, i) => `G${i}`).join(',')}`,
             `v=1&e=ub&g=${'A'.repeat(2100)}`,
@@ -91,6 +93,8 @@ describe('lienDu et lireLeLien', () => {
         expect(court.ok === true ? court.partage.nom : 'echec').toBe('Léa Marie');
         expect((fragmentDu({ ...groupes, nom: '   ' }) as string).includes('n=')).toBe(false);
         expect('x'.repeat(NOM_MAXIMUM)).toHaveLength(30);
+        const invisible = lireLeLien(`${ADRESSE_DU_LIEN}#v=1&e=ub&n=Le%E2%80%8Ba&g=A`);
+        expect(invisible.ok === true ? invisible.partage.nom : 'echec').toBeNull();
     });
 });
 

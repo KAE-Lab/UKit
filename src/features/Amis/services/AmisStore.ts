@@ -22,18 +22,19 @@ let amis: Ami[] | null = null;
 let chargement: Promise<Ami[]> | null = null;
 const abonnes = new Set<(amis: readonly Ami[]) => void>();
 
+/**
+ * La liste rangee. Une lecture en echec **leve** et ne se garde pas : la prendre pour une liste vide
+ * ferait ecrire le prochain ajout par-dessus tous les amis ranges (relecture du lot). L'ecran l'affiche
+ * vide le temps de l'echec ; un ajout ou un retrait echoue, et la lecture se retente au geste suivant.
+ */
 function charger(): Promise<Ami[]> {
     if (amis !== null) return Promise.resolve(amis);
     chargement ??= AsyncStorage.getItem(CLE)
-        .then((brut) => lireLesAmis(brut))
-        .catch((erreur) => {
-            console.warn('[amis] lecture en echec', erreur);
-            return [];
-        })
-        .then((lus) => {
-            amis ??= lus;
+        .then((brut) => {
+            amis ??= lireLesAmis(brut);
             return amis;
-        });
+        })
+        .finally(() => { chargement = null; });
     return chargement;
 }
 
@@ -70,7 +71,12 @@ export function useAmis(): readonly Ami[] | null {
     useEffect(() => {
         let vivant = true;
         abonnes.add(setListe);
-        void charger().then((lus) => { if (vivant) setListe(lus); });
+        charger()
+            .then((lus) => { if (vivant) setListe(lus); })
+            .catch((erreur) => {
+                console.warn('[amis] lecture en echec', erreur);
+                if (vivant) setListe([]);
+            });
         return () => {
             vivant = false;
             abonnes.delete(setListe);

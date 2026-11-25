@@ -18,7 +18,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 
-import { edtPersonnelActif, getCodeEtablissementActif, groupesRequis, sourceEdt } from '../../../shared/etablissements';
+import {
+    getCodeEtablissementActif,
+    getEtablissementActif,
+    groupeInconnu,
+    groupesRequis,
+    sourceEdt,
+    sourcePubliqueDe,
+} from '../../../shared/etablissements';
 import type { UkitFailure } from '../../../shared/aetherius';
 import { isConnected, SettingsManager } from '../../../shared/services/AppCore';
 import { maintenant } from '../../../shared/services/Temps';
@@ -28,6 +35,7 @@ import { semaineIsoDe, type SemaineIso } from '../../Planning/services/PlanningA
 import type { Ami } from './amis';
 import { creneauxOccupes, dateDuJour, JOURS_DE_L_INSTANTANE } from './instantane';
 import type { ContenuPartage } from './lienAmi';
+import { partageParGroupes } from './partage';
 
 export type LectureDeSemaine =
     | { readonly ok: true; readonly jours: readonly PlanningWeekDay[]; readonly enCache: boolean }
@@ -79,6 +87,9 @@ export async function lireSaSemaine(ami: Ami, semaine: SemaineIso): Promise<Lect
     if (ami.contenu.genre !== 'groupes') return { ok: false, failure: null };
     const resultat = await PlanningApiService.fetchSemainePublique(ami.etablissement, ami.contenu.groupes, semaine, { origine: 'automatique' });
     if (resultat.ok === false) return { ok: false, failure: resultat.failure };
+    // Un groupe que le referentiel ne resout plus laisserait ses heures passer pour libres : la semaine
+    // de l'ami n'est pas connue, pas a moitie (relecture du lot).
+    if ((resultat.manquants ?? []).length > 0) return { ok: false, failure: groupeInconnu(resultat.manquants.join(', ')) };
     return { ok: true, jours: filtrer(resultat.week, ami.contenu.filtres), enCache: false };
 }
 
@@ -96,12 +107,16 @@ export async function preparerLePartage(): Promise<PreparationDuPartage> {
     const favoris = SettingsManager.getFavoriteGroups();
     const source = sourceEdt();
     if (source.kind === 'aucun' || source.kind === 'lien-attendu') return { ok: false, raison: 'rien-a-partager' };
-    const personnel = edtPersonnelActif();
-    const publics = source.kind !== 'abonnement' && !favoris.some((groupe) => groupe === personnel?.nom);
-    if (publics) {
-        if (favoris.length === 0) return { ok: false, raison: 'rien-a-partager' };
-        return { ok: true, etablissement, contenu: { genre: 'groupes', groupes: [...favoris], filtres: [...SettingsManager.getFilters()] } };
-    }
+    if (groupesRequis() && favoris.length === 0) return { ok: false, raison: 'rien-a-partager' };
+    const publique = sourcePubliqueDe(getEtablissementActif());
+    const parGroupes = partageParGroupes({
+        source: source.kind,
+        etablissement,
+        favoris,
+        filtres: SettingsManager.getFilters(),
+        groupesPublics: publique?.kind === 'ical' ? publique.config.groupes.map((groupe) => groupe.nom) : null,
+    });
+    if (parGroupes !== null) return { ok: true, etablissement, contenu: parGroupes };
 
     const premierJour = dateDuJour(maintenant());
     const semaines: SemaineIso[] = [];
