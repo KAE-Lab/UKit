@@ -358,7 +358,11 @@ dégradé réel sans perdre la session, vérifié le 2026-11-04. Enfin, `animati
 système (`transition_animation_scale`) au lancement du processus, et un rechargement de Metro ne le
 relit pas. Mesuré le 2026-11-05 sur le fond de Campus : il glissait encore après un rechargement, et
 plus un pixel ne bougeait en cinq secondes après `am force-stop` et relance. Un utilisateur qui change
-le réglage en cours de route attend donc, lui aussi, la relance suivante. Sur `ukit`, le bouton
+le réglage en cours de route attend donc, lui aussi, la relance suivante. De même, un module qui pose
+un écouteur (`AppState`, NetInfo), modifié sous Metro, se réexécute avec ses importeurs sans que les
+écouteurs de l'ancienne version se débranchent : le 2026-11-25, une boîte d'envoi se redéposait à chaque
+retour au premier plan, par des instances d'avant une correction. Un tel parcours se juge après
+`am force-stop` et relance. Sur `ukit`, le bouton
 flottant « Tools » du build de développement recouvre le bouton droit des en-têtes : il se coupe dans le
 menu de développement (« Tools button »). Le rendu de l'émulateur est **ANGLE sur SwiftShader**
 (`swangle_indirect`) depuis le 2026-11-05 : SwiftShader en direct le faisait tomber (SEGV, sans trace)

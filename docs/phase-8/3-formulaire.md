@@ -1,5 +1,12 @@
 # Lot 3 — Le formulaire de retour natif
 
+> **Livré le 2026-11-25** : les migrations `20261125040000_retours_natifs.sql` et
+> `20261125050000_lecture_par_cle_en_post.sql` sont **en production**, recettées en transaction annulée
+> avant et rejouées après ; la fonction `communaute` déployée ; les pages Retours et Problèmes connus
+> **en ligne** sur https://kae-lab.github.io/UKit/ depuis `main` ; la page de bascule publiée sur le
+> site ; l'écran, « Mes retours » et les portes joués au banc. **Reste** : la bascule elle-même, à la
+> sortie de la 7.0 ; le chemin attesté sur téléphone (lot 1) ; `PRIVACY.md` et les fiches (lot 7).
+
 > **Ouvert le 2026-11-25**, sur `prochaine-version` pour la 7.0 ; la console sur `feat/console-retours`,
 > fusionnée dans `main`. Un écran natif remplace le formulaire Google pour un bug, une idée, une
 > demande de campus ; la réponse revient dans l'application. Le cadre est celui du
@@ -122,8 +129,10 @@ proposer », qui se rouvre dans Réglages, Confidentialité.
 ### 7. La boîte d'envoi
 
 Un retour entre d'abord dans la boîte (`retours-a-envoyer@1`), ses captures recopiées dans le
-répertoire privé, puis part. Sans réseau ou base injoignable, il attend et repart au retour du réseau
-(NetInfo) ou au prochain entretien, un dépôt à la fois, sous le même identifiant de dépôt. Un plafond
+répertoire privé, puis part. Sans réseau, le formulaire rend la main sans essayer ; base injoignable, il
+attend. Il repart quand internet redevient joignable (`isInternetReachable` de NetInfo : au retour du
+Wi-Fi, la connexion revient avant la résolution des noms, et un dépôt parti dès la connexion échouait)
+ou au prochain entretien, un dépôt à la fois, sous le même identifiant de dépôt. Un plafond
 du jour le garde aussi, jusqu'au lendemain — chaque essai compte à l'adresse —, et le toast dit qu'il
 partira plus tard ; tout autre refus est définitif et se dit. Un dépôt rejoué après la clôture ne
 redemande pas ses captures. Une capture se téléverse sous son rang (`<id>/<n>.jpg`), qu'une URL manquante ne décale pas,
@@ -229,6 +238,43 @@ volontaire ; le « moi aussi » et ce qu'il joint ; la notification locale. Les 
 5. **Dans la console locale**, un compte jetable : la liste des deux sources, la fiche native, ses
    captures, répondre, changer l'état ; publier, reformuler, clore un problème, ses « moi aussi » et ses
    détails ; à 1 440 et 390 pixels.
+
+*Joué le 2026-11-25.* La recette SQL, soixante-dix-sept vérifications conformes en transaction annulée
+avec les deux migrations, puis sans elles une fois appliquées ; la vue lisible à l'empreinte de la
+production. Par l'API publique : un dépôt non attesté accepté, son numéro masqué, l'URL signée, le
+téléversement, la lecture par clé en POST ; la même lecture en GET refusée — la première migration
+l'acceptait, une RPC volatile se lit aussi en GET, d'où la seconde ; les tables et `deposer_retour`
+refusés à la clé publiable (42501) ; la purge appelée par `pg_net`, une ligne marquée. `npm test` :
+1 587 tests ; `expo export` des deux plateformes ; le build `f17bd2d8` (APK
+`ukit-dev-2026-11-25-retours.apk`) sans `READ_MEDIA_IMAGES`, `CAMERA` ni `RECORD_AUDIO`, avec
+`DETECT_SCREEN_CAPTURE`.
+
+Sur le banc (`ukit`), en sombre et en français puis en clair et en espagnol : les trois natures, la
+branche du campus et du volontariat, les blocs coupés ; la capture d'écran du système détectée, la
+proposition, l'écran joint ; le sélecteur de photos du système, sans permission demandée ; un envoi
+avec réponse, la réponse écrite dans la console, puis au retour au premier plan le dialogue en tête, la
+pastille de Réglages, « Mes retours » et « Nouvelle réponse » ; hors ligne, la carte d'erreur des
+restaurants et « Signaler ce problème », l'erreur jointe (hôte et famille), le retour gardé « En
+attente d'envoi », parti seul au retour du réseau avec sa capture ; le plafond du jour de l'appareil non
+attesté atteint, le retour différé au lendemain et plus redéposé ce jour-là ; un problème publié par la
+console, « Déjà signalé » avant d'écrire, « Moi aussi » (compté dans la console, non attesté),
+« Ajouter un détail », puis clos et absent à la réouverture. Le banc a fait corriger : l'onglet de
+départ en anglais brut, le parcours qui contenait le formulaire et ses répétitions, le filet des champs
+du campus, la date qui débordait à côté d'un statut long, l'envoi hors ligne qui attendait le délai
+d'un appel voué à l'échec, et la boîte qui repartait avant la résolution des noms.
+
+Dans la console locale (compte jetable admin, supprimé après de l'authentification et d'`editeurs`) :
+la liste des deux sources, la fiche native, son contexte, sa capture, répondre (journalisé) ; un
+problème publié par le formulaire, ses « moi aussi » et ses appareils, clos ; à 1 440 et 390 pixels. Le
+panneau des « moi aussi » d'un problème neuf lisait un identifiant vide (22P02) : il n'apparaît plus
+qu'une fois la ligne enregistrée. Les essais (retours, réponse, capture, problème, vote) sont effacés
+de la production.
+
+Les relectures ont corrigé, avant la mise en production : un dépôt rejoué qui écrivait un doublon (d'où
+`depot`) ; un brouillon d'idée perdu par la pastille ; une notification qui éteignait le dialogue en
+tête ; un plafond du jour traité comme un refus définitif, puis redéposé toute la journée ; un texte
+masqué qui dépassait sa borne, un emoji coupé ; les captures redemandées après la clôture ; les
+captures du cache laissées derrière le formulaire.
 
 ## Limites écrites
 
