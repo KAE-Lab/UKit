@@ -13,8 +13,10 @@ import { BORNES, cheminDeCapture, lireContexte, lireDonneesDeRetour, masquer } f
 const CLE = versBase64Url(new Uint8Array(32).fill(1));
 const EMPREINTE = 'ab'.repeat(32);
 
+const DEPOT = '0b6f3c8e-2a41-4e57-9b8d-6f1e2c3d4a5b';
+
 function signe(retour: Record<string, unknown>): string {
-    return JSON.stringify({ defi: 'defi', cle: CLE, retour });
+    return JSON.stringify({ defi: 'defi', cle: CLE, retour: { depot: DEPOT, ...retour } });
 }
 
 describe('le texte signe d\'un retour', () => {
@@ -29,7 +31,7 @@ describe('le texte signe d\'un retour', () => {
         }));
         expect(lu.ok).toBe(true);
         if (lu.ok === false) return;
-        expect(lu.valeur.retour).toMatchObject({ nature: 'bug', texte: 'Le menu reste vide', captures: 2, cleReponse: EMPREINTE, campus: null, contact: null });
+        expect(lu.valeur.retour).toMatchObject({ depot: DEPOT, nature: 'bug', texte: 'Le menu reste vide', captures: 2, cleReponse: EMPREINTE, campus: null, contact: null });
         expect(lu.valeur.retour.contexte?.parcours).toEqual(['CampusTab', 'CrousMenu']);
     });
 
@@ -54,6 +56,8 @@ describe('le texte signe d\'un retour', () => {
             { nature: 'bug', texte: 'Cle courte', cle_reponse: 'abcd' },
             { nature: 'bug', texte: 'Probleme faux', probleme: '../retours' },
             { nature: 'bug', texte: 'Volontaire texte', volontaire: 'oui' },
+            { nature: 'bug', texte: 'Sans depot', depot: undefined },
+            { nature: 'bug', texte: 'Depot faux', depot: 'un-depot' },
         ];
         for (const retour of refuses) expect(lireDonneesDeRetour(signe(retour))).toEqual({ ok: false, raison: 'retour_invalide' });
         expect(lireDonneesDeRetour('{pas du json')).toEqual({ ok: false, raison: 'donnees' });
@@ -85,6 +89,8 @@ describe('le masquage du texte libre', () => {
     test('une adresse et un numero se retirent ; une version et un identifiant de store restent', () => {
         expect(masquer('Ecrivez a prenom.nom@etu.u-bordeaux.fr ou au 06 12 34 56 78')).toBe('Ecrivez a [adresse retirée] ou au [numéro retiré]');
         expect(masquer('Depuis la 7.0.0, id1394708917')).toBe('Depuis la 7.0.0, id1394708917');
+        // Un texte deja a la borne qui grossit au masque reste a la borne, au lieu d'etre refuse.
+        expect(masquer(`${'x'.repeat(1990)} 0612345678`)).toHaveLength(2000);
     });
 });
 

@@ -960,9 +960,13 @@ on conflict (sujet) do update
 --   atteste             l'appareil a-t-il ete atteste ; un retour non atteste se lit en retrait
 --   reponse_possible    l'etudiant a accepte la reponse dans l'application
 --   cle_reponse         l'empreinte SHA-256 de la cle secrete de l'appareil ; aucun compte ne la lit
+--                       dans la table (le journal, lu par les seuls admins, la copie avec la ligne)
 --   clos_le             le passage a `traite` ou `refuse`, tenu par un declencheur : il fixe la duree
 --                       des captures
 --   captures_purgees_le leurs fichiers effaces
+--   depot               l'identifiant du depot, tire sur l'appareil : un depot rejoue — la reponse
+--                       perdue en route, l'application tuee pendant un televersement — retrouve sa
+--                       ligne au lieu d'en ecrire une seconde
 -- Les contraintes vivent sur leur colonne : `add column if not exists` les saute avec elle, et la vue
 -- lisible (schema.sql) se rejoue sans erreur.
 alter table public.retours add column if not exists source text not null default 'formulaire'
@@ -978,6 +982,7 @@ alter table public.retours add column if not exists reponse_possible boolean not
     constraint retours_reponse_possible_check check (reponse_possible = (cle_reponse is not null));
 alter table public.retours add column if not exists clos_le timestamptz;
 alter table public.retours add column if not exists captures_purgees_le timestamptz;
+alter table public.retours add column if not exists depot uuid unique;
 
 -- Le plafond du parc non atteste compte les retours natifs non attestes du jour.
 create index if not exists retours_non_attestes on public.retours (recu_le) where source = 'app' and not atteste;

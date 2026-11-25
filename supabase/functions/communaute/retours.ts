@@ -35,6 +35,8 @@ export interface Contexte {
 }
 
 export interface Retour {
+    /** L'identifiant du depot, tire sur l'appareil : un depot rejoue retrouve sa ligne. */
+    readonly depot: string;
     readonly nature: NatureDeRetour;
     readonly texte: string;
     readonly campus: string | null;
@@ -168,13 +170,15 @@ function lireRetour(valeur: unknown): Retour | null {
     const volontaire = r.volontaire === true;
     const campus = facultatif(r.campus, (v) => champ(v, BORNES.campus));
     const contact = facultatif(r.contact, (v) => champ(v, BORNES.contact));
+    const depot = lireUuid(r.depot);
     const probleme = facultatif(r.probleme, lireUuid);
     const cleReponse = facultatif(r.cle_reponse, lireEmpreinte);
     const captures = r.captures === undefined ? 0 : lireNombreDeCaptures(r.captures);
     const contexte = lireContexte(r.contexte);
-    if (campus === false || contact === false || probleme === false || cleReponse === false || captures === undefined || contexte === undefined) return null;
+    if (depot === undefined || campus === false || contact === false || probleme === false || cleReponse === false
+        || captures === undefined || contexte === undefined) return null;
     if (!brancheValide(nature, campus, volontaire, contact)) return null;
-    return { nature, texte, campus, volontaire, contact, probleme, contexte, captures, cleReponse };
+    return { depot, nature, texte, campus, volontaire, contact, probleme, contexte, captures, cleReponse };
 }
 
 /** Les donnees signees d'un depot, relues apres la preuve. */
@@ -197,10 +201,11 @@ const NUMERO = /(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(?0\)?[\s.-]?)?[1-9](?:[\s.-]?\d
 
 /**
  * Les adresses et les numeros d'un texte libre, masques : les memes motifs que l'import du formulaire,
- * volontairement larges. L'adresse du volontaire, dans son champ, n'est jamais masquee.
+ * volontairement larges. L'adresse du volontaire, dans son champ, n'est jamais masquee. Le masque
+ * peut allonger le texte : il se borne de nouveau, plutot que de faire refuser un texte deja admis.
  */
 export function masquer(texte: string): string {
-    return texte.replace(ADRESSE, '[adresse retirée]').replace(NUMERO, '[numéro retiré]');
+    return texte.replace(ADRESSE, '[adresse retirée]').replace(NUMERO, '[numéro retiré]').slice(0, BORNES.texte);
 }
 
 /** Le chemin d'une capture dans l'espace `retours` : le dossier du retour, son rang. */

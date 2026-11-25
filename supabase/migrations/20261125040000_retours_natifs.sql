@@ -69,9 +69,13 @@ on conflict (sujet) do update
 --   atteste             l'appareil a-t-il ete atteste ; un retour non atteste se lit en retrait
 --   reponse_possible    l'etudiant a accepte la reponse dans l'application
 --   cle_reponse         l'empreinte SHA-256 de la cle secrete de l'appareil ; aucun compte ne la lit
+--                       dans la table (le journal, lu par les seuls admins, la copie avec la ligne)
 --   clos_le             le passage a `traite` ou `refuse`, tenu par un declencheur : il fixe la duree
 --                       des captures
 --   captures_purgees_le leurs fichiers effaces
+--   depot               l'identifiant du depot, tire sur l'appareil : un depot rejoue — la reponse
+--                       perdue en route, l'application tuee pendant un televersement — retrouve sa
+--                       ligne au lieu d'en ecrire une seconde
 -- Les contraintes vivent sur leur colonne : `add column if not exists` les saute avec elle, et la vue
 -- lisible (schema.sql) se rejoue sans erreur.
 alter table public.retours add column if not exists source text not null default 'formulaire'
@@ -87,6 +91,7 @@ alter table public.retours add column if not exists reponse_possible boolean not
     constraint retours_reponse_possible_check check (reponse_possible = (cle_reponse is not null));
 alter table public.retours add column if not exists clos_le timestamptz;
 alter table public.retours add column if not exists captures_purgees_le timestamptz;
+alter table public.retours add column if not exists depot uuid unique;
 
 -- Le plafond du parc non atteste compte les retours natifs non attestes du jour.
 create index if not exists retours_non_attestes on public.retours (recu_le) where source = 'app' and not atteste;
@@ -155,7 +160,7 @@ create table if not exists private.retours_par_appareil (
 -- -----------------------------------------------------------------------------
 --
 -- `deposer_retour`, apres `admettre` et la preuve de l'appareil. `p` : `{ appareil: { cle, nature,
--- plateforme, atteste, compteur? }, empreinte_ip, jeton, retour: { nature, texte, campus?, volontaire?,
+-- plateforme, atteste, compteur? }, empreinte_ip, jeton, retour: { depot, nature, texte, campus?, volontaire?,
 -- contact?, probleme?, contexte?, captures, cle_reponse? } }`, les octets en hexadecimal. Les refus
 -- attendus rendent `{"statut": "refusee", "raison": ...}` et la transaction se valide, comme
 -- `contribuer` : les comptes avancent meme quand le retour est refuse. Une forme fausse leve (22023).
@@ -189,6 +194,7 @@ declare
     v_contexte    jsonb;
     v_captures    integer;
     v_cle_reponse bytea;
+    v_depot       uuid;
     v_id          text;
 begin
     if p is null or jsonb_typeof(p) <> 'object' or jsonb_typeof(v_dispositif) is distinct from 'object'
@@ -206,6 +212,16 @@ begin
        or v_nature is null or v_nature not in ('app_attest', 'secret')
        or v_atteste is null or (v_nature = 'app_attest' and (not v_atteste or v_compteur is null)) then
         raise exception 'deposer_retour : appareil inattendu' using errcode = '22023';
+    end if;
+
+    -- 0. Un depot deja ecrit : sa ligne, sans rien compter de plus. L'appareil le rejoue quand la reponse
+    --    s'est perdue ; sans cela, il ecrirait un doublon, ou buterait pour toujours sur sa cle de reponse.
+    if (v_r ->> 'depot') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+        v_depot := (v_r ->> 'depot')::uuid;
+        select id, captures into v_id, v_captures from public.retours where depot = v_depot;
+        if v_id is not null then
+            return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'deja', true);
+        end if;
     end if;
 
     -- 1. Le non atteste, borne avant tout : par adresse (le compteur des contributions, partage), puis
@@ -292,11 +308,11 @@ begin
         'sha256'), 'hex');
     insert into public.retours (
         id, recu_le, nature, campus, section, appareil, systeme, version_app, texte, contact, volontaire,
-        reponses, source, contexte, captures, probleme, atteste, reponse_possible, cle_reponse)
+        reponses, source, contexte, captures, probleme, atteste, reponse_possible, cle_reponse, depot)
     values (
         v_id, now(), v_type, v_campus, left(v_contexte ->> 'onglet', 40), left(v_contexte ->> 'appareil', 120),
         left(v_contexte ->> 'systeme', 60), left(v_contexte ->> 'version', 20), v_texte, v_contact, v_volontaire,
-        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_atteste, v_cle_reponse is not null, v_cle_reponse);
+        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_atteste, v_cle_reponse is not null, v_cle_reponse, v_depot);
     return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'probleme', v_probleme);
 end;
 $$;

@@ -227,16 +227,19 @@ async function deposer(d: Deposer, req: Request, maintenant: number): Promise<Re
         // Le jeton du jour de l'appareil : son plafond de retours, sans que le retour porte sa cle.
         jeton: versHex(await jetonDeVote(CLES.vote, prouve.cle, 'retour', jourDeParis(new Date(maintenant)))),
         retour: {
-            nature: retour.nature, texte: masquer(retour.texte), campus: retour.campus, volontaire: retour.volontaire,
+            depot: retour.depot, nature: retour.nature, texte: masquer(retour.texte), campus: retour.campus, volontaire: retour.volontaire,
             contact: retour.contact, probleme: retour.probleme, contexte: retour.contexte, captures: retour.captures,
             cle_reponse: retour.cleReponse,
         },
     });
     if (r.statut === 'refusee') return refuser(r.raison ?? 'refusee');
     const id = typeof r.id === 'string' ? r.id : '';
+    // Le nombre que la base a garde : un depot rejoue rend les URL de son premier depot, et une capture
+    // deja arrivee se remplace (`upsert`), le temps de l'URL, par celui qui la detient seul.
+    const captures = typeof r.captures === 'number' ? r.captures : retour.captures;
     const envois: { chemin: string; jeton: string }[] = [];
-    for (let rang = 1; rang <= retour.captures && id !== ''; rang++) {
-        const { data, error } = await service().storage.from(ESPACE_DES_CAPTURES).createSignedUploadUrl(cheminDeCapture(id, rang));
+    for (let rang = 1; rang <= captures && id !== ''; rang++) {
+        const { data, error } = await service().storage.from(ESPACE_DES_CAPTURES).createSignedUploadUrl(cheminDeCapture(id, rang), { upsert: true });
         if (error !== null || data === null) {
             console.warn(`[communaute] URL de capture non creee : ${error?.message ?? 'vide'}`);
             continue;
@@ -250,7 +253,11 @@ async function deposer(d: Deposer, req: Request, maintenant: number): Promise<Re
  * Les captures dues, effacees par l'API de stockage, dossier par dossier, puis marquees. Un dossier
  * qui echoue reste du, et repart a l'heure suivante.
  */
-async function purger(): Promise<Response> {
+async function purger(req: Request, maintenant: number): Promise<Response> {
+    // Publique — la tache horaire de la base l'appelle sans secret —, elle compte l'adresse comme le
+    // reste : un appel en boucle bute sur le plafond de l'adresse, et ne lance pas les listages du stockage.
+    if (CLES === null) return indisponible('non_configuree');
+    if (!(await admettre(await empreinteDeLaDemande(CLES.ip, req, maintenant), false)).admis) return refuser('plafond_ip');
     const base = service();
     const { data: ids, error } = await base.rpc('captures_a_purger');
     if (error !== null) throw new Error(`captures_a_purger : ${error.message}`);
@@ -294,7 +301,7 @@ Deno.serve(async (req) => {
         }
         if (d.action === 'enregistrer') return await enregistrer(d, req, maintenant);
         if (d.action === 'deposer') return await deposer(d, req, maintenant);
-        if (d.action === 'purger') return await purger();
+        if (d.action === 'purger') return await purger(req, maintenant);
         return await contribuer(d, req, maintenant);
     } catch (erreur) {
         // Une base injoignable ou un reglage absent : l'application rejouera plus tard.

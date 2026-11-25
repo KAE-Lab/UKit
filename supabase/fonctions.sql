@@ -1069,7 +1069,7 @@ create trigger journal after insert or update or delete on public.retours_repons
 -- -----------------------------------------------------------------------------
 --
 -- `deposer_retour`, apres `admettre` et la preuve de l'appareil. `p` : `{ appareil: { cle, nature,
--- plateforme, atteste, compteur? }, empreinte_ip, jeton, retour: { nature, texte, campus?, volontaire?,
+-- plateforme, atteste, compteur? }, empreinte_ip, jeton, retour: { depot, nature, texte, campus?, volontaire?,
 -- contact?, probleme?, contexte?, captures, cle_reponse? } }`, les octets en hexadecimal. Les refus
 -- attendus rendent `{"statut": "refusee", "raison": ...}` et la transaction se valide, comme
 -- `contribuer` : les comptes avancent meme quand le retour est refuse. Une forme fausse leve (22023).
@@ -1103,6 +1103,7 @@ declare
     v_contexte    jsonb;
     v_captures    integer;
     v_cle_reponse bytea;
+    v_depot       uuid;
     v_id          text;
 begin
     if p is null or jsonb_typeof(p) <> 'object' or jsonb_typeof(v_dispositif) is distinct from 'object'
@@ -1120,6 +1121,16 @@ begin
        or v_nature is null or v_nature not in ('app_attest', 'secret')
        or v_atteste is null or (v_nature = 'app_attest' and (not v_atteste or v_compteur is null)) then
         raise exception 'deposer_retour : appareil inattendu' using errcode = '22023';
+    end if;
+
+    -- 0. Un depot deja ecrit : sa ligne, sans rien compter de plus. L'appareil le rejoue quand la reponse
+    --    s'est perdue ; sans cela, il ecrirait un doublon, ou buterait pour toujours sur sa cle de reponse.
+    if (v_r ->> 'depot') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+        v_depot := (v_r ->> 'depot')::uuid;
+        select id, captures into v_id, v_captures from public.retours where depot = v_depot;
+        if v_id is not null then
+            return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'deja', true);
+        end if;
     end if;
 
     -- 1. Le non atteste, borne avant tout : par adresse (le compteur des contributions, partage), puis
@@ -1206,11 +1217,11 @@ begin
         'sha256'), 'hex');
     insert into public.retours (
         id, recu_le, nature, campus, section, appareil, systeme, version_app, texte, contact, volontaire,
-        reponses, source, contexte, captures, probleme, atteste, reponse_possible, cle_reponse)
+        reponses, source, contexte, captures, probleme, atteste, reponse_possible, cle_reponse, depot)
     values (
         v_id, now(), v_type, v_campus, left(v_contexte ->> 'onglet', 40), left(v_contexte ->> 'appareil', 120),
         left(v_contexte ->> 'systeme', 60), left(v_contexte ->> 'version', 20), v_texte, v_contact, v_volontaire,
-        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_atteste, v_cle_reponse is not null, v_cle_reponse);
+        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_atteste, v_cle_reponse is not null, v_cle_reponse, v_depot);
     return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'probleme', v_probleme);
 end;
 $$;

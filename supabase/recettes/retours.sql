@@ -121,6 +121,24 @@ begin
     raise notice 'ok 2c';
 end $$;
 
+-- Un depot rejoue retrouve sa ligne, sans rien compter : ni doublon, ni le plafond de l'appareil.
+do $$
+declare
+    premier jsonb;
+    second  jsonb;
+begin
+    premier := pg_temp.d('lot3-rejeu', jsonb_build_object('depot', '7d1f2e3a-4b5c-4d6e-8f70-112233445566', 'nature', 'bug',
+        'texte', 'Rejoue apres une reponse perdue', 'captures', 1, 'cle_reponse', pg_temp.empreinte('reponse-rejeu')));
+    second := pg_temp.d('lot3-rejeu', jsonb_build_object('depot', '7d1f2e3a-4b5c-4d6e-8f70-112233445566', 'nature', 'bug',
+        'texte', 'Rejoue apres une reponse perdue', 'captures', 1, 'cle_reponse', pg_temp.empreinte('reponse-rejeu')));
+    if premier ->> 'statut' <> 'acceptee' or second ->> 'statut' <> 'acceptee' or (second ->> 'deja')::boolean is distinct from true
+       or premier ->> 'id' <> second ->> 'id' or (second ->> 'captures')::integer <> 1
+       or (select count(*) from public.retours where texte = 'Rejoue apres une reponse perdue') <> 1 then
+        raise exception 'ECHEC 2w : un depot rejoue % puis %', premier, second;
+    end if;
+    raise notice 'ok 2w';
+end $$;
+
 -- Le plafond du jour de l'appareil atteste (2), puis le non atteste (1).
 select pg_temp.attendre('2d', pg_temp.d('lot3-a', '{"nature": "fonctionnalite", "texte": "Une idee de plus"}'), 'acceptee');
 select pg_temp.attendre('2e', pg_temp.d('lot3-a', '{"nature": "fonctionnalite", "texte": "Une troisieme"}'), 'refusee', 'plafond_appareil');
@@ -196,6 +214,12 @@ do $$ begin
     raise notice 'ok 2v';
 end $$;
 reset role;
+do $$ begin
+    if (select n from private.retours_par_appareil where jeton = extensions.digest('lot3-rejeu|retour', 'sha256')) <> 1 then
+        raise exception 'ECHEC 2x : un depot rejoue compte au plafond de l appareil';
+    end if;
+    raise notice 'ok 2x';
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 3. Les problemes connus, et le detail qui s'y range.
