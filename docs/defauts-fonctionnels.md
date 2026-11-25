@@ -19,6 +19,63 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Les dépendances de la console portent trois failles élevées — relevé par `npm audit` le 2026-11-25
+
+`npm --prefix console audit` en compte trois, toutes corrigées en amont : **vite** 8.3.0 à 8.3.2, par
+`launch-editor` (échappement des arguments sous Windows, un drapeau d'éditeur mal lu) — le serveur de
+développement seulement, rien de ce qui est publié ; **zod** sous 4.6.6, qui peut épuiser la mémoire en
+validant une collection contrainte démesurée — dans le navigateur de l'éditeur, sur ses propres
+saisies ; **source-map-js** jusqu'à 1.2.1, un déni de service par des décalages de section, à la
+construction. Remède attendu : `npm --prefix console update vite zod source-map-js`, puis les portes
+et le build, dans un lot à lui ; les mêmes versions sont dans le `package-lock.json` de la racine.
+
+### Dependabot signale 95 alertes ouvertes sur `main` — relevé le 2026-11-25
+
+6 critiques, 41 élevées, 38 moyennes, 10 faibles. Près de la moitié portent sur **Pillow**, épinglé dans
+[`tools/epure/requirements.txt`](../tools/epure/requirements.txt), un outil du poste qui ne part ni dans
+l'application ni dans la console ; puis **node-forge** (21, transitive de la chaîne Expo, à la racine),
+vite, zod et source-map-js en double (racine et console), **shell-quote** (critique), brace-expansion,
+fast-uri, sharp, @vitest/mocker et quelques autres. Remède attendu : une passe par manifeste, l'outil
+`epure` d'abord (une ligne), puis la racine par `npm audit fix` et les portes complètes, l'export Expo
+compris si une dépendance native bouge.
+
+### `jetons_push` n'a aucune colonne unique que la console puisse lire — relevé le 2026-11-25
+
+Depuis 7-H, le jeton ne se lit par aucun compte de la console, et c'était sa clé : la liste et le parc
+lisent la table par tranches de mille (`.range()`), triées par `maj_le`, sans ordre stable. Un dépôt
+qui arrive entre la lecture de deux tranches déplace une ligne d'une tranche à l'autre : un appareil
+compté deux fois, ou pas du tout, dans le parc du tableau de bord et des statistiques. L'écart est
+d'une poignée d'appareils sur un parc de milliers, mais il n'est pas nul. Remède attendu : une colonne
+d'identité non secrète (un `id` en séquence, ou l'empreinte du jeton) lisible par les éditeurs, et le
+tri de lecture sur elle.
+
+### La page Équipe reste blanche après une lecture des droits en échec — relevé par la recette du lot 0c le 2026-11-25
+
+La base coupée le temps d'une lecture, les droits du compte ne se lisent pas : le menu perd « Équipe »,
+ce qui est juste. Mais la base revenue, la page Équipe (`#/equipe/nouveau`, rouverte par son adresse)
+reste vide, sans erreur ni « Réessayer », et le menu sans « Équipe », jusqu'au rechargement de la page.
+La règle transverse de 7-E veut qu'une lecture en échec se dise et se relise. Remède attendu : l'échec
+de la lecture des droits rendu comme les autres (`ErreurDeLecture`), et relu au retour du réseau.
+
+### Les sondes « du matin » passent l'après-midi — relevé le 2026-11-25
+
+[`sondes.yml`](../.github/workflows/sondes.yml) est programmé à 5 h UTC ; sur les sept derniers jours,
+les exécutions sont parties entre 13 h et 16 h UTC. GitHub retarde les tâches programmées des dépôts
+gratuits, sans garantie. La console et le guide parlent des « sondes du matin », et la lecture des échecs
+de l'application contre les sondes suppose qu'elles soient passées avant la journée de cours. Remède à
+trancher : un déclencheur hors de GitHub (une tâche programmée de Supabase qui appelle le workflow), ou
+le mot « du matin » retiré partout.
+
+### Les refus de connexion universitaire de Bordeaux ne s'expliquent pas par les sondes — relevé le 2026-11-25
+
+La page Sources de la console montre, pour la semaine du 18 au 24 novembre, une part importante de
+connexions universitaires refusées à Bordeaux, alors que la sonde du CAS est restée verte chaque jour.
+Les échecs de source mesurés par l'application sont dominés, eux aussi sous des sondes vertes, par le
+portail de Bordeaux (Moodle et la messagerie, famille `blocked`) et par Celcat (`unavailable`). Une
+sonde vérifie qu'un service répond, pas que le parcours de l'application aboutit. À instruire : la part
+des mots de passe faux (qu'aucune mesure ne distingue aujourd'hui), le parcours du portail au banc sur
+`ukit`, et ce que la famille `blocked` recouvre. Les chiffres sont dans la console, page Sources.
+
 ### Google Play exclut les appareils sans mode portrait ni Wi-Fi — signalé par la Play Console le 2026-11-24
 
 À l'envoi de la 6.3.2 en examen, la Play Console avertit que deux fonctionnalités matérielles sont
