@@ -50,20 +50,20 @@ end;
 $$;
 
 -- Un detail sur une idee, comme la fonction `communaute` le depose.
-create function pg_temp.d(cle text, idee text)
+create function pg_temp.d(cle text, idee text, nature text default 'fonctionnalite')
 returns jsonb language plpgsql as $$
 begin
     return public.deposer_retour(jsonb_build_object(
         'appareil', jsonb_build_object('cle', encode(extensions.digest(cle, 'sha256'), 'hex'), 'nature', 'secret', 'plateforme', 'android', 'atteste', true),
         'empreinte_ip', encode(extensions.digest('ip-lot4', 'sha256'), 'hex'),
         'jeton', encode(extensions.digest(cle || '|retour', 'sha256'), 'hex'),
-        'retour', jsonb_build_object('depot', gen_random_uuid(), 'nature', 'fonctionnalite', 'texte', 'Un detail sur l idee', 'idee', idee, 'captures', 0)));
+        'retour', jsonb_build_object('depot', gen_random_uuid(), 'nature', nature, 'texte', 'Un detail sur l idee', 'idee', idee, 'captures', 0)));
 end;
 $$;
 
 grant execute on function pg_temp.attendre(text, jsonb, text, text) to service_role;
 grant execute on function pg_temp.v(text, text, text, text, boolean) to service_role;
-grant execute on function pg_temp.d(text, text) to service_role;
+grant execute on function pg_temp.d(text, text, text) to service_role;
 
 select jsonb_build_object('email', email)::text as claims_admin
   from public.editeurs where role = 'admin' order by email limit 1 \gset
@@ -86,6 +86,13 @@ with a as (
     returning id
 )
 insert into essai select 'archivee', id from a;
+with a as (
+    insert into public.annonces (titre, emetteur, audience, publiee_le, expire_le, sondage) values
+        ('Recette sondage programme', 'Recette', 'testeurs', now() + interval '1 day', null, '{"question": "Quel creneau ?", "choix": [{"id": "a", "libelle": "Midi"}, {"id": "b", "libelle": "Soir"}], "clos_le": "2099-01-01T00:00:00Z"}'),
+        ('Recette sondage expire', 'Recette', 'testeurs', now() - interval '2 days', now() - interval '1 day', '{"question": "Quel creneau ?", "choix": [{"id": "a", "libelle": "Midi"}, {"id": "b", "libelle": "Soir"}], "clos_le": "2099-01-01T00:00:00Z"}')
+    returning id, titre
+)
+insert into essai select case titre when 'Recette sondage programme' then 'programmee' else 'expiree' end, id from a;
 
 -- ---------------------------------------------------------------------------
 -- 1. La forme du sondage.
@@ -102,6 +109,9 @@ declare
         '{"question": "Quel jour ?", "choix": [{"id": "a", "libelle": "x"}, {"id": "b", "libelle": "y"}], "clos_le": "demain"}',
         '{"question": "Quel jour ?", "choix": [{"id": "a", "libelle": "x"}, {"id": "b", "libelle": "y"}], "clos_le": "2099-01-01T00:00:00Z", "autre": 1}',
         '{"question": "Quel jour ?", "choix": [{"id": "a", "libelle": "1"}, {"id": "b", "libelle": "2"}, {"id": "c", "libelle": "3"}, {"id": "d", "libelle": "4"}, {"id": "e", "libelle": "5"}, {"id": "f", "libelle": "6"}, {"id": "g", "libelle": "7"}], "clos_le": "2099-01-01T00:00:00Z"}',
+        '{"question": "Quel jour ?", "choix": [{"id": "a", "libelle": "x"}, {"id": "b", "libelle": "y"}], "clos_le": "2026-02-30T12:00:00Z"}',
+        '{"question": "Quel jour ?", "choix": [{"id": "a", "libelle": "x"}, {"id": "b", "libelle": "y"}], "clos_le": "2026-12-01T25:00:00Z"}',
+        '{"question": "Quel jour ?", "choix": [{"id": "a", "libelle": "x"}, {"id": "b", "libelle": "y"}], "clos_le": "2026-12-01T12:00:00+99:99"}',
         '["pas un objet"]'
     ]::jsonb[];
     s jsonb;
@@ -147,6 +157,8 @@ select pg_temp.attendre('3e', pg_temp.v('lot4-b', 'sondage.choix', (select id::t
 select pg_temp.attendre('3f', pg_temp.v('lot4-b', 'sondage.choix', (select id::text from essai where nom = 'archivee'), 'a'), 'refusee', 'cible_inconnue');
 select pg_temp.attendre('3g', pg_temp.v('lot4-b', 'sondage.choix', (select id::text from essai where nom = 'sans'), 'a'), 'refusee', 'cible_inconnue');
 select pg_temp.attendre('3h', pg_temp.v('lot4-b', 'sondage.choix', 'restaurant-12', 'a'), 'refusee', 'cible_inconnue');
+select pg_temp.attendre('3h2', pg_temp.v('lot4-b', 'sondage.choix', (select id::text from essai where nom = 'programmee'), 'a'), 'refusee', 'cible_inconnue');
+select pg_temp.attendre('3h3', pg_temp.v('lot4-b', 'sondage.choix', (select id::text from essai where nom = 'expiree'), 'a'), 'refusee', 'cible_inconnue');
 select pg_temp.attendre('3i', pg_temp.v('lot4-c', 'sondage.choix', (select id::text from essai where nom = 'ouvert'), 'c', false), 'acceptee');
 do $$ begin
     if (select count(*) from public.votes where sujet = 'sondage.choix') <> 2
@@ -180,20 +192,33 @@ set local role anon;
 do $$
 declare r jsonb := public.resultats_sondage((select id from essai where nom = 'ouvert'));
 begin
-    -- 6 voix attestees pour a, 3 pour b, 0 pour c, sur 9 : les non attestees ne comptent pas.
-    if r <> '{"total": null, "parts": {"a": 67, "b": null, "c": null}}'::jsonb then
+    -- 6 voix attestees pour a, 3 pour b, 0 pour c, sur 9 : les non attestees ne comptent pas. b et c
+    -- masquees ne font que 3 voix, a les rejoint : plus rien ne se montre, sans quoi 67 % pour a dirait
+    -- 33 % pour les deux autres.
+    if r <> '{"total": null, "parts": {}}'::jsonb then
         raise exception 'ECHEC 4b : %', r;
     end if;
     raise notice 'ok 4b';
 end $$;
 reset role;
-select pg_temp.semer((select id from essai where nom = 'ouvert'), 'b', 2);
-select pg_temp.semer((select id from essai where nom = 'ouvert'), 'c', 5);
+select pg_temp.semer((select id from essai where nom = 'ouvert'), 'c', 6);
 set local role anon;
 do $$
 declare r jsonb := public.resultats_sondage((select id from essai where nom = 'ouvert'));
 begin
-    if r <> '{"total": 16, "parts": {"a": 38, "b": 31, "c": 31}}'::jsonb then
+    -- a 6, b 3, c 6 : b masquee, et a, la plus petite visible, la rejoint ; c se lit seule, sans total.
+    if r <> '{"total": null, "parts": {"a": null, "b": null, "c": 40}}'::jsonb then
+        raise exception 'ECHEC 4b2 : %', r;
+    end if;
+    raise notice 'ok 4b2';
+end $$;
+reset role;
+select pg_temp.semer((select id from essai where nom = 'ouvert'), 'b', 2);
+set local role anon;
+do $$
+declare r jsonb := public.resultats_sondage((select id from essai where nom = 'ouvert'));
+begin
+    if r <> '{"total": 17, "parts": {"a": 35, "b": 29, "c": 35}}'::jsonb then
         raise exception 'ECHEC 4c : %', r;
     end if;
     if public.resultats_sondage((select id from essai where nom = 'archivee')) is not null
@@ -215,8 +240,9 @@ do $$ begin insert into public.idees (titre) values ('Une idee du lecteur'); rai
 exception when insufficient_privilege then raise notice 'ok 5a'; end $$;
 set local request.jwt.claims = :'claims_admin';
 insert into public.idees (titre, statut) values
-    ('Recette idee proposee', 'proposee'), ('Recette idee en cours', 'en_cours'), ('Recette idee livree', 'livree'),
+    ('Recette idee proposee', 'proposee'), ('Recette idee en cours', 'en_cours'),
     ('Recette idee brouillon', 'brouillon'), ('Recette idee close', 'close');
+insert into public.idees (titre, statut, version_livree) values ('Recette idee livree', 'livree', '7.1.0');
 do $$ begin
     insert into public.idees (titre, statut) values ('Recette idee', 'publiee');
     raise exception 'ECHEC 5b : un statut hors liste';
@@ -225,7 +251,10 @@ do $$ begin
     update public.idees set version_livree = '7.1' where titre = 'Recette idee livree';
     raise exception 'ECHEC 5c : une version hors forme';
 exception when check_violation then raise notice 'ok 5c'; end $$;
-update public.idees set version_livree = '7.1.0' where titre = 'Recette idee livree';
+do $$ begin
+    insert into public.idees (titre, statut) values ('Recette idee sans version', 'livree');
+    raise exception 'ECHEC 5c2 : une idee livree sans version';
+exception when check_violation then raise notice 'ok 5c2'; end $$;
 set local request.jwt.claims = :'claims_lecteur';
 do $$ begin
     if (select count(*) from public.idees where titre like 'Recette idee%') <> 5 then raise exception 'ECHEC 5d : le lecteur lit toutes les idees'; end if;
@@ -254,6 +283,7 @@ select pg_temp.attendre('6c', pg_temp.v('lot4-a', 'idee.moi_aussi', (select id::
 select pg_temp.attendre('6d', pg_temp.v('lot4-a', 'idee.moi_aussi', (select id::text from essai where nom = 'idee-close'), 'oui'), 'refusee', 'cible_inconnue');
 select pg_temp.attendre('6e', pg_temp.v('lot4-a', 'idee.moi_aussi', (select id::text from essai where nom = 'idee-livree'), 'oui'), 'refusee', 'cible_inconnue');
 select pg_temp.attendre('6f', pg_temp.v('lot4-b', 'idee.moi_aussi', (select id::text from essai where nom = 'idee-proposee'), 'non'), 'refusee', 'valeur_invalide');
+select pg_temp.attendre('6f2', pg_temp.v('lot4-b', 'idee.moi_aussi', 'pas-une-idee', 'oui'), 'refusee', 'cible_inconnue');
 -- Les problemes connus passent tels quels : leur vote reste celui du lot 3.
 select pg_temp.attendre('6g', pg_temp.v('lot4-a', 'probleme.moi_aussi', '11111111-1111-4111-8111-111111111111', 'android|Pixel 7|Android 15|7.0.0'), 'acceptee');
 do $$
@@ -267,6 +297,10 @@ begin
     r := pg_temp.d('lot4-detail-2', (select id::text from essai where nom = 'idee-close'));
     if r ->> 'statut' <> 'acceptee' or r ->> 'idee' is not null or (select idee from public.retours where id = r ->> 'id') is not null then
         raise exception 'ECHEC 6i : le detail d une idee close %', r;
+    end if;
+    r := pg_temp.d('lot4-detail-3', (select id::text from essai where nom = 'idee-proposee'), 'bug');
+    if r ->> 'statut' <> 'acceptee' or r ->> 'idee' is not null then
+        raise exception 'ECHEC 6i : un bug range sous une idee %', r;
     end if;
     raise notice 'ok 6h-6i';
 end $$;

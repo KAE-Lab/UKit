@@ -1058,6 +1058,13 @@ begin
     if exists (select 1 from jsonb_array_elements(s -> 'choix') c where jsonb_typeof(c) <> 'object') then
         return false;
     end if;
+    -- Une date de la bonne forme mais impossible (un 30 fevrier, 25 h) leverait au vote : refusee ici. Le
+    -- fuseau est exige par la forme, le resultat ne depend donc pas de celui de la session.
+    begin
+        perform (s ->> 'clos_le')::timestamptz;
+    exception when others then
+        return false;
+    end;
     return not exists (
                select 1 from jsonb_array_elements(s -> 'choix') c
                 where jsonb_typeof(c -> 'id') is distinct from 'string'
@@ -1091,7 +1098,9 @@ create table if not exists public.idees (
                                check (statut in ('brouillon', 'proposee', 'en_cours', 'livree', 'close')),
     version_livree text        check (version_livree ~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'),
     cree_le        timestamptz not null default now(),
-    maj_le         timestamptz not null default now()
+    maj_le         timestamptz not null default now(),
+    -- « Livree dans telle version » : l'appareil qui l'a soutenue l'annonce avec elle.
+    check (statut <> 'livree' or version_livree is not null)
 );
 
 -- « Moi aussi, et j'ajoute un detail » : le retour range sous l'idee, comme sous un probleme connu.

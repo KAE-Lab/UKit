@@ -37,6 +37,13 @@ begin
     if exists (select 1 from jsonb_array_elements(s -> 'choix') c where jsonb_typeof(c) <> 'object') then
         return false;
     end if;
+    -- Une date de la bonne forme mais impossible (un 30 fevrier, 25 h) leverait au vote : refusee ici. Le
+    -- fuseau est exige par la forme, le resultat ne depend donc pas de celui de la session.
+    begin
+        perform (s ->> 'clos_le')::timestamptz;
+    exception when others then
+        return false;
+    end;
     return not exists (
                select 1 from jsonb_array_elements(s -> 'choix') c
                 where jsonb_typeof(c -> 'id') is distinct from 'string'
@@ -74,7 +81,9 @@ create table if not exists public.idees (
                                check (statut in ('brouillon', 'proposee', 'en_cours', 'livree', 'close')),
     version_livree text        check (version_livree ~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'),
     cree_le        timestamptz not null default now(),
-    maj_le         timestamptz not null default now()
+    maj_le         timestamptz not null default now(),
+    -- « Livree dans telle version » : l'appareil qui l'a soutenue l'annonce avec elle.
+    check (statut <> 'livree' or version_livree is not null)
 );
 
 drop trigger if exists maj_le on public.idees;
@@ -100,7 +109,6 @@ create or replace function private.juger_vote(p_sujet text, p_cible text, p_vale
 returns text
 language plpgsql
 stable
-security definer
 set search_path = ''
 as $$
 declare
@@ -132,8 +140,8 @@ begin
 end;
 $$;
 
+-- Appelee par `contribuer`, `security definer` : elle s'execute avec les droits de son proprietaire.
 revoke execute on function private.juger_vote(text, text, text) from public, anon, authenticated;
-grant execute on function private.juger_vote(text, text, text) to service_role;
 
 -- -----------------------------------------------------------------------------
 -- 4. Les portes, reecrites
@@ -490,8 +498,9 @@ begin
          where id = (v_r ->> 'probleme')::uuid and statut in ('publie', 'corrige');
     end if;
 
-    -- Une idee close ou retiree depuis : de meme (lot 4).
-    if (v_r ->> 'idee') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    -- Une idee close ou retiree depuis : de meme (lot 4). Seulement pour une idee, et jamais avec un probleme.
+    if v_type = 'fonctionnalite' and v_probleme is null
+       and (v_r ->> 'idee') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
         select id into v_idee from public.idees
          where id = (v_r ->> 'idee')::uuid and statut in ('proposee', 'en_cours');
     end if;
@@ -518,9 +527,10 @@ $$;
 --
 -- Lisibles par tous, pour l'annonce visible d'`anon` : `{ total, parts: { <choix>: <part> } }`. Seules les
 -- voix attestees comptent. Une part est un pourcentage entier ; un choix sous cinq voix rend `null`
--- (« moins de 5 », docs/mesure.md) ; sous cinq voix en tout, aucune part. `total` ne se rend que si aucune
--- case n'est masquee : sinon la case masquee se lirait par soustraction. `null` pour une annonce sans
--- sondage ou invisible. Le vote ne porte aucun identifiant : la base ne sait pas qui a vote, et ne peut
+-- (docs/mesure.md, les petites cases), et les cases masquees se regroupent : tant que leur somme reste
+-- sous cinq, la plus petite case visible les rejoint — sans quoi la case masquee se lirait par
+-- soustraction des parts visibles. Si tout se masque, aucune part. `total` ne se rend que si aucune case
+-- n'est masquee. `null` pour une annonce sans sondage ou invisible. Le vote ne porte aucun identifiant : la base ne sait pas qui a vote, et ne peut
 -- pas reserver les resultats aux votants — l'application ne les montre qu'apres le vote.
 create or replace function public.resultats_sondage(p_annonce uuid)
 returns jsonb
@@ -541,6 +551,8 @@ begin
     if v_sondage is null then
         return null;
     end if;
+    -- Les cases, de la plus petite a la plus grande : les petites (sous cinq) viennent en tete, et le
+    -- groupe masque s'etend dans cet ordre jusqu'a compter cinq voix au moins.
     with choix as (
         select c ->> 'id' as id from jsonb_array_elements(v_sondage -> 'choix') c
     ), comptes as (
@@ -549,12 +561,26 @@ begin
           left join public.votes v
             on v.sujet = 'sondage.choix' and v.cible = p_annonce::text and v.valeur = choix.id and v.poids >= 1
          group by choix.id
+    ), rangs as (
+        select id, n,
+               row_number() over (order by n, id) as rang,
+               sum(n) over (order by n, id) as cumul,
+               sum(n) over () as tout,
+               count(*) filter (where n < 5) over () as petites
+          from comptes
+    ), borne as (
+        -- Le rang de la derniere case masquee : 0 sans petite case, null quand tout se masque.
+        select case when max(petites) = 0 then 0
+                    else min(rang) filter (where rang >= petites and cumul >= 5 and rang < (select count(*) from rangs)) end as k
+          from rangs
     )
-    select coalesce(sum(n), 0)::integer, bool_or(n < 5),
-           jsonb_object_agg(id, case when n >= 5 then round(100.0 * n / nullif(tout, 0))::integer end)
+    select coalesce(max(r.tout), 0)::integer, max(b.k) is distinct from 0,
+           case when bool_and(b.k is not null) then
+               jsonb_object_agg(r.id, case when r.rang > b.k then round(100.0 * r.n / nullif(r.tout, 0))::integer end)
+           end
       into v_total, v_masque, v_parts
-      from (select id, n, sum(n) over () as tout from comptes) t;
-    if v_total < 5 then
+      from rangs r cross join borne b;
+    if v_total < 5 or v_parts is null then
         return jsonb_build_object('total', null, 'parts', '{}'::jsonb);
     end if;
     return jsonb_build_object('total', case when v_masque then null else v_total end, 'parts', v_parts);

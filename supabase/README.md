@@ -455,6 +455,17 @@ efface les jetons d'hier et, quand des captures sont dues, appelle `purger` par 
 comme `communaute-purge`. La recette, [`recettes/retours.sql`](recettes/retours.sql), suppose un admin
 dans `editeurs`.
 
+**Les sondages et la boîte à idées**, du [lot 4](../docs/phase-8/4-sondages-idees-notation.md), par la
+migration `20261125070000_sondages_idees.sql` : la colonne `annonces.sondage` et sa garde
+`private.sondage_valide`, la table `idees`, `retours.idee`, les sujets de vote `sondage.choix` et
+`idee.moi_aussi`. `contribuer` juge désormais la cible d'un vote (`private.juger_vote`) et
+`deposer_retour` range un détail sous une idée : toutes deux sont réécrites à l'identique hors de leurs
+blocs « lot 4 ». `resultats_sondage` se lit par la clé publiable — voix attestées seules, petites cases
+masquées et regroupées. La tâche quotidienne `votes-purge` efface les votes de plus de douze mois. Aucun
+réglage de plus. La recette, [`recettes/sondages_idees.sql`](recettes/sondages_idees.sql), suppose un
+admin dans `editeurs` ; les recettes des lots 1 à 3 se rejouent ensuite sur la migration, chacune dans
+sa transaction.
+
 ## Ce qui n'a pas sa place ici
 
 Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se
