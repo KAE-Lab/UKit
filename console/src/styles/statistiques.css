@@ -1,0 +1,170 @@
+/*
+ * Les statistiques et le tableau de bord (lot 0 de la phase 8, 7-G), sur le modele de Plausible : une
+ * rangee de chiffres cles, une courbe, des listes a barres de fond. Une seule teinte pour les donnees,
+ * l'accent ; la couleur d'etat ne dit que le sens d'une variation, avec sa fleche et son signe.
+ */
+
+/* La pile des pages de chiffres : une seule colonne, qui ne s'elargit jamais au contenu d'un tableau ou d'un nom d'hote. */
+.pile-stats { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--espace-md); }
+/* L'ecart vient de la grille : celui de deux cartes qui se suivent (surfaces.css) le doublerait. */
+.pile-stats > .carte { margin-top: 0; }
+
+/* ---- La rangee de chiffres cles : des cases separees par des filets, qui tiennent en une ligne ---- */
+.chiffres {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+    background: var(--surface); border: 1px solid var(--contour); border-radius: var(--rayon-lg); overflow: hidden;
+}
+/* Le filet a gauche et en haut de chaque case ; ceux du bord tombent hors du cadre, que `overflow` coupe. */
+.chiffre {
+    display: grid; align-content: start; gap: var(--espace-xs); min-width: 0; min-height: 112px;
+    padding: var(--espace-md) var(--espace-lg); color: var(--texte);
+    box-shadow: -1px 0 0 var(--bordure), 0 -1px 0 var(--bordure);
+}
+a.chiffre { transition: background var(--duree-courte) ease; }
+a.chiffre:hover { background: var(--surface-2); }
+.chiffre .libelle { font-size: var(--taille-xs); font-weight: 600; color: var(--texte-2); }
+/* Un chiffre seul se lit en chiffres proportionnels : les tabulaires espacent « 121 » a cette taille. */
+.chiffre .valeur { font-size: var(--taille-xxl); font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; min-height: 32px; display: flex; align-items: center; }
+.chiffre .valeur .squelette { height: 24px; }
+.chiffre .pied { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--espace-xxs) var(--espace-sm); font-size: var(--taille-xs); min-height: 18px; }
+.chiffre .detail { color: var(--texte-3); }
+@media (max-width: 720px) {
+    .chiffres { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .chiffre { padding: var(--espace-md); min-height: 104px; }
+}
+
+/* ---- La variation : le signe et la fleche portent le sens, la couleur dit s'il est bon ---- */
+.variation { display: inline-flex; align-items: center; gap: var(--espace-xxs); font-weight: 600; color: var(--texte-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.variation .icone { width: 14px; height: 14px; }
+.variation.bonne { color: var(--succes); }
+.variation.mauvaise { color: var(--danger); }
+/* En clair, le vert et le rouge des sections ne se lisent pas en petit sur le blanc (2,2:1 pour le vert) : melanges au texte, ils passent 4,5:1. */
+:root[data-theme="light"] .variation.bonne { color: color-mix(in oklab, var(--succes) 65%, var(--texte)); }
+:root[data-theme="light"] .variation.mauvaise { color: color-mix(in oklab, var(--danger) 65%, var(--texte)); }
+
+/* ---- Les cartes des statistiques : un titre, ses controles a droite ---- */
+.carte-stat { display: grid; gap: var(--espace-md); min-width: 0; }
+.carte.carte-stat + .carte.carte-stat { margin-top: 0; }
+.tete-de-carte { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); flex-wrap: wrap; min-height: 32px; }
+.tete-de-carte h2 { margin: 0; }
+.tete-de-carte > a { font-size: var(--taille-sm); font-weight: 500; }
+.grille-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espace-md); align-items: start; }
+.listes-du-parc { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--espace-md) var(--espace-xl); align-items: start; }
+/* Sous 1 100 px, la colonne de contenu ne laisse plus aux noms que des points de suspension : une carte par ligne. */
+@media (max-width: 1100px) { .grille-stats { grid-template-columns: minmax(0, 1fr); } }
+/* Des noms courts (Sombre, Français, Active) : deux cartes cote a cote tiennent jusqu'au telephone. */
+@media (min-width: 641px) and (max-width: 1100px) { .grille-stats.courte { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---- Les listes a barres de fond ---- */
+.liste-a-barres { width: 100%; border-collapse: collapse; font-size: var(--taille-sm); table-layout: fixed; }
+.liste-a-barres th { text-align: left; font-weight: 500; font-size: var(--taille-xs); color: var(--texte-3); padding: 0 0 var(--espace-xs); white-space: nowrap; }
+.liste-a-barres th.nombre, .liste-a-barres td.nombre { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: var(--espace-sm); }
+.liste-a-barres th.nombre { width: 92px; }
+.liste-a-barres th.nombre:last-child { width: 64px; }
+.liste-a-barres td { height: 34px; padding: var(--espace-xxs) 0; vertical-align: middle; }
+.liste-a-barres td:first-child { position: relative; }
+.barre-de-fond { position: absolute; left: 0; top: var(--espace-xxs); bottom: var(--espace-xxs); width: max(var(--espace-xxs), calc(var(--part) * 100%)); background: var(--accent-doux); border-radius: var(--rayon-sm); }
+/* Un nom long passe a la ligne plutot que de perdre sa fin : `ukit.portail.bordeaux.moodle` et `.messagerie` ne different qu'au bout. */
+.liste-a-barres .nom { position: relative; display: block; width: 100%; padding: var(--espace-xs) var(--espace-sm); line-height: 1.35; text-align: left; overflow-wrap: anywhere; }
+.liste-a-barres button.nom:hover { color: var(--accent); }
+.liste-a-barres tr.choisie .nom { font-weight: 600; color: var(--accent); }
+.liste-a-barres tr.choisie .barre-de-fond { box-shadow: inset 0 0 0 1px var(--accent); }
+.liste-a-barres code { font-size: var(--taille-xs); }
+
+/* ---- Le graphique (Recharts) : les couleurs du theme par la feuille, pas par les attributs ---- */
+.graphique { width: 100%; height: var(--hauteur-graphique); }
+.attente-de-graphique { height: var(--hauteur-graphique); }
+.graphique .recharts-surface { overflow: visible; }
+.graphique .recharts-cartesian-grid-horizontal line { stroke: var(--bordure); }
+.graphique .recharts-cartesian-axis-line { stroke: var(--bordure); }
+.graphique .recharts-cartesian-axis-tick-value { fill: var(--texte-3); font-size: var(--taille-xs); font-variant-numeric: tabular-nums; }
+.graphique .recharts-area-curve { stroke: var(--accent); }
+.graphique .recharts-area-area { fill: var(--accent); }
+.graphique .recharts-active-dot circle, .graphique circle.recharts-dot { fill: var(--accent); stroke: var(--surface); }
+.graphique .recharts-bar-rectangle path { fill: var(--accent); }
+.graphique .recharts-bar-rectangle:hover path { opacity: 0.85; }
+.graphique .recharts-tooltip-cursor { stroke: var(--texte-3); }
+.graphique .recharts-rectangle.recharts-tooltip-cursor { fill: var(--surface-2); fill-opacity: 0.6; stroke: none; }
+.graphique .recharts-wrapper:focus-visible, .graphique .recharts-surface:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bulle-graphique {
+    display: grid; gap: var(--espace-xxs); padding: var(--espace-sm) var(--espace-md); font-size: var(--taille-xs);
+    background: var(--surface); color: var(--texte); border: 1px solid var(--contour); border-radius: var(--rayon-md); box-shadow: var(--ombre-flottante);
+}
+.bulle-graphique .valeur { display: flex; align-items: center; gap: var(--espace-xs); color: var(--texte-2); }
+.bulle-graphique strong { color: var(--texte); font-size: var(--taille-sm); font-variant-numeric: tabular-nums; }
+.bulle-graphique .quand { color: var(--texte-3); }
+.cle-de-serie { width: 12px; height: 2px; border-radius: var(--rayon-pilule); background: var(--accent); }
+.tableau-de-graphique { max-height: var(--hauteur-graphique); overflow-y: auto; }
+.tableau th.nombre, .tableau td.nombre { text-align: right; }
+
+/* ---- Les onglets et les filtres des statistiques ---- */
+.onglets-stats { display: flex; gap: var(--espace-xxs); margin-bottom: var(--espace-md); padding-bottom: var(--espace-xxs); overflow-x: auto; border-bottom: 1px solid var(--bordure); }
+/* Au doigt, la rangee se fait glisser : sa barre de defilement doublerait le filet du bas. */
+@media (max-width: 800px) { .onglets-stats { scrollbar-width: none; } }
+.onglet-stat { flex: none; padding: var(--espace-sm) var(--espace-md); color: var(--texte-2); font-weight: 600; font-size: var(--taille-sm); border-radius: var(--rayon-md); white-space: nowrap; }
+.onglet-stat:hover { background: var(--surface); color: var(--texte); }
+.onglet-stat[aria-current="page"] { color: var(--texte); box-shadow: inset 0 -2px 0 var(--accent); border-radius: var(--rayon-sm) var(--rayon-sm) 0 0; }
+.filtres-stats { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--espace-sm) var(--espace-md); }
+.filtres-stats .periode { display: flex; align-items: center; gap: var(--espace-xs); flex-wrap: wrap; }
+.periode-choisie { margin: var(--espace-sm) 0 var(--espace-md); color: var(--texte-3); font-size: var(--taille-xs); }
+.choix-de-plage { min-width: 240px; padding: var(--espace-md); }
+.choix-de-plage form { display: grid; gap: var(--espace-sm); }
+.choix-de-plage input[type="date"] {
+    font: inherit; color: var(--texte); background: var(--fond); border: 1px solid var(--bordure); border-radius: var(--rayon-md);
+    padding: var(--espace-sm) var(--espace-md); width: 100%; color-scheme: inherit;
+}
+.choix-de-plage input[type="date"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); }
+.erreur-en-ligne { color: var(--danger); font-size: var(--taille-xs); margin: 0; }
+.selection-stat { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; min-width: 0; }
+.selection-stat strong { min-width: 0; max-width: 100%; }
+.lien-de-suite { margin: 0; font-size: var(--taille-sm); }
+
+/* ---- L'entonnoir en tableau : les taux fragiles en retrait ---- */
+/* Le nom et les en-tetes passent a la ligne : six colonnes tiennent ainsi dans la largeur d'un portable. */
+.tableau-entonnoir th, .tableau-entonnoir td:first-child { white-space: normal; }
+.tableau-entonnoir th.nombre { min-width: 72px; }
+.tableau-entonnoir td:first-child { min-width: 160px; padding-top: var(--espace-xs); padding-bottom: var(--espace-xs); }
+.tableau-entonnoir .nom { text-align: left; }
+.tableau-entonnoir button.nom:hover { color: var(--accent); }
+.tableau-entonnoir tr.choisie td { background: var(--accent-doux); }
+.tableau-entonnoir tr.choisie .nom { color: var(--accent); font-weight: 600; }
+.taux-fragile { color: var(--texte-3); }
+/* Sous un chiffre cle, le contexte est deja en retrait : un taux fragile s'y distingue par un souligne en pointilles, qui dit aussi qu'un survol l'explique. */
+.chiffre .detail .taux-fragile { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+
+/* ---- Le rapport partenaire ---- */
+.outils-de-rapport { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; }
+.outils-de-rapport .espace { flex: 1; }
+.rapport { display: grid; gap: var(--espace-lg); }
+.tete-de-rapport { display: grid; gap: var(--espace-xxs); }
+.tete-de-rapport h2 { font-size: var(--taille-xl); margin: 0; }
+.tete-de-rapport p { margin: 0; }
+.section-de-rapport { display: grid; gap: var(--espace-sm); }
+.section-de-rapport h3 { margin: 0; font-size: var(--taille-md); color: var(--texte); }
+.definitions dl { display: grid; gap: var(--espace-sm); margin: 0; }
+.definitions dl > div { display: grid; grid-template-columns: minmax(120px, 1fr) 4fr; gap: var(--espace-md); }
+.definitions dt { font-weight: 600; font-size: var(--taille-xs); }
+.definitions dd { margin: 0; font-size: var(--taille-xs); color: var(--texte-2); max-width: 72ch; }
+@media (max-width: 640px) { .definitions dl > div { grid-template-columns: minmax(0, 1fr); gap: var(--espace-xxs); } }
+
+/*
+ * L'impression : le rapport seul, en theme clair (lib/theme.ts le pose avant l'impression), sur toute
+ * la largeur de la page, sans rien de la coque. Une ligne de tableau ne se coupe pas entre deux pages.
+ */
+@media print {
+    .laterale, .barre, .entete-page, .onglets-stats, .filtres-stats, .periode-choisie, .non-imprime { display: none !important; }
+    body, .coque { display: block; background: var(--surface); }
+    .colonne::before { display: none; }
+    .contenu { padding: 0; max-width: none; }
+    .carte:has(> .rapport) { border: 0; padding: 0; }
+    .rapport .defilable { overflow: visible; border: 0; }
+    /* Sur papier, des lignes a la hauteur du texte : le rapport d'une semaine tient sur une page de plus, pas sur trois. */
+    .rapport .tableau td { white-space: normal; height: auto; padding-top: var(--espace-xs); padding-bottom: var(--espace-xs); }
+    .rapport .tableau tr, .rapport .chiffres, .definitions { break-inside: avoid; }
+    .rapport .tableau thead { display: table-header-group; }
+    /* Une grille ne se fragmente pas comme un bloc : sans cela, un intertitre restait seul en bas de page. */
+    .rapport, .section-de-rapport { display: block; }
+    .section-de-rapport + .section-de-rapport, .rapport > * + * { margin-top: var(--espace-lg); }
+    .section-de-rapport h3 { break-after: avoid; margin-bottom: var(--espace-sm); }
+}
+@page { margin: 14mm; }

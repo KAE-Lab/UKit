@@ -18,6 +18,8 @@
     --largeur-laterale: 248px;
     /* La colonne de lecture d'une page : au-dela, une ligne de tableau ne se lit plus d'un regard. */
     --largeur-contenu: 1180px;
+    /* Un graphique des statistiques, axe compris, et ce que son attente reserve. */
+    --hauteur-graphique: 240px;
 
     --police: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;

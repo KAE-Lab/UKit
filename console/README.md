@@ -82,6 +82,7 @@ un problème que la console avait :
 | **@mdi/font** | la police MaterialCommunityIcons de l'application, à la même version (7.4.47), pour les têtes de section de l'aperçu — chargée avec l'aperçu, jamais avant |
 | **react-textarea-autosize** | la description d'une annonce, dans une zone qui grandit avec le texte au lieu d'une boîte à faire défiler (7-F) |
 | **react-error-boundary** | une erreur de rendu ne laisse jamais une page blanche |
+| **Recharts** | les courbes et les colonnes des statistiques et du tableau de bord (lot 0 de la phase 8), chargées à part : les autres pages n'en portent pas le poids |
 
 **La règle transverse** : un chargement ou une erreur ne déplace jamais la mise en page. Une liste qui
 charge montre des lignes squelettes à la hauteur des lignes attendues, une erreur prend leur place avec
