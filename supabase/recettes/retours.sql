@@ -3,7 +3,7 @@
 -- lots 1 et 2. Rien n'y survit : ni la migration, ni les reglages d'essai, ni les comptes d'essai, ni les
 -- retours, les reponses, les problemes, les votes, ni le journal.
 --
---     (echo 'begin;'; cat supabase/migrations/20261125040000_retours_natifs.sql supabase/migrations/20261125050000_lecture_par_cle_en_post.sql supabase/recettes/retours.sql; echo 'rollback;') \
+--     (echo 'begin;'; cat supabase/migrations/20261125040000_retours_natifs.sql supabase/migrations/20261125050000_lecture_par_cle_en_post.sql supabase/migrations/20261125060000_lecture_par_cle_sans_head.sql supabase/recettes/retours.sql; echo 'rollback;') \
 --       | psql -h aws-0-eu-west-2.pooler.supabase.com -p 5432 -U postgres.<ref> -d postgres -v ON_ERROR_STOP=1 -q
 --
 -- Une fois la migration en production, elle se rejoue sans elle. Chaque cas leve une exception s'il
@@ -381,6 +381,14 @@ exception when insufficient_privilege then
     perform set_config('request.method', 'POST', true);
     raise notice 'ok 5f';
 end $$;
+do $$ begin
+    perform set_config('request.method', 'HEAD', true);
+    perform public.lire_mes_retours(array[pg_temp.cle('reponse-a')]);
+    raise exception 'ECHEC 5g : la lecture par cle passe en HEAD';
+exception when insufficient_privilege then
+    perform set_config('request.method', 'POST', true);
+    raise notice 'ok 5g';
+end $$;
 reset role;
 
 set local role authenticated;
@@ -388,14 +396,14 @@ set local request.jwt.claims = :'claims_admin';
 update public.retours set etat = 'en_attente' where texte = 'Le menu ne s affiche plus';
 do $$ begin
     if (select clos_le from public.retours where texte = 'Le menu ne s affiche plus') is not null then
-        raise exception 'ECHEC 5g : un retour rouvert perd sa cloture';
+        raise exception 'ECHEC 5h : un retour rouvert perd sa cloture';
     end if;
-    raise notice 'ok 5g';
+    raise notice 'ok 5h';
 end $$;
 do $$ begin
     update public.retours set texte = 'reecrit' where texte = 'Le menu ne s affiche plus';
-    raise exception 'ECHEC 5h : un admin reecrit le texte';
-exception when insufficient_privilege then raise notice 'ok 5h'; end $$;
+    raise exception 'ECHEC 5i : un admin reecrit le texte';
+exception when insufficient_privilege then raise notice 'ok 5i'; end $$;
 reset role;
 
 -- ---------------------------------------------------------------------------

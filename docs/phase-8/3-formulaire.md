@@ -1,7 +1,8 @@
 # Lot 3 — Le formulaire de retour natif
 
-> **Livré le 2026-11-25** : les migrations `20261125040000_retours_natifs.sql` et
-> `20261125050000_lecture_par_cle_en_post.sql` sont **en production**, recettées en transaction annulée
+> **Livré le 2026-11-25** : les migrations `20261125040000_retours_natifs.sql`,
+> `20261125050000_lecture_par_cle_en_post.sql` et `20261125060000_lecture_par_cle_sans_head.sql` sont
+> **en production**, recettées en transaction annulée
 > avant et rejouées après ; la fonction `communaute` déployée ; les pages Retours et Problèmes connus
 > **en ligne** sur https://kae-lab.github.io/UKit/ depuis `main` ; la page de bascule publiée sur le
 > site ; l'écran, « Mes retours » et les portes joués au banc. **Reste** : la bascule elle-même, à la
@@ -76,9 +77,10 @@ Avec l'accord, l'appareil tire 32 octets, garde la clé et n'envoie que son empr
 la copie avec la ligne, et elle n'ouvre rien sans la clé). Un admin répond depuis la console
 (`retours_reponses`, refusée à un retour sans accord) et change l'état. L'appareil relit par
 `lire_mes_retours(clés)` : l'état, la clôture et les réponses, rien d'autre, ni identifiant ni texte.
-La fonction refuse le GET (`request.method`) : une clé ne passe jamais dans une adresse.
-`volatile` ne suffisait pas, PostgREST l'appelait en GET dans une transaction en lecture seule —
-mesuré après le déploiement, d'où la seconde migration, `20261125050000_lecture_par_cle_en_post.sql`.
+La fonction refuse le GET et le HEAD (`request.method`) : une clé ne passe jamais dans une adresse.
+`volatile` ne suffisait pas, PostgREST l'appelait en GET dans une transaction en lecture seule, puis en
+HEAD une fois le GET refusé — mesuré chaque fois après le déploiement, d'où les deux migrations qui
+suivent la première.
 
 La relecture se fait à l'ouverture de « Mes retours », et au plus toutes les six heures par
 l'entretien (lancement, premier plan, tâche de fond). Une réponse neuve :
@@ -223,7 +225,7 @@ volontaire ; le « moi aussi » et ce qu'il joint ; la notification locale. Les 
    refusés ; le volontaire et son adresse ; un problème inconnu ou en brouillon sans lien ; la
    publication par un admin, refusée à un lecteur, lue par `anon` sans brouillon ; « moi aussi », unique,
    à la forme exigée ; les colonnes lues par l'équipe sans la clé ni l'adresse ; la réponse, refusée à un
-   lecteur et à un retour sans accord ; la lecture par clé, sans identifiant ni texte, refusée en GET ; la
+   lecteur et à un retour sans accord ; la lecture par clé, sans identifiant ni texte, refusée en GET et en HEAD ; la
    clôture datée puis retirée ; le dépôt rejoué, avant et après la clôture ; la purge due, marquée une fois ; les jetons d'hier effacés ; la tâche
    planifiée ; l'espace privé, lu par un admin seul.
 2. **Par `npm test`** : le texte signé et ses refus, le contexte, le masquage (fonction) ; les blocs, le
@@ -239,11 +241,11 @@ volontaire ; le « moi aussi » et ce qu'il joint ; la notification locale. Les 
    captures, répondre, changer l'état ; publier, reformuler, clore un problème, ses « moi aussi » et ses
    détails ; à 1 440 et 390 pixels.
 
-*Joué le 2026-11-25.* La recette SQL, soixante-dix-sept vérifications conformes en transaction annulée
-avec les deux migrations, puis sans elles une fois appliquées ; la vue lisible à l'empreinte de la
+*Joué le 2026-11-25.* La recette SQL, soixante-dix-huit vérifications conformes en transaction annulée
+avec les migrations, puis sans elles une fois appliquées ; la vue lisible à l'empreinte de la
 production. Par l'API publique : un dépôt non attesté accepté, son numéro masqué, l'URL signée, le
-téléversement, la lecture par clé en POST ; la même lecture en GET refusée — la première migration
-l'acceptait, une RPC volatile se lit aussi en GET, d'où la seconde ; les tables et `deposer_retour`
+téléversement, la lecture par clé en POST ; la même lecture en GET puis en HEAD refusée (401) —
+la première migration acceptait le GET, la seconde le HEAD, relevé par la dernière relecture ; les tables et `deposer_retour`
 refusés à la clé publiable (42501) ; la purge appelée par `pg_net`, une ligne marquée. `npm test` :
 1 587 tests ; `expo export` des deux plateformes ; le build `f17bd2d8` (APK
 `ukit-dev-2026-11-25-retours.apk`) sans `READ_MEDIA_IMAGES`, `CAMERA` ni `RECORD_AUDIO`, avec
