@@ -47,6 +47,14 @@ export function joindreParJour(a: TelephoneParJour, b: ReadonlyMap<string, reado
     return resultat;
 }
 
+/**
+ * Ce qui est affiche a-t-il quelque chose a montrer ? Un evenement du campus ajoute sans groupe ni
+ * calendrier coche (lot 5) ne doit pas disparaitre sous l'invitation a choisir un groupe.
+ */
+export function aDuContenu(affiche: readonly (PlanningEvent | PlanningWeekDay)[] | null): boolean {
+    return affiche !== null && affiche.some((element) => !('courses' in element) || element.courses.length > 0);
+}
+
 /** Une journee : les cours, puis le telephone, tries ensemble par le tri d'affichage. */
 export function fusionnerJour(cours: PlanningEvent[], telephone: readonly PlanningEvent[] | undefined): PlanningEvent[] {
     if (telephone === undefined || telephone.length === 0) return cours;

@@ -7,7 +7,7 @@
 import { expect, test } from 'vitest';
 
 import type { PlanningEvent, PlanningWeekDay } from './PlanningAssembly';
-import { estDuTelephone, fusionnerJour, fusionnerSemaine, joindreParJour, joursDeLaSemaine, separerJourneeEntiere } from './FusionTelephone';
+import { aDuContenu, estDuTelephone, fusionnerJour, fusionnerSemaine, joindreParJour, joursDeLaSemaine, separerJourneeEntiere } from './FusionTelephone';
 
 function cours(subject: string, starttime: string, patch: Partial<PlanningEvent> = {}): PlanningEvent {
     return {
@@ -57,4 +57,12 @@ test('le telephone et les evenements du campus se joignent par jour, sans rien p
     expect(joints.get('2026-12-04')?.map((e) => e.subject)).toEqual(['Soiree']);
     expect(joindreParJour(a, new Map())).toBe(a);
     expect(a.get('2026-12-03')).toHaveLength(1);
+});
+
+test('ce qui est affiche a du contenu des qu’un jour porte un evenement, jamais vide ni en attente', () => {
+    expect(aDuContenu(null)).toBe(false);
+    expect(aDuContenu([])).toBe(false);
+    expect(aDuContenu([cours('Conference', '18:00')])).toBe(true);
+    expect(aDuContenu([{ dayNumber: '1', dayTimestamp: 0, courses: [] }])).toBe(false);
+    expect(aDuContenu([{ dayNumber: '1', dayTimestamp: 0, courses: [] }, { dayNumber: '2', dayTimestamp: 0, courses: [cours('Soiree', '22:00')] }])).toBe(true);
 });

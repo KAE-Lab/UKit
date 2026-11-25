@@ -24,7 +24,7 @@ import { PlanningApiService as FetchManager, type PlanningEvent, type PlanningWe
 import { PlanningDataManager as DataManager } from '../services/PlanningDataManager';
 import { CourseManager, isArraysEquals, SettingsManager } from '../../../shared/services/AppCore';
 import { NotificationManager } from '../../../shared/services/NotificationService';
-import { fusionnerJour, fusionnerSemaine, joursDeLaSemaine, separerJourneeEntiere, TELEPHONE_VIDE, type TelephoneParJour } from '../services/FusionTelephone';
+import { aDuContenu, fusionnerJour, fusionnerSemaine, joursDeLaSemaine, separerJourneeEntiere, TELEPHONE_VIDE, type TelephoneParJour } from '../services/FusionTelephone';
 import { assemblerSemaine } from '../services/PlanningAssembly';
 import { lireLeTelephoneEtLeCampus } from '../services/TelephoneSource';
 import { CLE_JOUR } from '../services/TelephoneMapping';
@@ -556,9 +556,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
         // Et seulement si **rien n'est configure** : un etudiant qui a coche des calendriers a fait
         // son choix de planning, et lui redemander un groupe a chaque jour creux est du bruit — ses
         // journees vides sont des journees libres comme les autres. L'invitation reste a un toucher,
-        // dans la barre d'onglets (retour du 2026-09-08).
+        // dans la barre d'onglets (retour du 2026-09-08). Et jamais par-dessus un evenement du campus
+        // ajoute sans groupe (lot 5) : le jour a de quoi se montrer.
         if (groupesRequis() && Array.isArray(this.state.groupName) && this.state.groupName.length === 0
-            && SettingsManager.getCalendriersAffiches().length === 0) {
+            && SettingsManager.getCalendriersAffiches().length === 0 && !aDuContenu(this.state.schedule)) {
             return <FavorisVides theme={this.props.theme} onChercher={() => this.props.navigation?.navigate('GroupSearch')} />;
         }
         if (this.state.failure !== null && this.state.failure.silent !== true) {
