@@ -696,7 +696,8 @@ on conflict (id) do update set public = excluded.public;
 --
 -- Ce que les etudiants ecrivent depuis l'application, par la seule fonction `communaute` : le
 -- vocabulaire, les appareils, les signalements, les votes, les empreintes d'adresse. La configuration
--- vit dans `private` (fonctions.sql), les portes d'ecriture aussi, les politiques dans policies.sql
+-- (dans `private`), la purge horaire et les trois portes d'ecriture (dans `public`, reservees au
+-- service_role) sont dans fonctions.sql, les politiques dans policies.sql
 -- (docs/phase-8/1-base-communautaire.md).
 
 -- -----------------------------------------------------------------------------
@@ -788,38 +789,47 @@ create index if not exists signalements_maj_le on public.signalements (maj_le);
 create index if not exists signalements_expire_le on public.signalements (expire_le);
 create index if not exists signalements_appareil on public.signalements (appareil, cree_le);
 create index if not exists signalements_cible on public.signalements (sujet, cible) where statut = 'active';
+-- Le plafond du non atteste compte les voix de poids nul du jour, pour tout le parc.
+create index if not exists signalements_non_attestes on public.signalements (cree_le) where poids = 0;
 
 -- -----------------------------------------------------------------------------
 -- Les votes
 -- -----------------------------------------------------------------------------
 --
 -- Un bulletin par appareil et par cible : une option de sondage, un « moi aussi » sur une idee ou un
--- probleme connu (lot 4). Aucune lecture publique dans ce lot : le lot qui les montre la pose.
+-- probleme connu (lot 4). **Aucun vote ne porte d'identifiant** (docs/phase-8/README.md, vie privee) :
+-- `jeton` est un HMAC de la cle de l'appareil, du sujet et de la cible, calcule par la fonction
+-- `communaute` avec une cle qui n'est qu'a elle. Il suffit a refuser un second bulletin sur la meme
+-- cible, et ne relie ni deux votes du meme appareil, ni un vote a un appareil, pas meme pour qui lit
+-- toute la base. Aucune lecture publique dans ce lot : le lot qui les montre la pose.
 create table if not exists public.votes (
-    sujet    text        not null references public.sujets (sujet),
-    cible    text        not null check (cible ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$'),
-    appareil bytea       not null references public.appareils (cle),
-    valeur   text        not null check (char_length(valeur) between 1 and 120),
-    poids    smallint    not null check (poids between 0 and 2),
-    cree_le  timestamptz not null default now(),
-    primary key (sujet, cible, appareil)
+    sujet   text        not null references public.sujets (sujet),
+    cible   text        not null check (cible ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$'),
+    jeton   bytea       not null check (octet_length(jeton) = 32),
+    valeur  text        not null check (char_length(valeur) between 1 and 120),
+    poids   smallint    not null check (poids between 0 and 1),
+    cree_le timestamptz not null default now(),
+    primary key (sujet, cible, jeton)
 );
 
-create index if not exists votes_appareil on public.votes (appareil, cree_le);
+create index if not exists votes_non_attestes on public.votes (cree_le) where poids = 0;
 
 -- -----------------------------------------------------------------------------
 -- Les adresses IP, en empreinte
 -- -----------------------------------------------------------------------------
 --
--- Un compteur par empreinte et par jour de Paris, pour le plafond haut par adresse : un amphi entier
--- sort par la meme. L'empreinte est un HMAC de l'adresse et du jour, calcule par la fonction
--- `communaute` avec une cle qui n'est qu'a elle : l'adresse n'entre jamais dans la base, et
--- l'empreinte d'un jour ne se relie a celle d'aucun autre. Les lignes d'un jour passe s'effacent a la
--- premiere ecriture du jour suivant (`private.compter_adresse`). Rien ne relie une empreinte a un
--- appareil ni a un signalement.
+-- Trois compteurs par empreinte et par jour de Paris : les demandes, pour le plafond haut par adresse
+-- (un amphi entier sort par la meme) ; les verdicts Play Integrity demandes a Google, dont le quota
+-- est celui de tout le parc ; les contributions non attestees, pour qu'une seule adresse ne vide pas
+-- le plafond du parc. L'empreinte est un HMAC de l'adresse sous une cle du jour, tiree par la fonction
+-- `communaute` d'un secret qui n'est qu'a elle : l'adresse n'entre jamais dans la base, et l'empreinte
+-- d'un jour ne se relie a celle d'aucun autre. La tache horaire efface les jours passes. Rien ne
+-- relie une empreinte a un appareil ni a une contribution.
 create table if not exists public.empreintes_ip (
-    jour      date    not null,
-    empreinte bytea   not null check (octet_length(empreinte) = 32),
-    n         integer not null default 0 check (n >= 0),
+    jour         date    not null,
+    empreinte    bytea   not null check (octet_length(empreinte) = 32),
+    n            integer not null default 0 check (n >= 0),
+    verdicts     integer not null default 0 check (verdicts >= 0),
+    non_attestes integer not null default 0 check (non_attestes >= 0),
     primary key (jour, empreinte)
 );

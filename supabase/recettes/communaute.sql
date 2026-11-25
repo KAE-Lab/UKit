@@ -21,7 +21,8 @@ set client_min_messages = notice;
 delete from private.reglages_communaute;
 insert into private.reglages_communaute (cle, valeur) values
     ('plafond_appareil_atteste', 3), ('plafond_appareil_non_atteste', 1), ('plafond_non_attestes_jour', 2),
-    ('plafond_ip_jour', 40), ('seuil_fiable', 1), ('anciennete_fiable_jours', 0),
+    ('plafond_ip_jour', 40), ('plafond_verdicts_ip_jour', 2), ('plafond_ip_non_attestes_jour', 2),
+    ('seuil_fiable', 1), ('anciennete_fiable_jours', 0),
     ('duree_direct_minutes', 30), ('duree_correction_jours', 30), ('fin_max_jours', 30);
 insert into public.sujets (sujet, nature, domaine, famille, valeurs, forme) values
     ('recette.ferme',   'signalement', 'restaurant', 'jour',   '{ferme,ouvert}', null),
@@ -30,19 +31,29 @@ insert into public.sujets (sujet, nature, domaine, famille, valeurs, forme) valu
     ('recette.plat',    'signalement', 'restaurant', 'jour',   null, '^[a-z0-9 -]{1,60}$'),
     ('recette.sondage', 'vote',        'annonce',    null,     '{a,b}', null);
 
--- Une contribution d'essai, construite a partir d'octets lisibles : `cle` et `ip` sont des graines.
+-- Une contribution d'essai, construite a partir d'octets lisibles : `cle` et `ip` sont des graines. Elle
+-- passe par `admettre` d'abord, comme la fonction `communaute` le fait.
 create function pg_temp.c(cle text, nature text, atteste boolean, sujet text, cible text, valeur text,
                           ip text default 'ip-a', compteur bigint default null, fin text default null,
                           essai boolean default false)
-returns jsonb language sql as $$
-    select public.contribuer(jsonb_build_object(
+returns jsonb language plpgsql as $$
+declare
+    a jsonb;
+begin
+    a := public.admettre(jsonb_build_object('empreinte_ip', encode(extensions.digest(ip, 'sha256'), 'hex'), 'verdict', false));
+    if not (a ->> 'admis')::boolean then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_ip');
+    end if;
+    return public.contribuer(jsonb_build_object(
         'appareil', jsonb_strip_nulls(jsonb_build_object(
             'cle', encode(extensions.digest(cle, 'sha256'), 'hex'), 'nature', nature,
             'plateforme', case when nature = 'app_attest' then 'ios' else 'android' end,
             'atteste', atteste, 'compteur', compteur)),
         'empreinte_ip', encode(extensions.digest(ip, 'sha256'), 'hex'),
+        'jeton_de_vote', encode(extensions.digest(cle || '|' || sujet || '|' || cible, 'sha256'), 'hex'),
         'contribution', jsonb_build_object('sujet', sujet, 'cible', cible, 'valeur', valeur, 'fin', fin),
         'essai', essai));
+end;
 $$;
 
 create function pg_temp.attendre(n integer, r jsonb, statut text, raison text default null)
@@ -66,12 +77,16 @@ do $$ begin perform public.contribuer('{}'::jsonb); raise exception 'ECHEC 1a : 
 exception when insufficient_privilege then raise notice 'ok 1a'; end $$;
 do $$ begin perform public.enregistrer_appareil('{}'::jsonb); raise exception 'ECHEC 1b : anon appelle enregistrer_appareil';
 exception when insufficient_privilege then raise notice 'ok 1b'; end $$;
+do $$ begin perform public.admettre('{}'::jsonb); raise exception 'ECHEC 1b2 : anon appelle admettre';
+exception when insufficient_privilege then raise notice 'ok 1b2'; end $$;
+do $$ begin perform private.purger_communaute(); raise exception 'ECHEC 1b3 : anon purge';
+exception when insufficient_privilege then raise notice 'ok 1b3'; end $$;
 do $$ begin insert into public.signalements (sujet, cible, valeur, poids, expire_le, appareil)
     values ('recette.ferme', 'x', 'ferme', 2, now() + interval '1 hour', '\x00'); raise exception 'ECHEC 1c';
 exception when insufficient_privilege then raise notice 'ok 1c'; end $$;
 do $$ begin insert into public.appareils (cle, nature, plateforme) values (extensions.digest('z', 'sha256'), 'secret', 'android');
     raise exception 'ECHEC 1d'; exception when insufficient_privilege then raise notice 'ok 1d'; end $$;
-do $$ begin insert into public.votes (sujet, cible, appareil, valeur, poids) values ('recette.sondage', 'x', '\x00', 'a', 2);
+do $$ begin insert into public.votes (sujet, cible, jeton, valeur, poids) values ('recette.sondage', 'x', extensions.digest('z', 'sha256'), 'a', 1);
     raise exception 'ECHEC 1e'; exception when insufficient_privilege then raise notice 'ok 1e'; end $$;
 do $$ begin insert into public.empreintes_ip (jour, empreinte) values (current_date, extensions.digest('z', 'sha256'));
     raise exception 'ECHEC 1f'; exception when insufficient_privilege then raise notice 'ok 1f'; end $$;
@@ -104,6 +119,13 @@ do $$ begin perform public.contribuer('{}'::jsonb); raise exception 'ECHEC 2a';
 exception when invalid_parameter_value then raise notice 'ok 2a'; end $$;
 do $$ begin perform public.contribuer('{"appareil": {"cle": "zz"}, "contribution": {}}'::jsonb); raise exception 'ECHEC 2b';
 exception when invalid_parameter_value then raise notice 'ok 2b'; end $$;
+-- Un champ absent leve aussi : `nature` manquante ne saute ni le controle du compteur ni celui de la nature.
+do $$ begin perform public.contribuer(jsonb_build_object(
+        'appareil', jsonb_build_object('cle', encode(extensions.digest('x', 'sha256'), 'hex'), 'plateforme', 'ios', 'atteste', true, 'compteur', 9),
+        'empreinte_ip', encode(extensions.digest('x', 'sha256'), 'hex'), 'jeton_de_vote', encode(extensions.digest('x', 'sha256'), 'hex'),
+        'contribution', '{}'::jsonb));
+    raise exception 'ECHEC 2c';
+exception when invalid_parameter_value then raise notice 'ok 2c'; end $$;
 
 -- Non atteste : une voix de poids 0, puis le plafond bas de l'appareil.
 select pg_temp.attendre(3, pg_temp.c('na-1', 'secret', false, 'recette.ferme', '21', 'ferme'), 'acceptee');
@@ -113,6 +135,23 @@ select pg_temp.attendre(5, pg_temp.c('na-1', 'secret', false, 'recette.ferme', '
 -- Le plafond de tout le parc pour le non atteste : deux au plus ce jour-la, d'ou qu'ils viennent.
 select pg_temp.attendre(6, pg_temp.c('na-2', 'secret', false, 'recette.ferme', '21', 'ferme', 'ip-b'), 'acceptee');
 select pg_temp.attendre(7, pg_temp.c('na-3', 'secret', false, 'recette.ferme', '21', 'ferme', 'ip-c'), 'refusee', 'plafond_non_attestes');
+-- Et ce refus n'a pas cree d'appareil : un flot de secrets au hasard ne remplit pas la table.
+do $$ begin if exists (select 1 from public.appareils where cle = extensions.digest('na-3', 'sha256')) then
+    raise exception 'ECHEC 7b : un refus du plafond du parc a cree un appareil'; end if; raise notice 'ok 7b'; end $$;
+-- Une seule adresse ne vide pas le plafond du parc : la troisieme tentative non attestee d'ip-a est
+-- refusee par son plafond d'adresse, avant celui du parc.
+select pg_temp.attendre(7, pg_temp.c('na-5', 'secret', false, 'recette.ferme', '23', 'ferme'), 'refusee', 'plafond_ip');
+-- Les verdicts Play Integrity se comptent a part, par adresse : le troisieme n'est plus admis.
+do $$
+declare
+    v jsonb := jsonb_build_object('empreinte_ip', encode(extensions.digest('ip-verdicts', 'sha256'), 'hex'), 'verdict', true);
+begin
+    if not (public.admettre(v) ->> 'verdict')::boolean or not (public.admettre(v) ->> 'verdict')::boolean
+       or (public.admettre(v) ->> 'verdict')::boolean or not (public.admettre(v) ->> 'admis')::boolean then
+        raise exception 'ECHEC 7c : le plafond des verdicts par adresse';
+    end if;
+    raise notice 'ok 7c';
+end $$;
 
 -- Atteste : une voix de poids 1 ; un second appareil la confirme, l'auteur gagne un point, et sa voix
 -- suivante pese deux (seuil d'essai a 1, anciennete a 0).
@@ -128,11 +167,15 @@ do $$ begin
     end if;
     raise notice 'ok 11';
 end $$;
--- Une voix non attestee ne confirme rien, et n'est confirmee par rien : na-2 disait comme na-1.
+-- Une voix non attestee ne confirme rien, et n'est confirmee par rien : na-2 disait comme na-1, puis
+-- at-0, atteste, dit pareil sur la meme cible.
+select pg_temp.attendre(12, pg_temp.c('at-0', 'secret', true, 'recette.ferme', '21', 'ferme'), 'acceptee');
 do $$ begin
     if (select reputation from public.appareils where cle = extensions.digest('na-1', 'sha256')) <> 0
-       or (select confirme_le from public.signalements where appareil = extensions.digest('na-1', 'sha256')) is not null then
-        raise exception 'ECHEC 12 : une voix non attestee a confirme';
+       or (select reputation from public.appareils where cle = extensions.digest('na-2', 'sha256')) <> 0
+       or (select confirme_le from public.signalements where appareil = extensions.digest('na-1', 'sha256')) is not null
+       or (select confirme_le from public.signalements where appareil = extensions.digest('na-2', 'sha256')) is not null then
+        raise exception 'ECHEC 12 : une voix non attestee a confirme, ou ete confirmee';
     end if;
     raise notice 'ok 12';
 end $$;
@@ -160,13 +203,27 @@ end $$;
 select pg_temp.attendre(14, pg_temp.c('at-1', 'secret', true, 'recette.attente', '30', 'fluide'), 'acceptee');
 select pg_temp.attendre(15, pg_temp.c('at-1', 'secret', true, 'recette.attente', '31', 'fluide'), 'refusee', 'plafond_appareil');
 
+-- Deux appareils qui se confirment en boucle ne gagnent qu'un point par jour chacun.
+select pg_temp.attendre(15, pg_temp.c('rb-1', 'secret', true, 'recette.ferme', '95', 'ferme', 'ip-r'), 'acceptee');
+select pg_temp.attendre(15, pg_temp.c('rb-2', 'secret', true, 'recette.ferme', '95', 'ferme', 'ip-r'), 'acceptee');
+select pg_temp.attendre(15, pg_temp.c('rb-1', 'secret', true, 'recette.ferme', '95', 'ferme', 'ip-r'), 'acceptee');
+select pg_temp.attendre(15, pg_temp.c('rb-2', 'secret', true, 'recette.ferme', '95', 'ferme', 'ip-r'), 'acceptee');
+select pg_temp.attendre(15, pg_temp.c('rb-1', 'secret', true, 'recette.ferme', '95', 'ferme', 'ip-r'), 'acceptee');
+do $$ begin
+    if (select reputation from public.appareils where cle = extensions.digest('rb-1', 'sha256')) <> 1
+       or (select reputation from public.appareils where cle = extensions.digest('rb-2', 'sha256')) <> 1 then
+        raise exception 'ECHEC 15b : la reputation se gagne en boucle';
+    end if;
+    raise notice 'ok 15b';
+end $$;
+
 -- App Attest : l'enregistrement, puis le compteur qui ne fait que monter.
 do $$
 declare
     r jsonb;
     v jsonb := jsonb_build_object('cle', encode(extensions.digest('aa-1', 'sha256'), 'hex'),
         'cle_publique', encode('\x04'::bytea || extensions.digest('x', 'sha256') || extensions.digest('y', 'sha256'), 'hex'),
-        'environnement', 'developpement', 'empreinte_ip', encode(extensions.digest('ip-e', 'sha256'), 'hex'));
+        'environnement', 'developpement');
 begin
     r := public.enregistrer_appareil(v);
     perform pg_temp.attendre(16, r, 'enregistre');
@@ -218,7 +275,7 @@ select pg_temp.attendre(35, pg_temp.c('at-4', 'secret', true, 'recette.sondage',
 select pg_temp.attendre(36, pg_temp.c('at-4', 'secret', true, 'recette.sondage', 'annonce-1', 'b'), 'refusee', 'deja_vote');
 select pg_temp.attendre(37, pg_temp.c('at-4', 'secret', true, 'recette.sondage', 'annonce-1', 'c'), 'refusee', 'valeur_invalide');
 
--- L'essai joue l'appareil et ses plafonds, sans rien ecrire.
+-- L'essai joue l'appareil et ses plafonds, sans rien ecrire : ni signalement, ni appareil neuf.
 do $$
 declare
     r jsonb;
@@ -227,8 +284,21 @@ begin
     r := pg_temp.c('at-5', 'secret', true, 'essai.essai', 'essai', 'essai', 'ip-a', null, null, true);
     perform pg_temp.attendre(38, r, 'essai');
     if (r ->> 'poids')::int <> 1 or (select count(*) from public.signalements) <> v_avant
-       or not exists (select 1 from public.appareils where cle = extensions.digest('at-5', 'sha256')) then
-        raise exception 'ECHEC 39 : l essai a ecrit, ou n a pas joue l appareil : %', r;
+       or exists (select 1 from public.appareils where cle = extensions.digest('at-5', 'sha256')) then
+        raise exception 'ECHEC 39 : l essai a ecrit : %', r;
+    end if;
+    -- Un appareil connu, a l'essai, est juge tel qu'il est, plafonds compris : at-1 a atteint le
+    -- sien, at-2 passe, sans reputation.
+    perform pg_temp.attendre(39, pg_temp.c('at-1', 'secret', true, 'essai.essai', 'essai', 'essai', 'ip-a', null, null, true), 'refusee', 'plafond_appareil');
+    r := pg_temp.c('at-2', 'secret', true, 'essai.essai', 'essai', 'essai', 'ip-a', null, null, true);
+    if r ->> 'statut' <> 'essai' or (r ->> 'poids')::int <> 1 then
+        raise exception 'ECHEC 39 : l essai d un appareil connu : %', r;
+    end if;
+    -- Un essai non atteste d'un appareil inconnu ne cree rien, meme le plafond du parc atteint.
+    r := pg_temp.c('na-9', 'secret', false, 'essai.essai', 'essai', 'essai', 'ip-a', null, null, true);
+    if r ->> 'statut' <> 'essai' or (r ->> 'poids')::int <> 0
+       or exists (select 1 from public.appareils where cle = extensions.digest('na-9', 'sha256')) then
+        raise exception 'ECHEC 39 : l essai non atteste : %', r;
     end if;
     raise notice 'ok 39';
 end $$;
@@ -247,16 +317,31 @@ select pg_temp.attendre(41, pg_temp.c('at-6', 'secret', true, 'recette.ferme', '
 select pg_temp.attendre(42, pg_temp.c('at-7', 'secret', true, 'recette.ferme', '80', 'ferme', 'ip-z'), 'acceptee');
 select pg_temp.attendre(43, pg_temp.c('at-8', 'secret', true, 'recette.ferme', '80', 'ferme', 'ip-z'), 'refusee', 'plafond_ip');
 
--- L'empreinte d'un jour passe s'efface a la premiere ecriture du jour.
+-- La purge horaire : l'empreinte d'un jour passe, un signalement fini depuis plus de trente jours, un
+-- appareil muet depuis plus de douze mois qui ne porte plus rien ; et la tache est planifiee.
 reset role;
 insert into public.empreintes_ip (jour, empreinte, n) values (current_date - 2, extensions.digest('ip-hier', 'sha256'), 5);
+insert into public.appareils (cle, nature, plateforme, vu_le) values (extensions.digest('vieux', 'sha256'), 'secret', 'android', now() - interval '13 months');
+insert into public.appareils (cle, nature, plateforme, vu_le) values (extensions.digest('vieux-2', 'sha256'), 'secret', 'android', now() - interval '13 months');
+insert into public.signalements (sujet, cible, valeur, poids, cree_le, expire_le, appareil)
+values ('recette.ferme', '91', 'ferme', 1, now() - interval '40 days', now() - interval '31 days', extensions.digest('vieux', 'sha256')),
+       ('recette.ferme', '92', 'ferme', 1, now() - interval '20 days', now() - interval '19 days', extensions.digest('vieux-2', 'sha256'));
+select private.purger_communaute();
+do $$ begin
+    if exists (select 1 from public.empreintes_ip where jour < (now() at time zone 'Europe/Paris')::date)
+       or exists (select 1 from public.signalements where cible = '91')
+       or not exists (select 1 from public.signalements where cible = '92')
+       or exists (select 1 from public.appareils where cle = extensions.digest('vieux', 'sha256'))
+       or not exists (select 1 from public.appareils where cle = extensions.digest('vieux-2', 'sha256'))
+       or not exists (select 1 from cron.job where jobname = 'communaute-purge' and active) then
+        raise exception 'ECHEC 44 : la purge ou sa planification';
+    end if;
+    raise notice 'ok 44';
+end $$;
 set local role service_role;
-do $$ begin perform pg_temp.c('at-9', 'secret', true, 'recette.ferme', '81', 'ferme', 'ip-y'); end $$;
-reset role;
-do $$ begin if exists (select 1 from public.empreintes_ip where jour < (now() at time zone 'Europe/Paris')::date) then
-    raise exception 'ECHEC 44 : une empreinte d un jour passe survit'; end if; raise notice 'ok 44'; end $$;
 
 -- Un reglage absent fait echouer l'ecriture, jamais passer sans borne.
+reset role;
 delete from private.reglages_communaute where cle = 'plafond_ip_jour';
 set local role service_role;
 do $$ begin perform pg_temp.c('at-10', 'secret', true, 'recette.ferme', '82', 'ferme', 'ip-x'); raise exception 'ECHEC 45';
