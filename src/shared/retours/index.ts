@@ -105,6 +105,7 @@ async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
             const jour = jourDeParis(new Date());
             await modifierBoite((boite) => boite.map((a) => (a.local === attente.local ? { ...a, differe: jour } : a)));
         }
+        console.info(`[retours] depot ${attend.etat} : ${resultat.etat === 'refusee' || resultat.etat === 'echec' || resultat.etat === 'a-refaire' ? resultat.raison : resultat.etat}`);
         issues.set(attente.local, attend);
         return attend;
     }
@@ -116,6 +117,7 @@ async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
         ? { ...r, etat: issue.etat === 'refuse' ? 'refuse' : 'envoye', statut: issue.etat === 'refuse' ? null : 'nouveau' }
         : r)));
     oublierLesCaptures(attente.local);
+    console.info(`[retours] depot ${issue.etat}${issue.etat === 'envoye' ? `, ${issue.capturesPerdues} capture(s) perdue(s)` : ''}`);
     issues.set(attente.local, issue);
     return issue;
 }
@@ -177,6 +179,8 @@ export async function deposerUnRetour(saisie: SaisieDeRetour): Promise<IssueDuDe
     };
     await modifierBoite((boite) => [...boite, attente]);
     await modifierConnus((liste) => [nouveauRetourConnu(attente), ...liste]);
+    // Hors ligne, inutile d'attendre le delai d'un appel qui ne partira pas : la boite le gardera.
+    if ((await NetInfo.fetch().catch(() => null))?.isConnected === false) return { etat: 'en-attente' };
     // Un vidage deja en cours a lu la boite avant ce retour : un second le prend.
     await viderLaBoite();
     if (!issues.has(local)) await viderLaBoite();
@@ -247,7 +251,9 @@ export function brancherLesRetours(): void {
     if (branche) return;
     branche = true;
     brancherLeJournal();
+    // L'internet joignable, pas seulement la connexion : au retour du Wi-Fi, la connexion revient avant
+    // la resolution des noms, et un depot parti trop tot attendrait l'entretien suivant (vu au banc).
     NetInfo.addEventListener((etat) => {
-        if (etat.isConnected === true) void lireBoite().then((boite) => (boite.length > 0 ? viderLaBoite() : undefined));
+        if (etat.isInternetReachable === true) void lireBoite().then((boite) => (boite.length > 0 ? viderLaBoite() : undefined));
     });
 }
