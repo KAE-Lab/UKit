@@ -105,7 +105,7 @@ async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
             const jour = jourDeParis(new Date());
             await modifierBoite((boite) => boite.map((a) => (a.local === attente.local ? { ...a, differe: jour } : a)));
         }
-        console.info(`[retours] depot ${attend.etat} : ${resultat.etat === 'refusee' || resultat.etat === 'echec' || resultat.etat === 'a-refaire' ? resultat.raison : resultat.etat}`);
+        if (__DEV__) console.info(`[retours] depot ${attend.etat} : ${resultat.etat === 'refusee' || resultat.etat === 'echec' || resultat.etat === 'a-refaire' ? resultat.raison : resultat.etat}`);
         issues.set(attente.local, attend);
         return attend;
     }
@@ -117,7 +117,7 @@ async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
         ? { ...r, etat: issue.etat === 'refuse' ? 'refuse' : 'envoye', statut: issue.etat === 'refuse' ? null : 'nouveau' }
         : r)));
     oublierLesCaptures(attente.local);
-    console.info(`[retours] depot ${issue.etat}${issue.etat === 'envoye' ? `, ${issue.capturesPerdues} capture(s) perdue(s)` : ''}`);
+    if (__DEV__) console.info(`[retours] depot ${issue.etat}${issue.etat === 'envoye' ? `, ${issue.capturesPerdues} capture(s) perdue(s)` : ''}`);
     issues.set(attente.local, issue);
     return issue;
 }
