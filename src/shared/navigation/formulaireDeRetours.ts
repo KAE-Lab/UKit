@@ -70,7 +70,8 @@ export function formulaireDisponible(porte: PorteDuFormulaire): boolean {
  */
 export function ouvrirLeFormulaire(navigation: NavigateurDuFormulaire, porte: PorteDuFormulaire): void {
     if (formulaireNatif()) {
-        navigation.navigate('Retour', porte.porte === 'campus' ? { nature: 'campus' } : { nature: 'bug', onglet: porte.onglet });
+        // La pastille ne coche rien : un brouillon d'idee commence par elle revient tel quel.
+        navigation.navigate('Retour', porte.porte === 'campus' ? { nature: 'campus' } : { onglet: porte.onglet });
         return;
     }
     const lien = lienDuFormulaire(porte);

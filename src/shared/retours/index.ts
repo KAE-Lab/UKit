@@ -22,7 +22,7 @@ import { describeSupabaseFailure, getSupabase, reportSupabaseFailure } from '../
 import { appeler } from '../supabase/rpc';
 import { garderLesCaptures, octetsDe, oublierLesCaptures } from './captures';
 import {
-    aAnnoncer, clesALire, fusionnerLecture, lireEnvois, marquer, nouveauRetourConnu, serialiserRetour,
+    aNotifier, clesALire, fusionnerLecture, lireEnvois, marquer, nouveauRetourConnu, serialiserRetour,
     type NatureDeRetour, type RetourEnAttente,
 } from './donnees';
 import { brancherLeJournal } from './journalDeSession';
@@ -49,9 +49,14 @@ export interface SaisieDeRetour {
     readonly reponseIci: boolean;
 }
 
+/**
+ * `en-attente` : pas de reponse — le reseau, la base ; `differe` : un plafond du jour, que le lendemain
+ * leve. Les deux gardent le retour dans la boite, qui le redepose seule. `refuse` est definitif.
+ */
 export type IssueDuDepot =
     | { readonly etat: 'envoye'; readonly capturesPerdues: number }
     | { readonly etat: 'en-attente' }
+    | { readonly etat: 'differe' }
     | { readonly etat: 'refuse'; readonly raison: string };
 
 function enHex(octets: Uint8Array): string {
@@ -63,8 +68,10 @@ async function televerser(attente: RetourEnAttente, corps: unknown): Promise<num
     const supabase = getSupabase();
     const envois = lireEnvois(corps);
     let perdues = attente.fichiers.length - envois.length;
-    for (const [i, envoi] of envois.entries()) {
-        const fichier = attente.fichiers[i];
+    for (const envoi of envois) {
+        // Le rang est dans le chemin : une URL que la fonction n'a pas pu creer ne decale pas les suivantes.
+        const rang = Number(/\/(\d)\.jpg$/.exec(envoi.chemin)?.[1] ?? '0');
+        const fichier = attente.fichiers[rang - 1];
         if (supabase === null || fichier === undefined) {
             perdues++;
             continue;
@@ -91,9 +98,11 @@ const issues = new Map<string, IssueDuDepot>();
 async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
     const retour = { ...attente.retour, captures: attente.fichiers.length };
     const { resultat, corps } = await envoyerSigne('deposer', (defi, cle) => serialiserRetour(defi, cle, retour));
-    if (resultat.etat === 'echec' || resultat.etat === 'sans-base' || resultat.etat === 'a-refaire') {
-        issues.set(attente.local, { etat: 'en-attente' });
-        return { etat: 'en-attente' };
+    if (resultat.etat === 'echec' || resultat.etat === 'sans-base' || resultat.etat === 'a-refaire'
+        || (resultat.etat === 'refusee' && resultat.raison.startsWith('plafond_'))) {
+        const attend: IssueDuDepot = resultat.etat === 'refusee' ? { etat: 'differe' } : { etat: 'en-attente' };
+        issues.set(attente.local, attend);
+        return attend;
     }
     const issue: IssueDuDepot = resultat.etat === 'refusee'
         ? { etat: 'refuse', raison: resultat.raison }
@@ -116,7 +125,8 @@ let vidageEnCours: Promise<void> | null = null;
 export function viderLaBoite(): Promise<void> {
     vidageEnCours ??= (async () => {
         for (const attente of await lireBoite()) {
-            if ((await deposer(attente)).etat === 'en-attente') break;
+            const issue = await deposer(attente);
+            if (issue.etat === 'en-attente' || issue.etat === 'differe') break;
         }
     })().catch((erreur: unknown) => {
         console.warn(`[retours] boite non videe : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
@@ -153,6 +163,8 @@ export async function deposerUnRetour(saisie: SaisieDeRetour): Promise<IssueDuDe
         cle,
         fichiers,
         retour: {
+            // L'identifiant du depot est celui de la boite : un depot rejoue retrouve sa ligne (lot 3).
+            depot: local,
             nature: saisie.nature, texte: saisie.texte.trim(), campus: saisie.campus, volontaire: saisie.volontaire,
             contact: saisie.contact, probleme: saisie.probleme, contexte: saisie.contexte, captures: fichiers.length,
             cle_reponse: cleReponse,
@@ -210,11 +222,13 @@ async function relire(force: boolean): Promise<void> {
         }
         await noterLecture(Date.now());
         const lus = await modifierConnus((liste) => fusionnerLecture(liste, cles, Array.isArray(data) ? data : []));
-        const nouvelle = aAnnoncer(lus);
+        // Hors de l'application, une notification ; la reponse s'annonce encore en tete a l'ouverture
+        // suivante (RetoursHote), qu'elle ait ete touchee ou balayee.
+        const nouvelle = aNotifier(lus);
         if (nouvelle === null || AppState.currentState === 'active') return;
         const derniere = nouvelle.reponses[nouvelle.reponses.length - 1];
         if (derniere !== undefined && await notifier(derniere.texte)) {
-            await modifierConnus((liste) => marquer(liste, 'annoncees', nouvelle.local));
+            await modifierConnus((liste) => marquer(liste, 'notifiees', nouvelle.local));
         }
     } catch (erreur) {
         console.warn(`[retours] reponses non relues : ${erreur instanceof Error ? erreur.message : String(erreur)}`);

@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { deposerUnRetour, type IssueDuDepot } from '../../shared/retours';
-import { choisirUneImage } from '../../shared/retours/captures';
+import { choisirUneImage, oublierLeFichier } from '../../shared/retours/captures';
 import { blocsDuContexte, contexteAEnvoyer, type Bloc, type CleDeBloc, type EchecJoint } from '../../shared/retours/contexte';
 import type { NatureDeRetour } from '../../shared/retours/donnees';
 import { ecrireBrouillon, lireBrouillon } from '../../shared/retours/memoire';
@@ -33,6 +33,44 @@ export const CAPTURES_MAX = 3;
 const ADRESSE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ATTENTE_DU_BROUILLON_MS = 500;
 
+interface Saisie {
+    readonly nature: NatureDeRetour;
+    readonly texte: string;
+    readonly campus: string;
+    readonly volontaire: boolean;
+    readonly contact: string;
+}
+
+/**
+ * Le brouillon : relu a l'ouverture pour un retour libre — un detail sur un probleme, une capture
+ * detectee ou une carte d'erreur ouvrent un autre sujet —, ecrit une fois la frappe posee. `oublier`
+ * l'efface a l'envoi, et la frappe qui le precedait ne le recree pas.
+ */
+function useBrouillon(saisie: Saisie, remplir: (b: Saisie) => void, libre: boolean, natureDemandee: NatureDeRetour | undefined) {
+    const pret = useRef(false);
+    useEffect(() => {
+        if (!libre) return;
+        void lireBrouillon().then((b) => {
+            if (b !== null && (natureDemandee === undefined || natureDemandee === b.nature)) remplir(b);
+            pret.current = true;
+        });
+    // Une fois, a l'ouverture : les parametres de la route ne changent pas pendant la vie de l'ecran.
+    }, []);
+    useEffect(() => {
+        if (!pret.current) return undefined;
+        const minuteur = setTimeout(() => {
+            if (!pret.current) return;
+            const vide = saisie.texte.trim() === '' && saisie.campus.trim() === '' && saisie.contact.trim() === '';
+            void ecrireBrouillon(vide ? null : saisie);
+        }, ATTENTE_DU_BROUILLON_MS);
+        return () => clearTimeout(minuteur);
+    }, [saisie]);
+    return useCallback(async () => {
+        pret.current = false;
+        await ecrireBrouillon(null);
+    }, []);
+}
+
 export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
     const [nature, setNature] = useState<NatureDeRetour>(parametres.nature ?? 'bug');
     const [texte, setTexte] = useState('');
@@ -47,42 +85,29 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
     const [votes, setVotes] = useState<string[]>([]);
     const [envoi, setEnvoi] = useState(false);
     const [ajout, setAjout] = useState(false);
-    const brouillonPret = useRef(false);
     const probleme = parametres.probleme ?? null;
+    const saisie = useMemo(() => ({ nature, texte, campus, volontaire, contact }), [nature, texte, campus, volontaire, contact]);
+    const oublierLeBrouillon = useBrouillon(saisie, (b) => {
+        setNature(b.nature);
+        setTexte(b.texte);
+        setCampus(b.campus);
+        setVolontaire(b.volontaire);
+        setContact(b.contact);
+    }, probleme === null && parametres.capture === undefined && parametres.erreur === undefined, parametres.nature);
+
+    // Les captures du cache s'effacent avec l'ecran : envoyees, elles ont ete recopiees dans la boite ;
+    // abandonnees, elles ne restent pas sur l'appareil.
+    const capturesEnCours = useRef<string[]>([]);
+    capturesEnCours.current = captures;
+    useEffect(() => () => capturesEnCours.current.forEach(oublierLeFichier), []);
 
     // Le contexte de l'instant, une fois : il dit ce qui se passait a l'ouverture, pas pendant la saisie.
     useEffect(() => {
         void sourcesDuContexte(parametres.onglet ?? null, parametres.erreur ?? null).then((s) => setBlocs(blocsDuContexte(s)));
         void lireLesProblemes().then(setProblemes);
         void lireVotes().then(setVotes);
-        // Le brouillon ne revient que pour un retour libre : un detail sur un probleme ou une capture
-        // detectee ouvrent un autre sujet.
-        if (probleme === null && parametres.capture === undefined && parametres.erreur === undefined) {
-            void lireBrouillon().then((b) => {
-                if (b !== null && (parametres.nature === undefined || parametres.nature === b.nature)) {
-                    setNature(b.nature);
-                    setTexte(b.texte);
-                    setCampus(b.campus);
-                    setVolontaire(b.volontaire);
-                    setContact(b.contact);
-                }
-                brouillonPret.current = true;
-            });
-        }
     // Une fois, a l'ouverture : les parametres de la route ne changent pas pendant la vie de l'ecran.
     }, []);
-
-    // Le brouillon s'ecrit une fois la frappe posee, et seulement quand il a ete relu.
-    useEffect(() => {
-        if (!brouillonPret.current) return undefined;
-        const minuteur = setTimeout(() => {
-            // Un envoi a pu partir entre la frappe et ce moment : le brouillon efface ne revient pas.
-            if (!brouillonPret.current) return;
-            const vide = texte.trim() === '' && campus.trim() === '' && contact.trim() === '';
-            void ecrireBrouillon(vide ? null : { nature, texte, campus, volontaire, contact });
-        }, ATTENTE_DU_BROUILLON_MS);
-        return () => clearTimeout(minuteur);
-    }, [nature, texte, campus, volontaire, contact]);
 
     const basculerBloc = useCallback((cle: CleDeBloc) => {
         setRetires((avant) => {
@@ -102,7 +127,10 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
         }
     }, []);
 
-    const retirerUneCapture = useCallback((uri: string) => setCaptures((avant) => avant.filter((c) => c !== uri)), []);
+    const retirerUneCapture = useCallback((uri: string) => {
+        oublierLeFichier(uri);
+        setCaptures((avant) => avant.filter((c) => c !== uri));
+    }, []);
 
     const adresseValide = contact.trim() === '' || ADRESSE.test(contact.trim());
     const pret = useMemo(() => {
@@ -126,15 +154,12 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
                 captures: deCampus ? [] : captures,
                 reponseIci,
             });
-            if (issue.etat !== 'refuse') {
-                brouillonPret.current = false;
-                await ecrireBrouillon(null);
-            }
+            if (issue.etat !== 'refuse') await oublierLeBrouillon();
             return issue;
         } finally {
             setEnvoi(false);
         }
-    }, [pret, envoi, nature, texte, campus, volontaire, contact, probleme, blocs, retires, captures, reponseIci]);
+    }, [pret, envoi, nature, texte, campus, volontaire, contact, probleme, blocs, retires, captures, reponseIci, oublierLeBrouillon]);
 
     return {
         nature, setNature, texte, setTexte, campus, setCampus, volontaire, setVolontaire, contact, setContact, adresseValide,

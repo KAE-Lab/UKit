@@ -11,6 +11,8 @@ export type NatureDeRetour = 'bug' | 'fonctionnalite' | 'campus';
 
 /** Le retour tel qu'il part, champ pour champ ce que la fonction `communaute` borne. */
 export interface RetourASigner {
+    /** L'identifiant du depot, tire sur l'appareil : un depot rejoue retrouve sa ligne au lieu d'en ecrire une autre. */
+    readonly depot: string;
     readonly nature: NatureDeRetour;
     readonly texte: string;
     readonly campus: string | null;
@@ -76,17 +78,21 @@ export interface RetourConnu {
     readonly etat: 'a-envoyer' | 'envoye' | 'refuse';
     readonly statut: StatutDuRetour | null;
     readonly reponses: readonly Reponse[];
-    /** Combien de reponses ont ete vues dans « Mes retours ». */
+    /**
+     * Jusqu'ou les reponses ont ete vues dans « Mes retours », annoncees en tete de l'application,
+     * notifiees hors d'elle : l'instant de la derniere reponse concernee, 0 pour aucune. Un instant et
+     * non un nombre : une reponse retiree puis une autre publiee font le meme compte, pas le meme instant.
+     */
     readonly vues: number;
-    /** Combien ont ete annoncees, par une notification ou en tete de l'application. */
     readonly annoncees: number;
+    readonly notifiees?: number;
 }
 
 /** Ce que l'etudiant se rappelle : le campus pour une demande, sinon son texte. */
 export function nouveauRetourConnu(attente: RetourEnAttente): RetourConnu {
     return {
         local: attente.local, nature: attente.retour.nature, envoyeLe: attente.creeLe, texte: attente.retour.texte,
-        campus: attente.retour.campus, cle: attente.cle, etat: 'a-envoyer', statut: null, reponses: [], vues: 0, annoncees: 0,
+        campus: attente.retour.campus, cle: attente.cle, etat: 'a-envoyer', statut: null, reponses: [], vues: 0, annoncees: 0, notifiees: 0,
     };
 }
 
@@ -128,17 +134,32 @@ export function clesALire(retours: readonly RetourConnu[]): string[] {
         .map((r) => r.cle);
 }
 
+/** Les reponses arrivees apres un instant. */
+function apres(r: RetourConnu, instant: number): number {
+    return r.reponses.filter((reponse) => reponse.le > instant).length;
+}
+
 export function nonLues(retours: readonly RetourConnu[]): number {
-    return retours.reduce((n, r) => n + Math.max(0, r.reponses.length - r.vues), 0);
+    return retours.reduce((n, r) => n + apres(r, r.vues), 0);
 }
 
-/** Le retour dont une reponse n'a pas encore ete annoncee, le plus recent d'abord. */
+/** Le retour dont une reponse n'a pas encore ete annoncee en tete, le plus recent d'abord. */
 export function aAnnoncer(retours: readonly RetourConnu[]): RetourConnu | null {
-    return [...retours].filter((r) => r.reponses.length > r.annoncees).sort((a, b) => b.envoyeLe - a.envoyeLe)[0] ?? null;
+    return [...retours].filter((r) => apres(r, Math.max(r.annoncees, r.vues)) > 0).sort((a, b) => b.envoyeLe - a.envoyeLe)[0] ?? null;
 }
 
-export function marquer(retours: readonly RetourConnu[], quoi: 'vues' | 'annoncees', local: string | null = null): RetourConnu[] {
-    return retours.map((r) => (local === null || r.local === local ? { ...r, [quoi]: r.reponses.length, ...(quoi === 'vues' ? { annoncees: r.reponses.length } : {}) } : r));
+/** Le retour dont une reponse n'a ete ni notifiee, ni annoncee, ni vue : la notification hors de l'application. */
+export function aNotifier(retours: readonly RetourConnu[]): RetourConnu | null {
+    return [...retours].filter((r) => apres(r, Math.max(r.notifiees ?? 0, r.annoncees, r.vues)) > 0).sort((a, b) => b.envoyeLe - a.envoyeLe)[0] ?? null;
+}
+
+/** Marque jusqu'a la derniere reponse : vue (et donc annoncee), annoncee, ou notifiee. */
+export function marquer(retours: readonly RetourConnu[], quoi: 'vues' | 'annoncees' | 'notifiees', local: string | null = null): RetourConnu[] {
+    return retours.map((r) => {
+        if (local !== null && r.local !== local) return r;
+        const derniere = r.reponses.reduce((max, reponse) => Math.max(max, reponse.le), 0);
+        return { ...r, [quoi]: derniere, ...(quoi === 'vues' ? { annoncees: derniere } : {}) };
+    });
 }
 
 // ---------------------------------------------------------------------------

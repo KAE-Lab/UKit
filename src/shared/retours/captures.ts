@@ -125,6 +125,19 @@ export function oublierLesCaptures(local: string): void {
     }
 }
 
+/**
+ * Une capture du cache, effacee : l'ecran de UKit refait apres une capture peut montrer une note ou un
+ * message, et ne doit pas rester sur l'appareil si l'etudiant ne l'envoie pas. Ne leve jamais.
+ */
+export function oublierLeFichier(uri: string): void {
+    try {
+        const fichier = new File(uri);
+        if (fichier.exists) fichier.delete();
+    } catch {
+        // Le systeme videra son cache de toute facon.
+    }
+}
+
 /** Les octets d'une capture, pour le televersement. */
 export async function octetsDe(uri: string): Promise<ArrayBuffer> {
     return (await new File(uri).bytes()).buffer;

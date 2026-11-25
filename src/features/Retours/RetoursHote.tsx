@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { jourDeParis } from '../../shared/communaute/donnees';
 import Translator from '../../shared/i18n/Translator';
 import { EVENEMENT_RETOURS, relireLesReponses } from '../../shared/retours';
-import { capturerLEcran, ecouterLesCaptures } from '../../shared/retours/captures';
+import { capturerLEcran, ecouterLesCaptures, oublierLeFichier } from '../../shared/retours/captures';
 import { aAnnoncer, marquer, peutProposer, type RetourConnu } from '../../shared/retours/donnees';
 import { ecrireProposition, lireConnus, lireProposition, modifierConnus } from '../../shared/retours/memoire';
 import { allerA, ecranCourant } from '../../shared/retours/navigation';
@@ -87,7 +87,10 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
                 await ecrireProposition({ jour, jamais: false });
                 setCapture(uri);
                 if (minuteur.current !== null) clearTimeout(minuteur.current);
-                minuteur.current = setTimeout(() => setCapture(null), DUREE_DE_LA_PROPOSITION_MS);
+                minuteur.current = setTimeout(() => {
+                    oublierLeFichier(uri);
+                    setCapture(null);
+                }, DUREE_DE_LA_PROPOSITION_MS);
             })();
         }).then((d) => {
             if (actif) desabonner = d; else d();
@@ -100,12 +103,20 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
     }, []);
 
     if (capture === null) return null;
+    // Une capture qu'on ne signale pas s'efface ; celle qu'on signale passe au formulaire, qui l'efface
+    // en se fermant.
+    const fermer = () => {
+        if (minuteur.current !== null) clearTimeout(minuteur.current);
+        oublierLeFichier(capture);
+        setCapture(null);
+    };
     const signaler = () => {
+        if (minuteur.current !== null) clearTimeout(minuteur.current);
         setCapture(null);
         allerA('Retour', { nature: 'bug', capture });
     };
     const nePlusProposer = () => {
-        setCapture(null);
+        fermer();
         void ecrireProposition({ jour: jourDeParis(new Date()), jamais: true });
     };
     return (
@@ -114,7 +125,7 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
                 <View style={styles.ligne}>
                     <Icon icon={{ name: 'message-text-outline' }} size={22} color={theme.primary} />
                     <Text numberOfLines={2} style={[styles.titre, { color: theme.font }]}>{Translator.get('CAPTURE_PROPOSITION')}</Text>
-                    <TouchableOpacity accessibilityRole="button" accessibilityLabel={Translator.get('CLOSE')} hitSlop={tokens.space.sm} onPress={() => setCapture(null)} style={styles.croix}>
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel={Translator.get('CLOSE')} hitSlop={tokens.space.sm} onPress={fermer} style={styles.croix}>
                         <Icon icon={{ name: 'close' }} size={tokens.fontSize.lg} color={theme.fontSecondary} />
                     </TouchableOpacity>
                 </View>

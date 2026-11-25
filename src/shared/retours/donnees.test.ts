@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-    aAnnoncer, clesALire, contexteDuVote, fusionnerLecture, lireEnvois, lireLigne, lireProbleme, marquer, nonLues, nouveauRetourConnu,
+    aAnnoncer, aNotifier, clesALire, contexteDuVote, fusionnerLecture, lireEnvois, lireLigne, lireProbleme, marquer, nonLues, nouveauRetourConnu,
     peutProposer, serialiserRetour, type RetourConnu, type RetourEnAttente,
 } from './donnees';
 
 const ATTENTE: RetourEnAttente = {
     local: 'l1', creeLe: Date.parse('2026-11-25T10:00:00Z'), fichiers: [], cle: 'Y2xl',
-    retour: { nature: 'bug', texte: 'Le menu reste vide', campus: null, volontaire: false, contact: null, probleme: null, contexte: null, captures: 0, cle_reponse: 'ab'.repeat(32) },
+    retour: { depot: '0b6f3c8e-2a41-4e57-9b8d-6f1e2c3d4a5b', nature: 'bug', texte: 'Le menu reste vide', campus: null, volontaire: false, contact: null, probleme: null, contexte: null, captures: 0, cle_reponse: 'ab'.repeat(32) },
 };
 
 function connu(local: string, cle: string | null, envoyeLe: number, extra: Partial<RetourConnu> = {}): RetourConnu {
@@ -55,15 +55,27 @@ describe('la lecture des reponses', () => {
         expect(cles).not.toContain('cleBoite');
     });
 
-    test('ce qui reste a lire et a annoncer', () => {
-        const reponses = [{ texte: 'Un', le: 1 }, { texte: 'Deux', le: 2 }];
-        const retours = [connu('a', 'cleA', 1, { reponses, vues: 1, annoncees: 1 }), connu('b', 'cleB', 2)];
+    test('ce qui reste a lire, a annoncer et a notifier', () => {
+        const reponses = [{ texte: 'Un', le: 10 }, { texte: 'Deux', le: 20 }];
+        const retours = [connu('a', 'cleA', 1, { reponses, vues: 10, annoncees: 10 }), connu('b', 'cleB', 2)];
         expect(nonLues(retours)).toBe(1);
         expect(aAnnoncer(retours)?.local).toBe('a');
-        const annonces = marquer(retours, 'annoncees');
+        expect(aNotifier(retours)?.local).toBe('a');
+        // Notifiee, elle s'annonce encore en tete a l'ouverture suivante, sans se renotifier.
+        const notifiees = marquer(retours, 'notifiees', 'a');
+        expect(aNotifier(notifiees)).toBeNull();
+        expect(aAnnoncer(notifiees)?.local).toBe('a');
+        const annonces = marquer(notifiees, 'annoncees');
         expect(aAnnoncer(annonces)).toBeNull();
         expect(nonLues(annonces)).toBe(1);
         expect(nonLues(marquer(annonces, 'vues', 'a'))).toBe(0);
+    });
+
+    test('une reponse retiree puis une autre publiee se signalent', () => {
+        const vue = connu('a', 'cleA', 1, { reponses: [{ texte: 'Retiree', le: 10 }], vues: 10, annoncees: 10 });
+        const remplacee = fusionnerLecture([vue], ['cleA'], [{ etat: 'traite', reponses: [{ texte: 'Nouvelle', le: '1970-01-01T00:00:00.030Z' }] }]);
+        expect(nonLues(remplacee)).toBe(1);
+        expect(aAnnoncer(remplacee)?.local).toBe('a');
     });
 });
 

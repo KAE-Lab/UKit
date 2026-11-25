@@ -42,11 +42,12 @@ const NATURES: readonly { readonly nature: NatureDeRetour; readonly cle: 'RETOUR
 /** Ce que l'envoi est devenu, dit d'un toast : un geste ne se confirme pas par un dialogue (theme.md). */
 function direLIssue(issue: IssueDuDepot): boolean {
     if (issue.etat === 'refuse') {
-        const cle = issue.raison.startsWith('plafond_') ? 'RETOUR_REFUSE_PLAFOND' : issue.raison === 'appareil_bloque' ? 'RETOUR_REFUSE_BLOQUE' : 'RETOUR_REFUSE';
-        new ErrorAlert(Translator.get(cle)).show();
+        new ErrorAlert(Translator.get(issue.raison === 'appareil_bloque' ? 'RETOUR_REFUSE_BLOQUE' : 'RETOUR_REFUSE')).show();
         return false;
     }
-    const cle = issue.etat === 'en-attente' ? 'RETOUR_EN_ATTENTE' : issue.capturesPerdues > 0 ? 'RETOUR_ENVOYE_SANS_CAPTURES' : 'RETOUR_ENVOYE';
+    const cle = issue.etat === 'en-attente' ? 'RETOUR_EN_ATTENTE'
+        : issue.etat === 'differe' ? 'RETOUR_DIFFERE'
+        : issue.capturesPerdues > 0 ? 'RETOUR_ENVOYE_SANS_CAPTURES' : 'RETOUR_ENVOYE';
     new ErrorAlert(Translator.get(cle)).show();
     return true;
 }

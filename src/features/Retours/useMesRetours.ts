@@ -14,7 +14,7 @@ import { connusEnMemoire, lireConnus, modifierConnus } from '../../shared/retour
 export function useMesRetours() {
     const [retours, setRetours] = useState<readonly RetourConnu[]>(connusEnMemoire());
     const [lecture, setLecture] = useState(true);
-    // Combien de reponses chaque retour avait deja de vues a l'ouverture : les suivantes sont nouvelles.
+    // Jusqu'ou chaque retour etait vu a l'ouverture : les reponses d'apres sont nouvelles.
     const [vuesALOuverture, setVuesALOuverture] = useState<ReadonlyMap<string, number> | null>(null);
 
     useEffect(() => {
@@ -34,6 +34,6 @@ export function useMesRetours() {
         };
     }, []);
 
-    const nouvelles = (retour: RetourConnu): number => Math.max(0, retour.reponses.length - (vuesALOuverture?.get(retour.local) ?? retour.vues));
-    return { retours, lecture, nouvelles };
+    const vuJusqua = (retour: RetourConnu): number => vuesALOuverture?.get(retour.local) ?? retour.vues;
+    return { retours, lecture, vuJusqua };
 }

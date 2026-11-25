@@ -49,9 +49,12 @@ même file. La fonction relit le texte signé champ par champ ([`retours.ts`](..
 masque les adresses et les numéros du texte libre comme l'import du formulaire, et rend une URL de
 téléversement signée par capture annoncée.
 
-`deposer_retour` borne le non attesté par adresse (le compteur des contributions) et pour tout le
+`deposer_retour` retrouve d'abord un dépôt déjà écrit par son identifiant (`depot`, tiré sur
+l'appareil) : un dépôt rejoué — la réponse perdue en route, l'application tuée pendant un
+téléversement — rend sa ligne sans rien compter, au lieu d'un doublon ou d'une clé de réponse en
+double. Puis il borne le non attesté par adresse (le compteur des contributions) et pour tout le
 parc, refuse un appareil bloqué et un compteur App Attest rejoué, compte le plafond du jour de
-l'appareil, juge les longueurs et la branche du campus, puis écrit la ligne de `retours` avec
+l'appareil, juge les longueurs et la branche du campus, et écrit la ligne de `retours` avec
 `source = 'app'`. Trois réglages nouveaux, hors du dépôt : `plafond_retours_appareil`,
 `plafond_retours_non_atteste`, `plafond_retours_non_attestes_jour`.
 
@@ -62,7 +65,8 @@ par la fonction —, dans `private.retours_par_appareil`, que la tâche horaire 
 ### 3. La réponse, et ce qui l'annonce
 
 Avec l'accord, l'appareil tire 32 octets, garde la clé et n'envoie que son empreinte SHA-256
-(`retours.cle_reponse`, qu'aucun compte ne lit). Un admin répond depuis la console
+(`retours.cle_reponse`, qu'aucun compte ne lit dans la table ; le journal, lu par les seuls admins,
+la copie avec la ligne, et elle n'ouvre rien sans la clé). Un admin répond depuis la console
 (`retours_reponses`, refusée à un retour sans accord) et change l'état. L'appareil relit par
 `lire_mes_retours(clés)` : l'état, la clôture et les réponses, rien d'autre, ni identifiant ni texte.
 La fonction est `volatile`, que PostgREST n'appelle qu'en POST : une clé ne passe jamais dans une
@@ -73,7 +77,8 @@ l'entretien (lancement, premier plan, tâche de fond). Une réponse neuve :
 
 - **en arrière-plan**, une notification locale, si les notifications sont accordées ;
 - **à l'ouverture suivante**, en tête, un dialogue avec la réponse et « Voir mes retours »
-  ([`RetoursHote`](../../src/features/Retours/RetoursHote.tsx)) ;
+  ([`RetoursHote`](../../src/features/Retours/RetoursHote.tsx)), que la notification ait été touchée
+  ou balayée ;
 - **un point plein** sur l'onglet des Réglages et le nombre sur la rangée « Mes retours », tant
   qu'elle n'a pas été vue ;
 - **« Mes retours »** ([écran](../../src/features/Retours/MesRetoursScreen.tsx)) : chaque envoi, son
@@ -117,7 +122,10 @@ proposer », qui se rouvre dans Réglages, Confidentialité.
 
 Un retour entre d'abord dans la boîte (`retours-a-envoyer@1`), ses captures recopiées dans le
 répertoire privé, puis part. Sans réseau ou base injoignable, il attend et repart au retour du réseau
-(NetInfo) ou au prochain entretien, un dépôt à la fois ; un refus est définitif et se dit.
+(NetInfo) ou au prochain entretien, un dépôt à la fois, sous le même identifiant de dépôt. Un plafond
+du jour le garde aussi, et le toast dit qu'il partira plus tard ; tout autre refus est définitif et
+se dit. Une capture se téléverse sous son rang (`<id>/<n>.jpg`), qu'une URL manquante ne décale pas,
+et se remplace si elle est rejouée.
 
 ### 8. Les portes
 
@@ -168,7 +176,14 @@ le formulaire du catalogue.
 - **Les contraintes neuves de `retours` vivent sur leur colonne** (`add column if not exists … check`) :
   la vue lisible se rejoue sans erreur, et l'empreinte de la migration et de la vue est la même.
 - **L'URL de la fonction est écrite dans la tâche horaire** : un seul projet, dont la référence est
-  déjà publique (supabase/README.md) ; l'action `purger` n'efface que ce que la base désigne.
+  déjà publique (supabase/README.md) ; l'action `purger` n'efface que ce que la base désigne, et
+  compte l'adresse comme le reste : un appel en boucle bute sur son plafond.
+- **Lu, annoncé, notifié se notent par l'instant de la dernière réponse**, pas par un nombre : une
+  réponse retirée puis une autre publiée feraient le même compte, et la seconde passerait inaperçue.
+- **L'écran refait après une capture s'efface** s'il n'est pas signalé, et les captures du cache avec
+  le formulaire qui se ferme : elles peuvent montrer une note ou un message.
+- **Le texte se masque, puis se borne de nouveau** : un numéro masqué allonge le texte, qui ne doit
+  pas être refusé après avoir été admis.
 
 ## Ce que les documents du lot 7 devront dire
 

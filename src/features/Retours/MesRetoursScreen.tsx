@@ -43,7 +43,7 @@ export function statutDuRetour(r: RetourConnu): { readonly cle: TranslationKey; 
     }
 }
 
-function CarteDeRetour({ theme, retour, nouvelles }: { theme: AppThemeType; retour: RetourConnu; nouvelles: number }) {
+function CarteDeRetour({ theme, retour, vuJusqua }: { theme: AppThemeType; retour: RetourConnu; vuJusqua: number }) {
     const statut = statutDuRetour(retour);
     const apercu = retour.nature === 'campus' ? [retour.campus, retour.texte].filter((t) => t !== null && t !== '').join(' — ') : retour.texte;
     return (
@@ -56,7 +56,7 @@ function CarteDeRetour({ theme, retour, nouvelles }: { theme: AppThemeType; reto
                 <Text numberOfLines={4} style={[styles.texte, { color: theme.font }]}>{apercu}</Text>
             </View>
             {retour.reponses.map((reponse, i) => {
-                const nouvelle = i >= retour.reponses.length - nouvelles;
+                const nouvelle = reponse.le > vuJusqua;
                 return (
                     <View key={`${reponse.le}-${i}`} style={styles.corps}>
                         <View style={styles.enTete}>
@@ -76,7 +76,7 @@ function CarteDeRetour({ theme, retour, nouvelles }: { theme: AppThemeType; reto
 export default function MesRetoursScreen({ headerPadding, onAnimatedScroll }: MesRetoursScreenProps) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName ?? 'light'];
-    const { retours, lecture, nouvelles } = useMesRetours();
+    const { retours, lecture, vuJusqua } = useMesRetours();
 
     if (retours.length === 0 && !lecture) {
         return (
@@ -90,7 +90,7 @@ export default function MesRetoursScreen({ headerPadding, onAnimatedScroll }: Me
     return (
         <View style={[styles.page, { backgroundColor: theme.background }]}>
             <Animated.ScrollView contentContainerStyle={[headerPadding, styles.contenu]} onScroll={onAnimatedScroll as never} scrollEventThrottle={16} showsVerticalScrollIndicator={false}>
-                {retours.map((retour) => <CarteDeRetour key={retour.local} theme={theme} retour={retour} nouvelles={nouvelles(retour)} />)}
+                {retours.map((retour) => <CarteDeRetour key={retour.local} theme={theme} retour={retour} vuJusqua={vuJusqua(retour)} />)}
             </Animated.ScrollView>
         </View>
     );
