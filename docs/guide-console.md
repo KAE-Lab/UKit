@@ -43,27 +43,34 @@ et la fiche donneront sur un téléphone, en clair et en sombre, et suit le cham
    (événement, information, bon plan, partenaire) ; l'accroche, qui sert de chapeau ; la description.
    La barre au-dessus de la description insère la mise en forme (titres de section, puces, exergue,
    signature) : pas besoin d'en retenir la syntaxe, l'aperçu la rend.
-2. **Visuel.** Une affiche : elle est réduite et compressée toute seule avant l'envoi. Clique sur
+2. **Événement**, pour une annonce de type événement : le début, la fin et le lieu tel qu'on le
+   cherche sur place (« Amphi A22, bâtiment A22 »). La fiche les montre sous le titre, avec **Ajouter à
+   mon planning** : l'étudiant le retrouve dans son planning et, s'il synchronise son agenda, dans son
+   téléphone. Un événement tient en vingt-quatre heures au plus ; une soirée peut passer minuit.
+   Déplacer l'heure ou le lieu se reflète chez ceux qui l'ont ajouté ; archiver l'annonce, vider ses
+   trois champs ou changer son type l'annule chez eux. Ne la fais donc pas expirer avant la fin de l'événement. Les faits,
+   jamais l'appel (plus bas).
+3. **Visuel.** Une affiche : elle est réduite et compressée toute seule avant l'envoi. Clique sur
    l'image pour poser le **point focal**, ce qui doit rester visible quand la carte la recadre ; le
    voile gris montre ce qui sera coupé.
-3. **Cartes et ordre.** Les réglages par défaut conviennent presque toujours. Les **créneaux** mettent
+4. **Cartes et ordre.** Les réglages par défaut conviennent presque toujours. Les **créneaux** mettent
    une annonce en avant à certaines heures (un bon plan du midi, de 11 h à 14 h, en heure de Paris).
-4. **Lieu et action.** Pour le lieu, colle un point copié d'une carte (clic droit sur Google Maps) :
+5. **Lieu et action.** Pour le lieu, colle un point copié d'une carte (clic droit sur Google Maps) :
    la fiche proposera « S'y rendre ». Un bouton demande un libellé **et** un lien complet, qui commence
    par `https://`.
-5. **Sondage**, si l'annonce pose une question : **Ajouter un sondage**, la question, deux à six
+6. **Sondage**, si l'annonce pose une question : **Ajouter un sondage**, la question, deux à six
    choix, la date de clôture. Il s'affiche sous la description de la fiche ; chaque téléphone vote une
    fois, sans être reconnu, et voit les résultats après son vote. Ses résultats se lisent sous
    l'aperçu, une fois l'annonce enregistrée. Ne change pas les choix après les premières voix : un
    choix retiré perd les siennes. **Jamais sur un sujet politique** (plus bas).
-6. **Publication.** Garde le statut **Brouillon** tant que tu travailles : personne ne le voit. Passe à
+7. **Publication.** Garde le statut **Brouillon** tant que tu travailles : personne ne le voit. Passe à
    **Publiée** quand c'est prêt. Une date de publication **dans le futur** programme l'annonce : elle
    apparaîtra toute seule à l'heure dite, et l'en-tête le dit (« Programmée, publiée le 3 octobre à
    11 h »). Une date d'expiration la retire toute seule.
-7. **Ciblage.** Commence **toujours** par l'audience **Les testeurs seulement** (voir plus bas). Les
+8. **Ciblage.** Commence **toujours** par l'audience **Les testeurs seulement** (voir plus bas). Les
    campus : tes campus sont déjà cochés, et un rédacteur ne peut cocher que les siens. Laisse les
    versions et les plateformes vides, sauf consigne.
-8. **Enregistrer**, en bas, ou **Ctrl+S** (**Cmd+S** sur Mac).
+9. **Enregistrer**, en bas, ou **Ctrl+S** (**Cmd+S** sur Mac).
 
 ![Le ciblage d'une annonce pour un rédacteur : son campus déjà coché, les autres grisés](screenshots/console/console-annonce-campus-redacteur.png)
 
@@ -151,6 +158,11 @@ ne comptent rien.
 - **Un sondage sur un sujet politique.** UKit est un outil, neutre sur le fond : un sondage porte sur
   la vie du campus — un créneau, un lieu, un choix d'animation —, jamais sur une élection, un parti, une
   cause ou une prise de position. Dans le doute, on ne le publie pas.
+- **Une annonce d'événement qui appelle.** Elle dit les faits — quoi, quand, où, qui l'organise —,
+  jamais l'appel : ni « venez nombreux », ni « votez pour », ni « rejoignez le mouvement ».
+  L'université et toutes les organisations étudiantes y ont le même droit, aux mêmes conditions, et
+  le jugement porte sur la forme de l'annonce, jamais sur sa cause : UKit est un outil, neutre sur le
+  fond.
 - **Prêter son compte.** Chaque compte est personnel, et tout ce qu'il écrit est enregistré à son nom.
   Pour quelqu'un de plus, un admin l'invite.
 
