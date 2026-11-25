@@ -17,14 +17,19 @@ import type { Ligne } from '../../supabase';
 import { Ressource } from '../Ressource';
 import { etatDAnnonce } from '../../schema/tables/etatDAnnonce';
 import { Ordre } from './Ordre';
+import { ResultatsDuSondage } from './ResultatsDuSondage';
 
 const ApercuDiffere = lazy(() => import('./apercu/Apercu').then((module) => ({ default: module.Apercu })));
 
 function apercu(valeurs: Ligne, activite: Activite) {
+    // Les resultats suivent la ligne enregistree (ResultatsDuSondage la relit) : une saisie en cours n'a pas de voix.
     return (
-        <Suspense fallback={<div aria-busy="true"><SqueletteBloc hauteur={480} /></div>}>
-            <ApercuDiffere valeurs={valeurs} activite={activite} />
-        </Suspense>
+        <div className="pile">
+            <Suspense fallback={<div aria-busy="true"><SqueletteBloc hauteur={480} /></div>}>
+                <ApercuDiffere valeurs={valeurs} activite={activite} />
+            </Suspense>
+            {typeof valeurs.id === 'string' ? <ResultatsDuSondage annonce={valeurs.id} /> : null}
+        </div>
     );
 }
 

@@ -12,13 +12,14 @@ import { ANNONCES } from './annonces';
 import { EDITEURS } from './editeurs';
 import { JETONS, MESSAGES } from './messages';
 import { BATIMENTS, ETABLISSEMENTS, SALUTATIONS, TESTEURS, VERSION, VISUELS } from './publiees';
+import { IDEES } from './idees';
 import { PROBLEMES } from './problemes';
 import { RETOURS } from './retours';
 
-export { ANNONCES, BATIMENTS, EDITEURS, ETABLISSEMENTS, JETONS, MESSAGES, PROBLEMES, RETOURS, SALUTATIONS, TESTEURS, VERSION, VISUELS };
+export { ANNONCES, BATIMENTS, EDITEURS, ETABLISSEMENTS, IDEES, JETONS, MESSAGES, PROBLEMES, RETOURS, SALUTATIONS, TESTEURS, VERSION, VISUELS };
 
 /** Les pages a descripteur, dans l'ordre de la navigation ; `section` dit sous quel titre — l'equipe, sous le compte. */
-export const RESSOURCES: readonly Descripteur[] = [RETOURS, PROBLEMES, JETONS, ANNONCES, MESSAGES, TESTEURS, VISUELS, ETABLISSEMENTS, SALUTATIONS, BATIMENTS, VERSION, EDITEURS];
+export const RESSOURCES: readonly Descripteur[] = [RETOURS, PROBLEMES, IDEES, JETONS, ANNONCES, MESSAGES, TESTEURS, VISUELS, ETABLISSEMENTS, SALUTATIONS, BATIMENTS, VERSION, EDITEURS];
 
 export function ressourceDe(chemin: string): Descripteur | undefined {
     return RESSOURCES.find((ressource) => ressource.chemin === chemin);

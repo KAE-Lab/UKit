@@ -20,7 +20,7 @@ const PLATEFORMES: readonly Option[] = [
 export const PROBLEMES: Descripteur = {
     chemin: 'problemes',
     table: 'problemes_connus',
-    section: 'suivre',
+    section: 'communaute',
     titre: 'Problèmes connus',
     nouvelle: 'Nouveau problème',
     description: 'Ce que l’application montre avant d’envoyer un bug, avec « Moi aussi » et « Ajouter un détail ».',

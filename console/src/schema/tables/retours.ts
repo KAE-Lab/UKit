@@ -35,7 +35,7 @@ export const ETATS_OUVERTS: readonly string[] = ['nouveau', 'en_attente'];
 export const RETOURS: Descripteur = {
     chemin: 'retours',
     table: 'retours',
-    section: 'suivre',
+    section: 'communaute',
     titre: 'Retours',
     description: 'Ce que les utilisateurs écrivent : depuis l’application, et l’import du formulaire Google toutes les 72 heures. Lu, reclassé et répondu ici.',
     cle: ['id'],

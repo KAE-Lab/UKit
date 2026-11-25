@@ -46,6 +46,7 @@ const GROUPE_CONTENU = 'Contenu';
 const GROUPE_VISUEL = 'Visuel';
 const GROUPE_CARTES = 'Cartes et ordre';
 const GROUPE_LIEU = 'Lieu et action';
+const GROUPE_SONDAGE = 'Sondage';
 const GROUPE_PUBLICATION = 'Publication';
 const GROUPE_CIBLAGE = 'Ciblage';
 
@@ -117,6 +118,7 @@ export const ANNONCES: Descripteur = {
         { nom: 'lng', libelle: 'Longitude', type: { type: 'nombre' }, cache: true },
         { nom: 'cta_texte', libelle: 'Libellé du bouton', type: { type: 'texte' }, aide: 'Le bouton n’apparaît que si le libellé et le lien sont tous les deux là.', groupe: GROUPE_LIEU },
         { nom: 'cta_lien', libelle: 'Lien du bouton', type: { type: 'texte' }, forme: FORME_DU_LIEN, aide: 'Une page web s’ouvre dans l’application ; mailto: et tel: partent vers le système.', groupe: GROUPE_LIEU },
+        { nom: 'sondage', libelle: 'Sondage', type: { type: 'sondage' }, aide: 'Une question et deux à six choix, sous la description de la fiche : une voix par appareil, anonyme, les résultats après le vote. Jamais sur un sujet politique (guide de l’équipe). Changer les choix après les premières voix fausse le résultat : un choix retiré perd ses voix.', groupe: GROUPE_SONDAGE },
         { nom: 'statut', libelle: 'Statut', type: { type: 'choix', options: STATUTS }, obligatoire: true, defaut: 'publiee', aide: 'Une annonce programmée est une annonce publiée dont la date de publication est à venir ; archiver la retire sans perdre sa trace.', groupe: GROUPE_PUBLICATION },
         { nom: 'publiee_le', libelle: 'Publiée le', type: { type: 'date' }, obligatoire: true, defaut: MAINTENANT, groupe: GROUPE_PUBLICATION },
         { nom: 'expire_le', libelle: 'Expire le', type: { type: 'date' }, groupe: GROUPE_PUBLICATION },

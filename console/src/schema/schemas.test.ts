@@ -167,3 +167,32 @@ test('des cases qui exigent au moins une refusent le vide, et gardent le tableau
     expect(convertir(EMPLACEMENTS, ['salles'])).toEqual({ ok: true, valeur: ['salles'] });
     expect(convertir(PLATEFORMES, [])).toEqual({ ok: true, valeur: null });
 });
+
+const SONDAGE: Champ = { nom: 's', libelle: 's', type: { type: 'sondage' } };
+
+test('un sondage tout vide part nul ; complet, il part a la forme de la base, la cloture en UTC', () => {
+    const schema = schemaDuChamp(SONDAGE);
+    expect(schema.parse({ question: '', choix: [], clos_le: '' })).toBeNull();
+    const parti = schema.parse({ question: ' Quel creneau ? ', choix: [{ id: 'a', libelle: 'Midi ' }, { id: 'b', libelle: '' }, { id: 'c', libelle: 'Soir' }], clos_le: '2026-12-01T18:00' }) as { question: string; choix: unknown[]; clos_le: string };
+    expect(parti.question).toBe('Quel creneau ?');
+    expect(parti.choix).toEqual([{ id: 'a', libelle: 'Midi' }, { id: 'c', libelle: 'Soir' }]);
+    expect(parti.clos_le).toMatch(/Z$/);
+});
+
+test('un sondage incomplet ne part pas, et la phrase dit quoi corriger', () => {
+    const schema = schemaDuChamp(SONDAGE);
+    const refus = (saisie: unknown) => {
+        const r = schema.safeParse(saisie);
+        return r.success ? null : r.error.issues[0]?.message;
+    };
+    expect(refus({ question: 'Q ?', choix: [{ id: 'a', libelle: 'Un' }, { id: 'b', libelle: 'Deux' }], clos_le: '2026-12-01T18:00' })).toContain('question');
+    expect(refus({ question: 'Quel creneau ?', choix: [{ id: 'a', libelle: 'Un' }, { id: 'b', libelle: ' ' }], clos_le: '2026-12-01T18:00' })).toContain('deux choix');
+    expect(refus({ question: 'Quel creneau ?', choix: [{ id: 'a', libelle: 'Un' }, { id: 'b', libelle: 'Deux' }], clos_le: '' })).toContain('clôture');
+});
+
+test('un sondage de la base se relit en saisie, sa cloture en heure locale', () => {
+    const saisie = versSaisieDuChamp(SONDAGE, { question: 'Quel creneau ?', choix: [{ id: 'a', libelle: 'Midi' }], clos_le: '2026-12-01T17:00:00.000Z' }) as { clos_le: string; choix: unknown[] };
+    expect(saisie.clos_le).toMatch(/^2026-12-01T\d{2}:00$/);
+    expect(saisie.choix).toEqual([{ id: 'a', libelle: 'Midi' }]);
+    expect(versSaisieDuChamp(SONDAGE, null)).toEqual({ question: '', choix: [], clos_le: '' });
+});

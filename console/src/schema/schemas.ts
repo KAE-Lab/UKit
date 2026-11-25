@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { lireFocale, type Focale } from '../../../src/shared/annonces/carte';
 import { PALETTE } from '../../../src/shared/annonces/grammaire';
 import { minutesDe } from '../../../src/shared/annonces/ordre';
+import { BORNES_DU_SONDAGE, lireSondage } from '../../../src/shared/annonces/sondage';
 import { depuisSaisie, versSaisie } from '../lib/dates';
 import type { Champ, Descripteur } from './descripteurs';
 
@@ -34,11 +35,19 @@ export interface PartenaireSaisi {
     readonly lien: string;
 }
 
-export type Saisie = string | boolean | readonly string[] | Focale | readonly CreneauSaisi[] | PartenaireSaisi;
+/** Le sondage tel qu'il se saisit : la cloture en heure locale du navigateur, comme une date du formulaire. */
+export interface SondageSaisi {
+    readonly question: string;
+    readonly choix: readonly { readonly id: string; readonly libelle: string }[];
+    readonly clos_le: string;
+}
+
+export type Saisie = string | boolean | readonly string[] | Focale | readonly CreneauSaisi[] | PartenaireSaisi | SondageSaisi;
 export type Saisies = Record<string, Saisie>;
 export type SchemaDeChamp = z.ZodType<unknown, Saisie>;
 
 export const PARTENAIRE_VIDE: PartenaireSaisi = { nom: '', logo_url: '', lien: '' };
+export const SONDAGE_VIDE: SondageSaisi = { question: '', choix: [], clos_le: '' };
 
 const FORME_VERSION = /^\d+\.\d+\.\d+$/;
 const FORME_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -67,6 +76,23 @@ export function lirePartenaire(valeur: unknown): PartenaireSaisi {
     return { nom: texte(brut.nom), logo_url: texte(brut.logo_url), lien: texte(brut.lien) };
 }
 
+/** Le sondage d'une ligne, tel qu'il se saisit : chaque choix garde son identifiant, la cloture passe en heure locale. */
+export function lireSondageSaisi(valeur: unknown): SondageSaisi {
+    if (typeof valeur !== 'object' || valeur === null || Array.isArray(valeur)) return SONDAGE_VIDE;
+    const brut = valeur as { readonly question?: unknown; readonly choix?: unknown; readonly clos_le?: unknown };
+    const choix = Array.isArray(brut.choix) ? brut.choix.flatMap((c: unknown) => {
+        const entree = c as { readonly id?: unknown; readonly libelle?: unknown } | null;
+        return entree !== null && typeof entree === 'object' && typeof entree.id === 'string'
+            ? [{ id: entree.id, libelle: typeof entree.libelle === 'string' ? entree.libelle : '' }] : [];
+    }) : [];
+    return {
+        question: typeof brut.question === 'string' ? brut.question : '',
+        choix,
+        // Une saisie deja locale (le formulaire relit sa propre valeur) reste telle quelle.
+        clos_le: typeof brut.clos_le === 'string' ? (/Z|[+-]\d{2}:\d{2}$/.test(brut.clos_le) ? versSaisie(brut.clos_le) : brut.clos_le) : '',
+    };
+}
+
 /** Les saisies structurees des annonces (7-F) ; `undefined` pour les autres types. */
 function saisieStructuree(type: Champ['type']['type'], valeur: unknown): Saisie | undefined {
     switch (type) {
@@ -80,6 +106,8 @@ function saisieStructuree(type: Champ['type']['type'], valeur: unknown): Saisie 
             return lireCreneauxSaisis(valeur);
         case 'partenaire':
             return lirePartenaire(valeur);
+        case 'sondage':
+            return lireSondageSaisi(valeur);
         default:
             return undefined;
     }
@@ -276,6 +304,28 @@ const partenaire: SchemaDeChamp = z.custom<Saisie>().transform((saisie, ctx) => 
     return { nom, logo_url: logo === '' ? null : logo, lien: lien === '' ? null : lien };
 });
 
+/**
+ * Tout vide : pas de sondage. Sinon une question, deux a six choix remplis, une cloture ; la forme finale
+ * se relit par la regle partagee avec l'application, qui est celle de la base.
+ */
+const sondage: SchemaDeChamp = z.custom<Saisie>().transform((saisie, ctx) => {
+    const brut = lireSondageSaisi(saisie);
+    const question = brut.question.trim();
+    const choix = brut.choix.map((c) => ({ id: c.id, libelle: c.libelle.trim() })).filter((c) => c.libelle !== '');
+    if (question === '' && choix.length === 0 && brut.clos_le === '') return null;
+    const erreur = (message: string) => { ctx.addIssue({ code: 'custom', message }); return z.NEVER; };
+    const q = BORNES_DU_SONDAGE.question;
+    if (question.length < q.min || question.length > q.max) return erreur(`La question compte de ${q.min} à ${q.max} caractères.`);
+    if (choix.length < BORNES_DU_SONDAGE.choix.min) return erreur('Il faut au moins deux choix remplis.');
+    if (choix.some((c) => c.libelle.length > BORNES_DU_SONDAGE.libelle.max)) return erreur(`Un choix compte ${BORNES_DU_SONDAGE.libelle.max} caractères au plus.`);
+    if (new Set(choix.map((c) => c.libelle.toLocaleLowerCase('fr'))).size !== choix.length) return erreur('Deux choix portent le même libellé.');
+    const clos = depuisSaisie(brut.clos_le);
+    if (clos === null) return erreur('La date de clôture est obligatoire.');
+    const valeur = { question, choix, clos_le: clos };
+    if (lireSondage(valeur) === null) return erreur('Le sondage est hors de la forme attendue : deux à six choix.');
+    return valeur;
+});
+
 export interface ContexteDeSchema {
     /** Les codes du catalogue ; `null` quand il n'a pas repondu, et la verification est alors sautee. */
     readonly etablissements: readonly string[] | null;
@@ -302,6 +352,7 @@ const SCHEMAS: Readonly<Partial<Record<Champ['type']['type'], FabriqueDeSchema>>
     galerie: () => galerie,
     creneaux: () => creneaux,
     partenaire: () => partenaire,
+    sondage: () => sondage,
     teinte: () => teinte,
 };
 

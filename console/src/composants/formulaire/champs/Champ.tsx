@@ -16,6 +16,7 @@ import { ChampGalerie } from './Galerie';
 import { ChampImage } from './Image';
 import { ChampLieu } from './Lieu';
 import { ChampPartenaire } from './Partenaire';
+import { ChampSondage } from './Sondage';
 import { ChampTeinte } from './Teinte';
 import type { ChampProps } from './types';
 
@@ -48,6 +49,7 @@ const WIDGETS: Readonly<Partial<Record<ChampProps['champ']['type']['type'], Comp
     galerie: ChampGalerie,
     creneaux: ChampCreneaux,
     partenaire: ChampPartenaire,
+    sondage: ChampSondage,
     teinte: ChampTeinte,
     lieu: ChampLieu,
     etablissements: ChampEtablissements,
