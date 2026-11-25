@@ -25,6 +25,9 @@ export const TABLES_JOURNALISEES: readonly string[] = [
     'etats_officiels',
     'signalements',
     'appareils',
+    // Depuis le lot 3 : les problemes connus publies, et les reponses d'un admin a un retour.
+    'problemes_connus',
+    'retours_reponses',
 ];
 
 /** Les tables dont le journal ne se lit que par un admin : un retour y copie l'adresse laissee, l'equipe ses membres (7-H). */
