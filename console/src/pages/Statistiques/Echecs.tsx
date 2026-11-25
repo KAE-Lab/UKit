@@ -10,7 +10,7 @@ import { CarteDeGraphique } from '../../composants/stats/CarteDeGraphique';
 import { CarteDeListe } from '../../composants/stats/CarteDeListe';
 import { parJour, serieAffichee, somme, variation } from '../../stats/agregats';
 import { casesDe } from '../../stats/cases';
-import { joursDe, type Periode } from '../../stats/periode';
+import { joursDe, precedente, type Periode } from '../../stats/periode';
 import { dHote, ECHEC, echecsPar, FAMILLES } from '../../stats/sources';
 import { erreurDe, type LectureDeMesures } from '../../requetes/useMesures';
 import type { Lignes } from './choix';
@@ -24,7 +24,7 @@ export function useEchecs(lignes: Lignes | undefined, periode: Periode, hote: st
         const total = somme(lignes.courantes.filter(garder), ECHEC);
         return {
             total,
-            variation: variation(total, somme(lignes.precedentes.filter(garder), ECHEC)),
+            variation: variation(total, somme(lignes.precedentes.filter(garder), ECHEC), precedente({ du, au })),
             parJour: serieAffichee(jours, parJour(lignes.courantes, ECHEC, jours, garder)),
             parHote: casesDe(echecsPar(lignes.courantes, 'hote')),
             parFamille: casesDe(echecsPar(lignes.courantes, 'famille', hote)),

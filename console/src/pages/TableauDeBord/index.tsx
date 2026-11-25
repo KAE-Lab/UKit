@@ -57,9 +57,9 @@ function useSemaine(campus: string | null) {
         const annonces = entonnoir(courantes);
         const echecs = somme(courantes, ECHEC);
         return {
-            sessions, variationSessions: variation(sessions, somme(precedentes, 'session')),
-            ouvertures: annonces.ouvertures, tauxDOuverture: tauxDOuverture(annonces), variationOuvertures: variation(annonces.ouvertures, entonnoir(precedentes).ouvertures),
-            echecs, variationEchecs: variation(echecs, somme(precedentes, ECHEC)),
+            sessions, variationSessions: variation(sessions, somme(precedentes, 'session'), avant),
+            ouvertures: annonces.ouvertures, tauxDOuverture: tauxDOuverture(annonces), variationOuvertures: variation(annonces.ouvertures, entonnoir(precedentes).ouvertures, avant),
+            echecs, variationEchecs: variation(echecs, somme(precedentes, ECHEC), avant),
             // Chaque semaine se protege contre son propre total : le chiffre cle pour celle-ci, la variation pour l'autre.
             parJour: [{ periode: avant, lignes: precedentes }, { periode: semaine, lignes: courantes }].flatMap(({ periode, lignes: deLaPeriode }) => {
                 const jours = joursDe(periode);

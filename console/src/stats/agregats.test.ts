@@ -62,16 +62,25 @@ describe('les sommes', () => {
 });
 
 describe('la variation', () => {
+    const COMPARABLE = { du: '2026-12-02', au: '2026-12-08' };
+
     test('sur la periode precedente, en fraction', () => {
-        expect(variation(120, 100)).toBeCloseTo(0.2);
-        expect(variation(50, 100)).toBeCloseTo(-0.5);
-        expect(variation(0, 100)).toBe(-1);
+        expect(variation(120, 100, COMPARABLE)).toBeCloseTo(0.2);
+        expect(variation(50, 100, COMPARABLE)).toBeCloseTo(-0.5);
+        expect(variation(0, 100, COMPARABLE)).toBe(-1);
     });
 
     test('ne se dit pas sans base, ni sur une petite case', () => {
-        expect(variation(10, 0)).toBeNull();
-        expect(variation(3, 100)).toBeNull();
-        expect(variation(100, 4)).toBeNull();
+        expect(variation(10, 0, COMPARABLE)).toBeNull();
+        expect(variation(3, 100, COMPARABLE)).toBeNull();
+        expect(variation(100, 4, COMPARABLE)).toBeNull();
+    });
+
+    test('ne se dit pas sur une periode precedente d\'avant l\'adoption de la 6.3', () => {
+        // Le cas du 25 novembre 2026 : la semaine d'avant comptait l'adoption, pas l'usage.
+        expect(variation(10_076, 100, { du: '2026-11-11', au: '2026-11-17' })).toBeNull();
+        // Un jour avant la date suffit a ecarter la comparaison, quel que soit l'ecart.
+        expect(variation(120, 100, { du: '2026-12-01', au: '2026-12-07' })).toBeNull();
     });
 });
 

@@ -71,6 +71,21 @@ export function precedente(periode: Periode): Periode {
     return { du: decaler(periode.du, -n), au: decaler(periode.du, -1) };
 }
 
+/**
+ * Le premier jour d'une periode precedente comparable. La 6.3.1, qui porte la mesure, est en ligne sur
+ * les deux stores le 2026-11-18 : avant, presque rien ne comptait, et le parc se met encore a jour deux
+ * semaines apres — le delai que 7-G donnait a la 6.3 avant que les courbes disent quelque chose. Une
+ * periode precedente qui commence plus tot compte l'adoption, pas l'usage : le 25 novembre, la console
+ * montrait des variations a quatre chiffres. La regle est une date, pas un seuil sur les
+ * chiffres : un seuil cacherait aussi la vraie flambee d'echecs d'une source qui tombe.
+ */
+const COMPARABLE_DES = '2026-12-02';
+
+/** Une periode precedente se compare quand la mesure y avait deja tout le parc. */
+export function estComparable(precedente: Periode): boolean {
+    return precedente.du >= COMPARABLE_DES;
+}
+
 /** Les `n` derniers jours complets : la periode finit hier. */
 export function derniersJours(n: number, maintenant: Date): Periode {
     const hier = decaler(jourLocal(maintenant), -1);

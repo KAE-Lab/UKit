@@ -22,6 +22,7 @@ import { TableDEntonnoir } from './TableDEntonnoir';
 function useVueDesAnnonces(choix: Choix, choisie: string | null) {
     const { lignes, lecture } = useLignes(choix);
     const { du, au } = choix.periode;
+    const avant = choix.precedente;
     const vue = useMemo(() => {
         if (lignes === undefined) return undefined;
         const garder = (cle: string) => choisie === null || cle === choisie;
@@ -31,16 +32,16 @@ function useVueDesAnnonces(choix: Choix, choisie: string | null) {
         return {
             courant,
             variations: {
-                impressions: variation(courant.impressions, precedent.impressions),
-                ouvertures: variation(courant.ouvertures, precedent.ouvertures),
-                actions: variation(courant.actions, precedent.actions),
+                impressions: variation(courant.impressions, precedent.impressions, avant),
+                ouvertures: variation(courant.ouvertures, precedent.ouvertures, avant),
+                actions: variation(courant.actions, precedent.actions, avant),
             },
             parJour: serieAffichee(jours, parJour(lignes.courantes, IMPRESSION, jours, (m) => garder(m.cle))),
             // Les petites cases seulement : choisir une annonce redonne ses chiffres exacts (annonces.ts).
             classement: protegerLesLignes(classement(lignes.courantes), { secondaire: false }),
             parCampus: protegerLesLignes([...entonnoirParCampus(lignes.courantes, garder)].map(([cle, e]) => ({ cle, ...e })), { secondaire: false }),
         };
-    }, [lignes, choisie, du, au]);
+    }, [lignes, choisie, du, au, avant.du]);
     return { vue, lecture };
 }
 

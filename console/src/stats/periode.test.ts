@@ -7,7 +7,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-    derniersJours, duree, estUnJour, joursDe, libelleDePeriode, lundiDe, periodeDepuisParams, poserPeriode, precedente, semainesDe, tranchesDe,
+    derniersJours, duree, estComparable, estUnJour, joursDe, libelleDePeriode, lundiDe, periodeDepuisParams, poserPeriode, precedente, semainesDe, tranchesDe,
 } from './periode';
 
 const SEMAINE = { du: '2026-11-17', au: '2026-11-23' };
@@ -79,4 +79,11 @@ describe('l adresse', () => {
 test('une periode se dit en francais', () => {
     expect(libelleDePeriode(SEMAINE)).toBe('17–23 novembre 2026');
     expect(libelleDePeriode({ du: '2026-11-17', au: '2026-11-17' })).toBe('17 novembre 2026');
+});
+
+test('une periode precedente se compare a partir du 2 decembre 2026, deux semaines apres la 6.3.1', () => {
+    expect(estComparable({ du: '2026-11-18', au: '2026-11-24' })).toBe(false);
+    expect(estComparable({ du: '2026-12-01', au: '2026-12-07' })).toBe(false);
+    expect(estComparable({ du: '2026-12-02', au: '2026-12-08' })).toBe(true);
+    expect(estComparable(precedente({ du: '2026-12-09', au: '2026-12-15' }))).toBe(true);
 });

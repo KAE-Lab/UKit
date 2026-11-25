@@ -7,7 +7,7 @@
  */
 
 import { EtatVide } from '../../composants/ui/EtatVide';
-import { libelleDePeriode } from '../../stats/periode';
+import { estComparable, libelleDePeriode } from '../../stats/periode';
 import { Annonces } from './Annonces';
 import { useChoix } from './choix';
 import { Filtres } from './Filtres';
@@ -37,7 +37,7 @@ export default function Statistiques({ reste }: { readonly reste: string | null 
             <Onglets actif={page.chemin} params={choix.params} />
             <Filtres choix={choix} />
             <p className="periode-choisie non-imprime">
-                {libelleDePeriode(choix.periode)}{page.variation ? `, comparée à ${libelleDePeriode(choix.precedente)}` : ''}
+                {libelleDePeriode(choix.periode)}{page.variation && estComparable(choix.precedente) ? `, comparée à ${libelleDePeriode(choix.precedente)}` : ''}
             </p>
             <Contenu choix={choix} />
         </>

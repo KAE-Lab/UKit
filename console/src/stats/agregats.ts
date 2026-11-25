@@ -9,7 +9,7 @@
 
 import { masquer, proteger, type Affiche } from './cases';
 import type { Mesure } from './mesures';
-import { contient, type Periode } from './periode';
+import { contient, estComparable, type Periode } from './periode';
 
 export interface Filtre {
     /** Les appareils testeurs sont exclus par defaut ; la bascule les reintegre (7-G). */
@@ -58,9 +58,12 @@ export function par(mesures: readonly Mesure[], evenement: string, dimension: Di
 
 /**
  * La variation d'une periode sur la precedente, en fraction (0,12 pour +12 %). `null` quand elle ne
- * se dit pas : rien avant, ou l'un des deux comptes est une petite case — la variation le trahirait.
+ * se dit pas : une periode precedente d'avant l'adoption de la 6.3 (`estComparable`), rien avant, ou
+ * l'un des deux comptes est une petite case — la variation le trahirait. La periode est un argument
+ * pour qu'aucune page ne l'oublie.
  */
-export function variation(courant: number, precedent: number): number | null {
+export function variation(courant: number, precedent: number, periodePrecedente: Periode): number | null {
+    if (!estComparable(periodePrecedente)) return null;
     if (precedent === 0 || masquer(courant) === null || masquer(precedent) === null) return null;
     return (courant - precedent) / precedent;
 }

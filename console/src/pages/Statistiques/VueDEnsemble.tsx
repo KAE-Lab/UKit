@@ -26,6 +26,7 @@ const VUES_DU_PLANNING = { jour: 'Jour', semaine: 'Semaine' };
 function useVue(choix: Choix) {
     const { lignes, lecture } = useLignes(choix);
     const { du, au } = choix.periode;
+    const avant = choix.precedente;
     const vue = useMemo(() => {
         if (lignes === undefined) return undefined;
         const { courantes, precedentes } = lignes;
@@ -34,9 +35,9 @@ function useVue(choix: Choix) {
         const onglets = somme(courantes, 'onglet.vu');
         return {
             sessions,
-            variationSessions: variation(sessions, somme(precedentes, 'session')),
+            variationSessions: variation(sessions, somme(precedentes, 'session'), avant),
             onglets,
-            variationOnglets: variation(onglets, somme(precedentes, 'onglet.vu')),
+            variationOnglets: variation(onglets, somme(precedentes, 'onglet.vu'), avant),
             parJour: serieAffichee(jours, parJour(courantes, 'session', jours)),
             parCampus: casesDe(par(courantes, 'session', 'campus')),
             parVersion: casesDe(par(courantes, 'session', 'version')),
@@ -45,7 +46,7 @@ function useVue(choix: Choix) {
             vueDuPlanning: casesDe(new Map([['jour', somme(courantes, 'planning.jour')], ['semaine', somme(courantes, 'planning.semaine')]])),
             fiches: casesDe(new Map(Object.entries(FICHES).map(([cle, evenement]) => [cle, somme(courantes, evenement)]))),
         };
-    }, [lignes, du, au]);
+    }, [lignes, du, au, avant.du]);
     return { vue, lecture };
 }
 

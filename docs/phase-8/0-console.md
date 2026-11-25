@@ -102,6 +102,13 @@ bruts, qui restent dans l'équipe ([mesure.md](../mesure.md#les-petites-cases)).
 - **Le parc actif n'a pas de variation** : `jetons_push` ne garde que le dernier dépôt de chaque
   appareil, le parc d'une semaine passée ne s'y lit pas. Le tableau de bord pose à sa place la part
   de la 6.3 à côté des sessions ([`parc.ts`](../../console/src/stats/parc.ts)).
+- **Une variation ne se compare qu'à une période comparable** ([`periode.ts`](../../console/src/stats/periode.ts)) :
+  la période précédente doit commencer le 2 décembre 2026 ou après, deux semaines après la sortie de la
+  6.3.1 sur les deux stores (18 novembre), le délai que 7-G donnait à la 6.3 avant que les courbes
+  disent quelque chose. Avant, elle compte l'adoption, pas l'usage, et la console affichait des
+  variations à quatre chiffres. Sinon un tiret, et l'en-tête des statistiques ne dit plus « comparée
+  à ». Une date plutôt qu'un seuil sur les chiffres : un seuil cacherait aussi la vraie flambée
+  d'échecs d'une source qui tombe.
 - **Une semaine close bouge encore** : un téléphone envoie ses compteurs quand il passe en
   arrière-plan, parfois le lendemain. L'exactitude se juge contre une requête SQL jouée au même
   instant que la lecture de la console, jamais contre une ligne de base de la veille.
