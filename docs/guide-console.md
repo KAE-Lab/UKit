@@ -163,6 +163,14 @@ ne comptent rien.
 - **Les retours** se reclassent (nature, état, note). L'adresse laissée s'affiche au clic,
   **Afficher l'adresse**, et ne se recopie nulle part ailleurs.
 - **Les testeurs** : ajoute les téléphones de l'équipe (un identifiant, un nom).
+- **Les signalements** : ce que les étudiants signalent sur les restaurants, les bibliothèques et les
+  bâtiments, lieu par lieu, avec ce que l'application en montre. **Masquer** retire une voix de
+  l'application (**Rétablir** la rend) ; c'est le seul retrait, une voix ne se supprime pas.
+  **Bloquer l'appareil** masque toutes ses voix encore valables et refuse ce qu'il écrira : on le
+  désigne par l'un de ses signalements, sa clé ne s'affiche jamais. **Rendre officiel** publie ce que
+  disent les étudiants comme un état officiel, qui passe devant eux dans l'application ; un état
+  officiel se publie aussi à la main, jusqu'à un jour choisi, et se retire. Un signalement abusif se
+  masque ; un appareil qui en abuse se bloque.
 
 Pour réparer un compte admin, il reste une commande sur le poste du développeur :
 [`supabase/README.md`](../supabase/README.md#la-console-et-son-équipe).

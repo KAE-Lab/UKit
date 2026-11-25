@@ -49,3 +49,12 @@ details pre { margin: var(--espace-sm) 0 0; padding: var(--espace-sm); border-ra
 .carte .defilable { border: 0; background: none; border-radius: 0; }
 .carte .tableau th:first-child, .carte .tableau td:first-child { padding-left: 0; }
 .carte .tableau th:last-child, .carte .tableau td:last-child { padding-right: 0; }
+
+/* Signalements (phase 8, lot 2) : l'etat de chaque sujet d'un lieu, une rangee, puis l'etat officiel a publier. */
+.etats-du-lieu { display: grid; gap: var(--espace-xs); margin-bottom: var(--espace-md); }
+.etats-du-lieu:empty { display: none; }
+.etat-du-lieu { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-sm); min-height: 36px; }
+.etat-du-lieu .sujet { font-weight: 600; min-width: 200px; }
+.etat-du-lieu .espace { flex: 1; }
+.officiel-a-publier { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-sm); margin-bottom: var(--espace-md); }
+.officiel-a-publier .etiquette { font-size: var(--taille-xs); color: var(--texte-2); }
