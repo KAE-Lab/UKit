@@ -71,3 +71,29 @@ entrent en base avec [7-C](7-c-economie-et-socle.md), et l'ordre est rendu par l
 
 - **Une version visuelle n'a pas de critère d'arrêt naturel.** Le relevé en tient lieu ; sans lui,
   elle ne se termine que par lassitude.
+
+## Les vérifications de 7-Z, le 2026-11-25
+
+Jouées par le [lot 0 de la phase 8](../phase-8/0-console.md#4-les-vérifications-de-7-z), qui les
+reprenait. Les constats seulement : les chiffres de la mesure restent dans l'équipe.
+
+- **Les sauvegardes quotidiennes sont actives** : une sauvegarde physique terminée chaque nuit vers
+  4 h 20 UTC sur les sept derniers jours (API de gestion de Supabase). Pas de restauration à un instant
+  donné (PITR), qui ne fait pas partie du Pro de base.
+- **Les sondes sont vertes** depuis le 19 novembre, après trois passages en échec du 16 au 18 ; la
+  dernière source à avoir changé d'état est `cas-bordeaux-montaigne`, revenue le 18. Elles ne passent pas le matin : programmées à 5 h UTC, elles
+  partent entre 13 h et 16 h UTC, la file de GitHub les retardant ([registre](../defauts-fonctionnels.md)).
+- **L'egress du cycle reste loin du quota du Pro.** Le tableau Usage n'est pas dans l'API ; l'estimation
+  vient des journaux de la passerelle, jour par jour : la taille déclarée des réponses, plus, pour celles
+  qui n'en déclarent pas (les réponses compressées de l'API, près de la moitié des requêtes), la taille
+  compressée mesurée des cinq requêtes les plus fréquentes. Elle reste de l'ordre du centième du quota
+  sur le cycle. Ses limites : les journaux ne gardent que sept jours, l'egress en cache servi par le CDN
+  sans passer par la passerelle n'y est pas, les en-têtes ne sont pas comptés.
+- **Les refus de connexion universitaire ne s'expliquent pas par les sondes.** À Bordeaux, une part
+  importante des tentatives de la semaine est refusée alors que la sonde du CAS est restée verte tous
+  les jours ; les autres campus ont trop peu de tentatives pour se lire. Les échecs de source mesurés
+  par l'application sont dominés par le portail de Bordeaux (Moodle et la messagerie, famille
+  `blocked`), puis par Celcat (`unavailable`), là encore sous des sondes vertes. Une sonde vérifie que
+  le service répond, pas que le parcours de l'application aboutit : à instruire
+  ([registre](../defauts-fonctionnels.md)).
+
