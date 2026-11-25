@@ -176,7 +176,19 @@ async function notifier(texte: string): Promise<boolean> {
  * `force` (l'ouverture de « Mes retours »). Une reponse arrivee pendant que l'application est en
  * arriere-plan se notifie ; au premier plan, l'hote l'annonce lui-meme (RetoursHote). Ne leve jamais.
  */
-export async function relireLesReponses(force = false): Promise<void> {
+let lectureEnCours: Promise<void> | null = null;
+
+export function relireLesReponses(force = false): Promise<void> {
+    // L'entretien et l'hote relisent tous deux au retour au premier plan : un seul aller-retour. Une
+    // lecture forcee qui arrive pendant une autre attend la fin de celle-ci, puis passe.
+    if (lectureEnCours !== null) return force ? lectureEnCours.then(() => relireLesReponses(true)) : lectureEnCours;
+    lectureEnCours = relire(force).finally(() => {
+        lectureEnCours = null;
+    });
+    return lectureEnCours;
+}
+
+async function relire(force: boolean): Promise<void> {
     try {
         const supabase = getSupabase();
         const connus = await lireConnus();
