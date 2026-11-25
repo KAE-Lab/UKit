@@ -13,12 +13,12 @@ import { DeviceEventEmitter } from 'react-native';
 
 import type { MemoireDeProposition, NatureDeRetour, RetourConnu, RetourEnAttente } from './donnees';
 
-export const CLE_CONNUS = 'retours-connus@1';
-export const CLE_BOITE = 'retours-a-envoyer@1';
-export const CLE_BROUILLON = 'retours-brouillon@1';
-export const CLE_PROPOSITION = 'retours-proposition@1';
-export const CLE_LECTURE = 'retours-lecture@1';
-export const CLE_VOTES = 'problemes-votes@1';
+const CLE_CONNUS = 'retours-connus@1';
+const CLE_BOITE = 'retours-a-envoyer@1';
+const CLE_BROUILLON = 'retours-brouillon@1';
+const CLE_PROPOSITION = 'retours-proposition@1';
+const CLE_LECTURE = 'retours-lecture@1';
+const CLE_VOTES = 'problemes-votes@1';
 
 /** Diffuse apres chaque ecriture de « Mes retours ». */
 export const EVENEMENT_RETOURS = 'retoursChanges';
@@ -55,15 +55,22 @@ export function connusEnMemoire(): readonly RetourConnu[] {
     return connus ?? [];
 }
 
-export async function ecrireConnus(liste: RetourConnu[]): Promise<void> {
+async function ecrireConnus(liste: RetourConnu[]): Promise<void> {
     connus = liste;
     await ecrireJson(CLE_CONNUS, liste);
     DeviceEventEmitter.emit(EVENEMENT_RETOURS, liste);
 }
 
-export async function modifierConnus(modifier: (liste: RetourConnu[]) => RetourConnu[]): Promise<RetourConnu[]> {
-    const suivante = modifier(await lireConnus());
-    await ecrireConnus(suivante);
+let connusEnEcriture: Promise<unknown> = Promise.resolve();
+
+/** Modifie « Mes retours », une modification a la fois, pour la meme raison que la boite. */
+export function modifierConnus(modifier: (liste: RetourConnu[]) => RetourConnu[]): Promise<RetourConnu[]> {
+    const suivante = connusEnEcriture.then(async () => {
+        const liste = modifier(await lireConnus());
+        await ecrireConnus(liste);
+        return liste;
+    });
+    connusEnEcriture = suivante.catch(() => undefined);
     return suivante;
 }
 
@@ -71,8 +78,16 @@ export function lireBoite(): Promise<RetourEnAttente[]> {
     return lireJson<RetourEnAttente[]>(CLE_BOITE, [], estListe);
 }
 
-export function ecrireBoite(boite: readonly RetourEnAttente[]): Promise<void> {
-    return ecrireJson(CLE_BOITE, boite);
+let boiteEnEcriture: Promise<unknown> = Promise.resolve();
+
+/**
+ * Modifie la boite d'envoi, une modification a la fois : un depot qui s'ajoute pendant qu'un vidage en
+ * retire un autre ne doit perdre ni l'un ni l'autre.
+ */
+export function modifierBoite(modifier: (boite: RetourEnAttente[]) => RetourEnAttente[]): Promise<void> {
+    const suivante = boiteEnEcriture.then(async () => ecrireJson(CLE_BOITE, modifier(await lireBoite())));
+    boiteEnEcriture = suivante.catch(() => undefined);
+    return suivante;
 }
 
 /** Ce que l'etudiant a commence a ecrire, retrouve a la reouverture du formulaire. */

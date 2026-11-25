@@ -76,6 +76,8 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
     useEffect(() => {
         if (!brouillonPret.current) return undefined;
         const minuteur = setTimeout(() => {
+            // Un envoi a pu partir entre la frappe et ce moment : le brouillon efface ne revient pas.
+            if (!brouillonPret.current) return;
             const vide = texte.trim() === '' && campus.trim() === '' && contact.trim() === '';
             void ecrireBrouillon(vide ? null : { nature, texte, campus, volontaire, contact });
         }, ATTENTE_DU_BROUILLON_MS);

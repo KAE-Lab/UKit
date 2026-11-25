@@ -26,7 +26,7 @@ import {
     type NatureDeRetour, type RetourEnAttente,
 } from './donnees';
 import { brancherLeJournal } from './journalDeSession';
-import { derniereLecture, ecrireBoite, lireBoite, lireConnus, modifierConnus, noterLecture } from './memoire';
+import { derniereLecture, lireBoite, lireConnus, modifierBoite, modifierConnus, noterLecture } from './memoire';
 
 export { EVENEMENT_RETOURS } from './memoire';
 
@@ -98,7 +98,7 @@ async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
     const issue: IssueDuDepot = resultat.etat === 'refusee'
         ? { etat: 'refuse', raison: resultat.raison }
         : { etat: 'envoye', capturesPerdues: await televerser(attente, corps) };
-    await ecrireBoite((await lireBoite()).filter((a) => a.local !== attente.local));
+    await modifierBoite((boite) => boite.filter((a) => a.local !== attente.local));
     await modifierConnus((liste) => liste.map((r) => (r.local === attente.local
         ? { ...r, etat: issue.etat === 'refuse' ? 'refuse' : 'envoye', statut: issue.etat === 'refuse' ? null : 'nouveau' }
         : r)));
@@ -139,18 +139,26 @@ export async function deposerUnRetour(saisie: SaisieDeRetour): Promise<IssueDuDe
         cle = versBase64(octets);
         cleReponse = enHex(new Uint8Array(await digest(CryptoDigestAlgorithm.SHA256, octets)));
     }
+    let fichiers: string[];
+    try {
+        fichiers = garderLesCaptures(local, saisie.captures);
+    } catch (erreur) {
+        // Une capture que le cache a deja perdue : le retour part sans elle, plutot que pas du tout.
+        console.warn(`[retours] captures non gardees : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
+        fichiers = [];
+    }
     const attente: RetourEnAttente = {
         local,
         creeLe: Date.now(),
         cle,
-        fichiers: garderLesCaptures(local, saisie.captures),
+        fichiers,
         retour: {
             nature: saisie.nature, texte: saisie.texte.trim(), campus: saisie.campus, volontaire: saisie.volontaire,
-            contact: saisie.contact, probleme: saisie.probleme, contexte: saisie.contexte, captures: saisie.captures.length,
+            contact: saisie.contact, probleme: saisie.probleme, contexte: saisie.contexte, captures: fichiers.length,
             cle_reponse: cleReponse,
         },
     };
-    await ecrireBoite([...(await lireBoite()), attente]);
+    await modifierBoite((boite) => [...boite, attente]);
     await modifierConnus((liste) => [nouveauRetourConnu(attente), ...liste]);
     // Un vidage deja en cours a lu la boite avant ce retour : un second le prend.
     await viderLaBoite();
