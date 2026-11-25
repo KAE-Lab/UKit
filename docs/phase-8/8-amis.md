@@ -64,8 +64,9 @@ semaines, sans intitulés.
 ([`instantane.ts`](../../src/features/Amis/services/instantane.ts)) : trois octets par créneau,
 `jour << 18 | début << 9 | durée`, le jour de 0 à 13, le début et la durée en pas de cinq minutes.
 **Mesurée** (`lienAmi.test.ts`) : 68 caractères pour deux groupes de l'Université de Bordeaux ; 152 pour
-vingt créneaux ; **232 pour deux semaines chargées**, quarante créneaux, soit un code QR de version 10
-au niveau de correction M, qu'un appareil photo lit à bout de bras sur un écran de téléphone.
+vingt créneaux ; **232 pour deux semaines chargées**, quarante créneaux, soit un code QR de version 11
+(61 modules) au niveau de correction M (`codeQr.test.ts`), qu'un appareil photo lit sur un écran de
+téléphone.
 
 La lecture refuse sans rien montrer à moitié : une clé répétée, des groupes et un instantané à la fois,
 un caractère de contrôle, plus de dix groupes, plus de deux cents créneaux, un jour, un début ou une
