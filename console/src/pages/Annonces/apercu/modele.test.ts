@@ -7,7 +7,7 @@
 import { expect, test } from 'vitest';
 
 import { PALETTES } from '../../../../../src/shared/theme/palettes';
-import { annonceDApercu, badgeDeType, carrouselsSpeciaux, LARGEUR_CARROUSEL, LARGEUR_CELLULE, LARGEUR_VISUEL, ratioDeCadre, teinteDe, vueDuChamp, zoneDuChamp } from './modele';
+import { annonceDApercu, badgeDeType, carrouselsSpeciaux, heuresDeLEvenement, jourDeLEvenement, LARGEUR_CARROUSEL, LARGEUR_CELLULE, LARGEUR_VISUEL, ratioDeCadre, teinteDe, vueDuChamp, zoneDuChamp } from './modele';
 
 test('les largeurs sont celles que l application calcule sur un iPhone 13 Pro', () => {
     expect(LARGEUR_CARROUSEL).toBe(234);
@@ -71,4 +71,16 @@ test('la fiche se cale sur l endroit qui montre le champ edite', () => {
     expect(zoneDuChamp('images')).toBe('galerie');
     expect(zoneDuChamp('lat')).toBe('lieu');
     expect(zoneDuChamp('priorite')).toBeNull();
+});
+
+test('l’evenement de la fiche se lit de la saisie, comme le telephone le lit : sur une annonce de type evenement seulement', () => {
+    const saisie = { type: 'evenement', evenement_debut: '2026-12-03T18:00', evenement_fin: '2026-12-03T20:00', evenement_lieu: ' Amphi A22 ' };
+    const evenement = annonceDApercu(saisie).evenement;
+    expect(evenement?.lieu).toBe('Amphi A22');
+    expect(evenement === null ? null : jourDeLEvenement(evenement.debut)).toBe('Jeudi 3 décembre');
+    expect(evenement === null ? null : heuresDeLEvenement(evenement.debut, evenement.fin)).toBe('18:00 – 20:00');
+    expect(annonceDApercu({ ...saisie, type: 'info' }).evenement).toBeNull();
+    expect(annonceDApercu({ ...saisie, evenement_lieu: '' }).evenement).toBeNull();
+    expect(vueDuChamp('evenement_lieu')).toBe('fiche');
+    expect(zoneDuChamp('evenement_debut')).toBe('evenement');
 });

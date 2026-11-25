@@ -25,6 +25,7 @@ import {
     type Partenaire,
     type TypeDeBadge,
 } from '../../../../../src/shared/annonces/carte';
+import { lireEvenement, type EvenementDAnnonce } from '../../../../../src/shared/annonces/evenement';
 import type { PaletteDeBase } from '../../../../../src/shared/theme/palettes';
 import { tokens } from '../../../../../src/shared/theme/tokens';
 import { EMPLACEMENTS } from '../../../schema/tables/annonces';
@@ -33,7 +34,7 @@ import { EMPLACEMENTS } from '../../../schema/tables/annonces';
 export type Vue = 'carte' | 'fiche';
 
 /** Les endroits de la fiche ou l'apercu se cale quand on edite ce qu'ils montrent. */
-export type ZoneDeFiche = 'heros' | 'description' | 'galerie' | 'lieu';
+export type ZoneDeFiche = 'heros' | 'evenement' | 'description' | 'galerie' | 'lieu';
 
 /** La largeur logique de l'iPhone 13 Pro, l'appareil de reference du parc de test. */
 export const LARGEUR_TELEPHONE = 390;
@@ -62,6 +63,8 @@ export interface AnnonceApercu {
     readonly partenaire: Partenaire | null;
     readonly emplacements: readonly string[];
     readonly aUnLieu: boolean;
+    /** L'evenement que la fiche montre sous le titre, avec « Ajouter a mon planning » : la regle de l'application. */
+    readonly evenement: EvenementDAnnonce | null;
 }
 
 function texte(valeur: unknown): string | null {
@@ -97,6 +100,8 @@ export function annonceDApercu(valeurs: Readonly<Record<string, unknown>>): Anno
         partenaire: partenaireDeCarte(type, valeurs.partenaire),
         emplacements: Array.isArray(valeurs.emplacements) ? valeurs.emplacements.filter((e): e is string => typeof e === 'string') : ['annonces'],
         aUnLieu: nombre(valeurs.lat) !== null && nombre(valeurs.lng) !== null,
+        // La saisie d'un `datetime-local` est une heure locale sans fuseau, que `Date.parse` lit comme telle.
+        evenement: lireEvenement(type, valeurs.evenement_debut, valeurs.evenement_fin, valeurs.evenement_lieu),
     };
 }
 
@@ -133,7 +138,7 @@ export function carrouselsSpeciaux(emplacements: readonly string[]): readonly { 
  */
 export function vueDuChamp(nom: string): Vue | null {
     if (['image_url', 'focale', 'type', 'emplacements', 'partenaire'].includes(nom)) return 'carte';
-    if (['accroche', 'description', 'images', 'lat', 'cta_texte', 'cta_lien'].includes(nom)) return 'fiche';
+    if (['accroche', 'description', 'images', 'lat', 'cta_texte', 'cta_lien', 'evenement_debut', 'evenement_fin', 'evenement_lieu'].includes(nom)) return 'fiche';
     return null;
 }
 
@@ -141,9 +146,22 @@ export function vueDuChamp(nom: string): Vue | null {
 export function zoneDuChamp(nom: string): ZoneDeFiche | null {
     switch (nom) {
         case 'titre': case 'emetteur': case 'accroche': return 'heros';
+        case 'evenement_debut': case 'evenement_fin': case 'evenement_lieu': return 'evenement';
         case 'description': return 'description';
         case 'images': return 'galerie';
         case 'lat': return 'lieu';
         default: return null;
     }
+}
+
+/** Le jour d'un evenement, comme la fiche l'ecrit en francais : « Jeudi 3 décembre ». */
+export function jourDeLEvenement(debut: number): string {
+    const jour = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(debut));
+    return jour.charAt(0).toUpperCase() + jour.slice(1);
+}
+
+/** Les heures d'un evenement : « 18:00 – 20:00 ». */
+export function heuresDeLEvenement(debut: number, fin: number): string {
+    const heure = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return `${heure.format(new Date(debut))} – ${heure.format(new Date(fin))}`;
 }

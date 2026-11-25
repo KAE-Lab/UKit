@@ -61,6 +61,13 @@
 .ap-filigrane { position: absolute; right: -16px; bottom: -8px; font-size: 88px; line-height: 1; opacity: 0.06; pointer-events: none; }
 .ap-bloc .ap-filigrane { font-size: 64px; }
 .ap-galerie { display: grid; gap: var(--app-espace-md); margin-top: var(--app-espace-lg); }
+/* L'evenement sous le titre (lot 5) : trois rangees d'une carte au gabarit du sondage, puis le bouton tonal. */
+.ap-evenement { display: grid; gap: var(--app-espace-sm); margin-bottom: var(--app-espace-lg); }
+.ap-evenement-carte { background: var(--app-carte); border: 0.5px solid var(--app-bordure); border-radius: var(--app-rayon-lg); overflow: hidden; }
+.ap-evenement-carte > div { display: flex; align-items: center; gap: var(--app-espace-sm); min-height: 48px; padding: var(--app-espace-sm) var(--app-espace-md); font-size: var(--app-taille-md); color: var(--app-texte); box-sizing: border-box; }
+.ap-evenement-carte > div + div { border-top: 0.5px solid var(--app-bordure); }
+.ap-evenement-carte i { font-size: 18px; color: var(--app-texte-2); }
+.ap-bouton-tonal { display: flex; align-items: center; justify-content: center; gap: var(--app-espace-sm); height: 50px; border-radius: var(--app-rayon-md); background: var(--app-gris); color: var(--app-accent); font-size: var(--app-taille-md); font-weight: 600; }
 .ap-lieu { margin-top: var(--app-espace-xl); display: grid; gap: var(--app-espace-sm); }
 .ap-plan { height: 160px; border-radius: var(--app-rayon-lg); background: var(--app-gris); display: grid; place-items: center; color: var(--app-texte-2); font-size: 40px; }
 .ap-pied-action { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--app-espace-md); padding-top: var(--app-espace-xl); background: linear-gradient(to top, var(--app-fond) 55%, transparent); }
