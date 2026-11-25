@@ -151,7 +151,7 @@ recouvrement — et garde le jour de Paris en cache (`communaute-signalements@1`
 |---|---|---|
 | un signalement | trente jours après sa fin | la tâche horaire `communaute-purge` (pg_cron) |
 | un appareil, sa réputation | douze mois après sa dernière contribution, s'il ne porte plus rien | idem |
-| l'empreinte d'une adresse | son jour de Paris, effacée dans l'heure qui suit minuit : vingt-quatre heures au plus pour une empreinte du matin, vingt-cinq pour une de minuit | idem ; elle est calculée sous une clé du jour, et deux jours ne se relient pas |
+| l'empreinte d'une adresse | son jour de Paris, effacée dans l'heure qui suit minuit : vingt-quatre heures au plus pour une empreinte du matin, vingt-cinq pour une de minuit | idem ; calculée sous une clé du jour tirée du secret de la fonction, deux jours ne se relient pas pour qui ne détient pas ce secret |
 | un défi | jamais stocké | — |
 | un vote | fixée au lot 4, avec les sondages | aucun vote n'existe avant ; il ne porte de toute façon aucun identifiant |
 
@@ -202,6 +202,9 @@ le contenu publié par l'utilisateur et l'identifiant d'appareil propre à l'app
   la seconde exige, sont des dépendances de développement : rien n'en part dans l'application.
 - **La base garde la confiance, pas l'état** : plafonds, réputation et poids sont des gardes, comme
   `est_editeur()` ; aucune fonction ne calcule ce que l'écran affiche.
+- **Les dates d'un appareil ne disent que le jour**, et celle d'un vote le jour de Paris : une heure
+  exacte, écrite dans la même transaction qu'un vote, relierait le vote à l'appareil pour qui lit la
+  console.
 - **Une seule voix vivante par appareil**, sujet et cible : la suivante remplace la précédente. C'est
   ce qui permet au modèle de compter des voix sans connaître les appareils.
 
@@ -290,8 +293,9 @@ Un build de production fait ensuite la preuve, sur la piste de test interne.
 
 ## Limites écrites
 
-- **Une personne, plusieurs clés** : réinstaller, ou tirer un nouveau secret, fait un autre appareil
-  attesté, sans réputation. Deux voix contraires d'une même personne peuvent ainsi faire basculer un
+- **Une personne, plusieurs clés** : réinstaller — ou la remise à zéro complète du menu de
+  développement, qui en tient lieu —, ou tirer un nouveau secret, fait un autre appareil attesté, sans
+  réputation. Deux voix contraires d'une même personne peuvent ainsi faire basculer un
   état. Les plafonds par adresse et par jour, la réputation qui demande du temps, la modération et le
   blocage (lot 2) bornent l'abus ; Play Integrity a un rappel d'appareil (*device recall*) qui le
   fermerait mieux, à évaluer après la sortie.
@@ -303,7 +307,13 @@ Un build de production fait ensuite la preuve, sur la piste de test interne.
 - **Une clé App Attest remplacée** après un échec laisse sa dernière voix vivante jusqu'à son
   expiration : ce jour-là, le même iPhone peut avoir deux voix sur un même sujet et une même cible.
 - **Un plafond du parc se dépasse de peu** : deux contributions simultanées d'appareils différents se
-  comptent sans verrou commun.
+  comptent sans verrou commun. De même, deux confirmations simultanées de deux voix différentes d'un
+  même auteur peuvent lui valoir deux points le même jour.
+- **L'assemblage de la fonction** (`index.ts` : l'ordre de l'admission, le verdict sous plafond, le
+  jeton de vote, la reprise d'un interblocage) n'a pas de test unitaire, Deno n'étant pas joué par
+  `npm test` ; il se juge par les sondes de l'API publique après chaque déploiement.
+- **Une lecture qui trouverait plus de mille lignes au même instant** s'arrêterait à la première page :
+  aucune écriture de la fonction n'en produit, une ligne par transaction.
 - **Le reçu App Attest** et sa mesure de risque ne sont pas lus.
 - **Une contribution non attestée passe** : c'est le plan. Le plafond de tout le parc la borne, et son
   poids nul l'empêche de rien changer.

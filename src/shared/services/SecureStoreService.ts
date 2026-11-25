@@ -104,8 +104,10 @@ const INSTALLATION_ID_KEY = 'UKIT_INSTALLATION_ID';
  * Le secret de l'appareil aupres de la communaute (phase 8, lot 1) : 32 octets tires sur l'appareil,
  * en base64, dont la base ne garde que l'empreinte — la cle serveur d'un Android, ou d'un iPhone sans
  * App Attest (shared/communaute/appareil.ts). **Rien a voir avec l'identifiant d'installation**, qui
- * ne quitte jamais l'appareil : ce secret-ci part avec chaque contribution, et seulement avec elle. La
- * reinitialisation ne l'efface pas ; une desinstallation, si (Android), et la reputation repart de zero.
+ * ne quitte jamais l'appareil : ce secret-ci part avec chaque contribution, et seulement avec elle.
+ * « Reinitialiser l'application » ne le change pas ; une desinstallation, ou la remise a zero complete
+ * du menu de developpement, en fait tirer un autre (la marque d'installation de shared/communaute), et
+ * la reputation repart de zero.
  */
 const COMMUNAUTE_SECRET_KEY = 'UKIT_COMMUNAUTE_SECRET';
 
