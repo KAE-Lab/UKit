@@ -205,6 +205,12 @@
 
 /* Le partenaire : deux champs et un logo. */
 .partenaire { display: grid; gap: var(--espace-sm); }
+/* Le sondage d'une annonce (phase 8, lot 4) : la question, les choix l'un sous l'autre, la cloture. */
+.sondage { display: grid; gap: var(--espace-sm); }
+.sondage-choix { display: grid; gap: var(--espace-xs); }
+.sondage-choix-ligne { display: flex; gap: var(--espace-xs); align-items: center; }
+.sondage-choix-ligne input { flex: 1; min-width: 0; font: inherit; font-size: var(--taille-sm); color: var(--texte); background: var(--fond); border: 1px solid var(--bordure); border-radius: var(--rayon-md); padding: 9px 12px; }
+.sondage-choix-ligne input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); outline: none; }
 .partenaire-champs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--espace-sm); }
 .sous-champ { display: grid; gap: 4px; font-size: var(--taille-xs); font-weight: 600; color: var(--texte-2); }
 .sous-champ input { font: inherit; font-size: var(--taille-sm); color: var(--texte); background: var(--fond); border: 1px solid var(--bordure); border-radius: var(--rayon-md); padding: 9px 12px; width: 100%; }

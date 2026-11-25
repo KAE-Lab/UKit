@@ -71,7 +71,12 @@ export type TypeDeChamp =
      * Un lieu : la latitude, et la colonne soeur `longitude` que le champ pose avec elle. On colle un
      * point copie d'une carte, les deux se remplissent (lib/coordonnees.ts).
      */
-    | { readonly type: 'lieu'; readonly longitude: string };
+    | { readonly type: 'lieu'; readonly longitude: string }
+    /**
+     * Le sondage d'une annonce (phase 8, lot 4) : une question, deux a six choix, une cloture. Tout vide,
+     * la colonne est nulle ; ses bornes sont celles de la base (src/shared/annonces/sondage.ts).
+     */
+    | { readonly type: 'sondage' };
 
 export interface Champ {
     readonly nom: string;
@@ -235,8 +240,8 @@ export interface Descripteur {
     readonly creer?: (valeurs: Ligne) => Promise<ResultatDAction>;
     /** Le geste qui remplace « Supprimer », quand retirer une ligne est plus qu'une suppression. */
     readonly retrait?: Retrait;
-    /** Ou la page se range dans la navigation : ce qu'on suit (les retours), ce qu'on publie, l'equipe. */
-    readonly section?: 'suivre' | 'publier' | 'equipe';
+    /** Ou la page se range dans la navigation : ce qu'on suit, ce que la communaute ecrit (les retours), ce qu'on publie, l'equipe. */
+    readonly section?: 'suivre' | 'communaute' | 'publier' | 'equipe';
     /** Le message d'une liste vide, quand « la premiere se cree avec le bouton » serait faux. */
     readonly vide?: string;
     /** Une regle qui ne tient pas dans un champ : rend le message d'erreur, ou `null`. */
