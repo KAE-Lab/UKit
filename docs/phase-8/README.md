@@ -185,6 +185,19 @@ la 7.0.
 | Lot | État |
 |---|---|
 | 0. La console | **livré le 2026-11-25**, en ligne sur https://kae-lab.github.io/UKit/ ([spécification](0-console.md)) |
-| 7.0 | à ouvrir, après le lot 0 |
+| 7.0 | **ouverte le 2026-11-25**, en sept lots, ci-dessous |
 | 7.1 | à ouvrir, après la 7.0 |
 | 7.2 | à ouvrir, après la 7.1 |
+
+La 7.0 se découpe en lots, chacun avec sa spécification, sur `prochaine-version` ; une page de la
+console qui lit les données d'un lot part sur `main` avec lui.
+
+| Lot de la 7.0 | Contenu | État |
+|---|---|---|
+| 1. La base communautaire | l'appareil attesté (App Attest, Play Integrity), la fonction `communaute`, les plafonds, la réputation, le modèle d'état d'un lieu, la lecture du jour ; aucun écran | ouvert le 2026-11-25 ([spécification](1-base-communautaire.md)) |
+| 2. Les signalements | restaurants, bibliothèques, bâtiments, l'attente au RU, le plat recommandé ; la modération dans la console | à ouvrir, après le lot 1 |
+| 3. Le formulaire natif | relié à `retours`, par la même porte attestée | à ouvrir |
+| 4. Sondages, boîte à idées et notation | les votes du lot 1, la fiche native du système | à ouvrir |
+| 5. Les événements dans le Planning | l'annonce datée, « Ajouter à mon planning », l'abonnement | à ouvrir |
+| 6. L'intelligence | où manger, les changements détectés, la journée en une carte | à ouvrir |
+| 7. Le natif, les documents, les règles | la barre de navigation d'Android 9, les fonctionnalités matérielles déclarées pour Google Play ; `PRIVACY.md`, les fiches des stores, le README ; les règles de la communauté publiées | à ouvrir, en dernier |
