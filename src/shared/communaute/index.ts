@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getSupabase, describeSupabaseFailure, reportSupabaseFailure } from '../supabase';
 import { assertion, identiteDeLAppareil, jetonPlayIntegrity, oublierLaCleAppAttest, type Identite } from './appareil';
+import { COLONNES_OFFICIELS, lireEtatOfficiel, type EtatOfficiel } from './lieu';
 import {
     COLONNES, depuis, ecrireCache, fusionner, jourDeParis, lireCache, lireResultat, lireSignalement, serialiserDonnees,
     type Contribution, type ResultatDeContribution, type Signalement,
@@ -22,11 +23,14 @@ import {
 import { appelerLaFonction, demanderUnDefi } from './fonction';
 
 export { capacites } from './appareil';
+export { classement, lireLeLieu, nomDePlat, type EtatDuSujet, type EtatOfficiel, type PlatClasse } from './lieu';
 export type { Contribution, Famille, Poids, ResultatDeContribution, Signalement, StatutDeSignalement } from './donnees';
 export { etatDUnLieu, finDeValidite, REGLAGES, type EtatDeLaCommunaute, type EtatDUnLieu, type Reglages } from './etat';
 
 /** `{ jour, curseur, lignes }` : les signalements du jour de Paris, tels que la base les rend. */
 const CLE_CACHE = 'communaute-signalements@1';
+/** Les etats officiels valables a la derniere lecture, tels que la base les rend (lot 2). */
+const CLE_CACHE_OFFICIELS = 'communaute-officiels@1';
 /** PostgREST plafonne ses reponses : on lit par pages, dans un ordre stable. */
 const TAILLE_DE_PAGE = 1000;
 
@@ -141,4 +145,52 @@ export function lireLesSignalementsDuJour(maintenant: Date = new Date()): Promis
             lectureEnCours = null;
         });
     return lectureEnCours;
+}
+
+// ---------------------------------------------------------------------------
+// Les etats officiels (lot 2)
+// ---------------------------------------------------------------------------
+
+export interface LectureDesOfficiels {
+    readonly etat: 'ok' | 'cache' | 'sans-base';
+    readonly officiels: readonly EtatOfficiel[];
+}
+
+function relireLeCache(texte: string | null, maintenant: number): readonly EtatOfficiel[] {
+    if (texte === null) return [];
+    try {
+        const lignes = JSON.parse(texte) as unknown;
+        if (!Array.isArray(lignes)) return [];
+        return lignes.map(lireEtatOfficiel).filter((o): o is EtatOfficiel => o !== null && o.expireLe > maintenant);
+    } catch {
+        return [];
+    }
+}
+
+let officielsEnCours: Promise<LectureDesOfficiels> | null = null;
+
+async function lireOfficiels(maintenant: number): Promise<LectureDesOfficiels> {
+    const cache = relireLeCache(await AsyncStorage.getItem(CLE_CACHE_OFFICIELS).catch(() => null), maintenant);
+    const supabase = getSupabase();
+    if (supabase === null) return { etat: 'sans-base', officiels: cache };
+    // Tous ceux qui valent encore, en une page : l'equipe en publie quelques-uns, jamais des milliers.
+    // Une relecture entiere, et non par curseur : un etat retire est supprime, et seule son absence le dit.
+    const { data, error } = await supabase.from('etats_officiels').select(COLONNES_OFFICIELS).order('cree_le').limit(TAILLE_DE_PAGE);
+    if (error !== null) {
+        reportSupabaseFailure('etats_officiels', describeSupabaseFailure(error));
+        return { etat: 'cache', officiels: cache };
+    }
+    const lignes = (data ?? []) as unknown[];
+    await AsyncStorage.setItem(CLE_CACHE_OFFICIELS, JSON.stringify(lignes)).catch(() => undefined);
+    return { etat: 'ok', officiels: lignes.map(lireEtatOfficiel).filter((o): o is EtatOfficiel => o !== null) };
+}
+
+/** Les etats officiels qui valent encore, tous lieux confondus. Ne leve jamais : une base injoignable rend le cache. */
+export function lireLesEtatsOfficiels(maintenant: number = Date.now()): Promise<LectureDesOfficiels> {
+    officielsEnCours ??= lireOfficiels(maintenant)
+        .catch((): LectureDesOfficiels => ({ etat: 'cache', officiels: [] }))
+        .finally(() => {
+            officielsEnCours = null;
+        });
+    return officielsEnCours;
 }

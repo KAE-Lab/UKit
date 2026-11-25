@@ -92,19 +92,14 @@ interface Pli {
 }
 
 function plier(voix: readonly Signalement[]): Pli | null {
-    let pli: Pli | null = null;
-    for (const v of voix) {
-        if (pli === null) {
-            pli = { valeur: v.valeur, depuis: v.creeLe, confirmeLe: v.creeLe, contraire: null, poidsContraire: 0 };
-        } else if (v.valeur === pli.valeur) {
-            pli = { ...pli, confirmeLe: v.creeLe, contraire: null, poidsContraire: 0 };
-        } else if (pli.poidsContraire + v.poids >= 2) {
-            pli = { valeur: v.valeur, depuis: v.creeLe, confirmeLe: v.creeLe, contraire: null, poidsContraire: 0 };
-        } else {
-            pli = { ...pli, contraire: v.valeur, poidsContraire: pli.poidsContraire + v.poids };
-        }
-    }
-    return pli;
+    // Un `reduce` et non une boucle : en mode strict (la console), TypeScript retrecit une variable
+    // `let pli: Pli | null = null` a `null` et ne la rouvre pas dans la boucle qui la reecrit.
+    return voix.reduce<Pli | null>((pli, v) => {
+        if (pli === null) return { valeur: v.valeur, depuis: v.creeLe, confirmeLe: v.creeLe, contraire: null, poidsContraire: 0 };
+        if (v.valeur === pli.valeur) return { ...pli, confirmeLe: v.creeLe, contraire: null, poidsContraire: 0 };
+        if (pli.poidsContraire + v.poids >= 2) return { valeur: v.valeur, depuis: v.creeLe, confirmeLe: v.creeLe, contraire: null, poidsContraire: 0 };
+        return { ...pli, contraire: v.valeur, poidsContraire: pli.poidsContraire + v.poids };
+    }, null);
 }
 
 /**
