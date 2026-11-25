@@ -136,8 +136,9 @@ export function Signalements() {
                     <h1>Signalements</h1>
                     <p className="sous-titre">
                         Ce que les étudiants signalent sur les restaurants, les bibliothèques et les bâtiments, lieu par lieu, avec l’état que
-                        l’application en tire. Masquer retire une voix de l’application ; bloquer masque toutes celles d’un appareil et refuse les suivantes ;
-                        un état officiel passe devant ceux des étudiants.
+                        l’application en tire : ce qui s’est écrit pendant la période, et tout ce qui vaut encore. Masquer retire une voix de
+                        l’application ; bloquer masque toutes celles d’un appareil et refuse les suivantes ; un état officiel passe devant ceux des
+                        étudiants.
                     </p>
                 </div>
             </div>

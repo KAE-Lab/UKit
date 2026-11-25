@@ -10,18 +10,22 @@ import { traduire } from '../../lib/erreurs';
 import { supabase } from '../../supabase';
 import { lireSignalementModere, type SignalementModere } from './moderation';
 
-/** Tous les signalements depuis un instant, par lots, sans la cle de leur auteur. */
+/**
+ * Les signalements ecrits depuis un instant et ceux qui valent encore, par lots, sans la cle de leur
+ * auteur. Par identifiant : une ligne arrivee entre deux lots decale les suivants, et la meme ligne
+ * reviendrait deux fois.
+ */
 export async function lireLaModeration(depuis: string): Promise<SignalementModere[]> {
-    const tout: SignalementModere[] = [];
+    const tout = new Map<string, SignalementModere>();
     for (let lot = 0; ; lot++) {
         const { data, error } = await supabase.rpc('signalements_a_moderer', { p_depuis: depuis }).range(lot * TAILLE_DE_LOT, (lot + 1) * TAILLE_DE_LOT - 1);
         if (error !== null) throw traduire(error);
         const lignes = (data ?? []) as unknown[];
         for (const ligne of lignes) {
             const lue = lireSignalementModere(ligne);
-            if (lue !== null) tout.push(lue);
+            if (lue !== null) tout.set(lue.id, lue);
         }
-        if (lignes.length < TAILLE_DE_LOT) return tout;
+        if (lignes.length < TAILLE_DE_LOT) return [...tout.values()];
     }
 }
 

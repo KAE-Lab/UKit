@@ -7,7 +7,7 @@
 import { useState, type ReactNode } from 'react';
 
 import type { EtatDuSujet } from '../../../../src/shared/communaute/lieu';
-import { sujetDeLieu, sujetsDuDomaine } from '../../../../src/shared/communaute/vocabulaire';
+import { sujetDeLieu, sujetsDuDomaine, type SujetDeLieu } from '../../../../src/shared/communaute/vocabulaire';
 import { jourDeParis } from '../../../../src/shared/communaute/donnees';
 import { Bouton } from '../../composants/ui/Bouton';
 import { Pastille } from '../../composants/ui/Pastille';
@@ -36,6 +36,11 @@ interface Props {
 
 const iso = (ms: number) => new Date(ms).toISOString();
 
+/** Ce qui peut devenir un etat officiel : ce qui dure, jamais le direct, jamais le plat. */
+function officialisable(sujet: SujetDeLieu): boolean {
+    return sujet.famille !== 'direct' && sujet.sujet !== 'restaurant.plat';
+}
+
 /** Ce que l'application dit d'un sujet, en clair ; `null` quand elle n'en dit rien. */
 function EtatDUnSujet({ etat, lieu, instant, admin, gestes, enCours }: { readonly etat: EtatDuSujet } & Props) {
     const { officiel, communaute, enRetrait } = etat.etat;
@@ -57,8 +62,9 @@ function EtatDUnSujet({ etat, lieu, instant, admin, gestes, enCours }: { readonl
     }
     if (pastille === null) return null;
     const cle = `${etat.sujet.sujet}|${lieu.cible}`;
-    // La valeur que la communaute etablit, a rendre officielle ; le plat se classe, il ne s'officialise pas.
-    const aPromouvoir = officiel === null && communaute.nature !== 'sans_info' && etat.sujet.sujet !== 'restaurant.plat' ? communaute.valeur : null;
+    // La valeur que la communaute etablit, a rendre officielle. Le plat se classe, il ne s'officialise
+    // pas ; un direct ne vaut que quelques minutes, et un officiel le figerait jusqu'au soir.
+    const aPromouvoir = officiel === null && communaute.nature !== 'sans_info' && officialisable(etat.sujet) ? communaute.valeur : null;
     return (
         <div className="etat-du-lieu">
             <span className="sujet">{libelleDuSujet(etat.sujet.sujet)}</span>
@@ -84,7 +90,7 @@ function EtatDUnSujet({ etat, lieu, instant, admin, gestes, enCours }: { readonl
 
 /** Publier un etat officiel que la communaute n'a pas dit : un sujet a valeurs, une valeur, un dernier jour. */
 function Publication({ lieu, admin, gestes, enCours }: Props) {
-    const sujets = sujetsDuDomaine(lieu.domaine).filter((s) => s.valeurs !== null);
+    const sujets = sujetsDuDomaine(lieu.domaine).filter((s) => s.valeurs !== null && officialisable(s));
     const aujourdHui = jourDeParis(new Date());
     const [sujet, setSujet] = useState<string>(sujets[0]?.sujet ?? '');
     const [valeur, setValeur] = useState<string>('oui');

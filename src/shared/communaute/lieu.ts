@@ -61,6 +61,24 @@ function officielDe(officiels: readonly EtatOfficiel[], sujet: string, cible: st
     return retenu;
 }
 
+export interface OptionsDuLieu {
+    readonly reglages?: Reglages;
+    /**
+     * L'empreinte des horaires que la source affiche (horaires.ts). Donnee, une correction d'horaires
+     * — d'etudiant ou officielle — ne compte que si elle porte sur ces horaires-la : celles d'une autre
+     * source n'entrent pas dans l'etat, au lieu de le rendre incertain et de faire taire la bonne.
+     * `null` : la fiche ne connait pas ses horaires, aucune correction ne compte. Absente (la console),
+     * toutes comptent.
+     */
+    readonly empreinteDesHoraires?: string | null;
+}
+
+/** Une correction d'horaires d'une autre source que celle affichee ne compte pas. */
+function horsSource(sujet: string, valeur: string, empreinte: string | null | undefined): boolean {
+    if (empreinte === undefined || !sujet.endsWith('.horaires')) return false;
+    return empreinte === null || !valeur.startsWith(`${empreinte}|`);
+}
+
 /**
  * Chaque sujet du domaine sur cette cible, dans l'ordre du vocabulaire. Les sujets dont on ne sait rien
  * sont rendus aussi : c'est l'ecran qui choisit ce qu'il tait.
@@ -71,11 +89,13 @@ export function lireLeLieu(
     domaine: DomaineDeLieu,
     cible: string,
     maintenant: number,
-    reglages?: Reglages,
+    options: OptionsDuLieu = {},
 ): readonly EtatDuSujet[] {
-    const duLieu = signalements.filter((s) => s.cible === cible);
+    const { reglages, empreinteDesHoraires } = options;
+    const duLieu = signalements.filter((s) => s.cible === cible && !horsSource(s.sujet, s.valeur, empreinteDesHoraires));
+    const officielsRetenus = officiels.filter((o) => !horsSource(o.sujet, o.valeur, empreinteDesHoraires));
     return sujetsDuDomaine(domaine).map((sujet) => {
-        const officiel = officielDe(officiels, sujet.sujet, cible, maintenant);
+        const officiel = officielDe(officielsRetenus, sujet.sujet, cible, maintenant);
         const etat = etatDUnLieu<EtatOfficiel>(duLieu, sujet.sujet, cible, sujet.famille, maintenant, { officiel, reglages });
         const voix = duLieu.filter((s) => s.sujet === sujet.sujet && s.statut !== 'masquee' && s.poids > 0 && s.creeLe <= maintenant);
         let fin: string | null = null;
