@@ -732,7 +732,7 @@ const en = {
 	EVENEMENTS_DU_CAMPUS: 'Campus events',
 	EVENEMENTS_GROUPE: 'In the timetable',
 	AMIS_TITRE: 'Friends',
-	AMIS_INTRO: 'Share your timetable with a link or a QR code, and see the free time you have in common. Nothing goes through a server.',
+	AMIS_INTRO: 'Share your timetable with a link or a QR code, and see the free time you have in common. Nothing goes through our servers.',
 	AMIS_PARTAGER: 'Share my timetable',
 	AMIS_VIDE_TITRE: 'No friends yet',
 	AMIS_VIDE: 'Open the link a friend sends you, or scan their code with the camera.',
@@ -782,6 +782,7 @@ const en = {
 	AMI_RETIRER: 'Remove $-',
 	AMI_RETIRER_TITRE: 'Remove $-?',
 	AMI_RETIRER_CORPS: 'Everything $- shared is erased from this phone.',
+	AMI_HORS_PARTAGE: 'This share ends on $-: this week is not covered.',
 };
 
 export default en;

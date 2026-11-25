@@ -5,7 +5,7 @@
  */
 
 import moment from 'moment';
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { getEtablissement } from '../../../shared/etablissements';
@@ -56,6 +56,12 @@ export default function AjoutAmiScreen({ navigation, route, headerPadding }: Ajo
     const amis = useAmis();
     const [nom, setNom] = useState(verdict.ok === true ? verdict.partage.nom ?? '' : '');
     const [envoi, setEnvoi] = useState(false);
+    // Un second lien recu pendant que l'ecran est ouvert le reutilise avec d'autres parametres : le
+    // prenom du premier ne doit pas ranger le second (relecture du lot).
+    useEffect(() => {
+        setNom(verdict.ok === true ? verdict.partage.nom ?? '' : '');
+        setEnvoi(false);
+    }, [verdict]);
 
     if (verdict.ok === false) {
         const refus = REFUS[verdict.raison];
@@ -85,7 +91,7 @@ export default function AjoutAmiScreen({ navigation, route, headerPadding }: Ajo
 
     return (
         <View style={[styles.page, { backgroundColor: theme.background }]}>
-            <ScrollView contentContainerStyle={[headerPadding, styles.contenu]} keyboardShouldPersistTaps="handled">
+            <ScrollView contentContainerStyle={[headerPadding, styles.contenu]} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
                 <Text style={[tokens.texte.titreDeSection, styles.titre, { color: theme.font }]}>
                     {partage.nom !== null ? Translator.get('AJOUT_PARTAGE_DE', partage.nom) : Translator.get('AJOUT_PARTAGE_ANONYME')}
                 </Text>

@@ -54,7 +54,10 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
             onPress={ouvrir}
             onPressIn={enfoncement.onPressIn}
             onPressOut={enfoncement.onPressOut}
-            accessibilityRole="button"
+            // Sans navigation (l'emploi du temps d'un ami, en lecture), la rangee n'ouvre rien : ni
+            // enfoncement, ni bouton annonce aux lecteurs d'ecran.
+            disabled={navigation === undefined}
+            accessibilityRole={navigation === undefined ? undefined : 'button'}
             accessibilityLabel={[cours.subject, cours.endtime === '' ? cours.starttime : `${cours.starttime} – ${cours.endtime}`, salle, avant].filter(Boolean).join(', ')}
         >
             <Reanimated.View style={[styles.rangee, enfoncement.style]}>

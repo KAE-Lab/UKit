@@ -745,7 +745,7 @@ const fr: TranslationDict = {
 	EVENEMENTS_DU_CAMPUS: 'Événements du campus',
 	EVENEMENTS_GROUPE: 'Dans le planning',
 	AMIS_TITRE: 'Amis',
-	AMIS_INTRO: 'Partage ton emploi du temps par un lien ou un code QR, et vois les créneaux libres que vous avez en commun. Rien ne passe par un serveur.',
+	AMIS_INTRO: 'Partage ton emploi du temps par un lien ou un code QR, et vois les créneaux libres que vous avez en commun. Rien ne passe par nos serveurs.',
 	AMIS_PARTAGER: 'Partager mon emploi du temps',
 	AMIS_VIDE_TITRE: 'Aucun ami pour l’instant',
 	AMIS_VIDE: 'Ouvre le lien qu’un ami t’envoie, ou scanne son code avec l’appareil photo.',
@@ -795,6 +795,7 @@ const fr: TranslationDict = {
 	AMI_RETIRER: 'Retirer $-',
 	AMI_RETIRER_TITRE: 'Retirer $- ?',
 	AMI_RETIRER_CORPS: 'Tout ce que $- a partagé est effacé de ce téléphone.',
+	AMI_HORS_PARTAGE: 'Ce partage s’arrête le $- : cette semaine n’y est pas.',
 };
 
 export default fr;

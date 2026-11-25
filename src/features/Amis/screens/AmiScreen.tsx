@@ -98,19 +98,20 @@ function JourEnCommun({ jour, theme, premier, restaurants }: { jour: JourCommun;
 }
 
 /** Ce que la carte « Libres ensemble » dit quand elle n'a pas de creneau a montrer. */
-function messageSansCreneau(semaine: SemaineDeLAmi): string | null {
+function messageSansCreneau(semaine: SemaineDeLAmi, finDuPartage: string | null): string | null {
+    if (semaine.horsDuPartage && finDuPartage !== null) return Translator.get('AMI_HORS_PARTAGE', moment(finDuPartage).format('D MMMM'));
     if (semaine.mon === 'sans-emploi-du-temps') return Translator.get('AMI_SANS_MON_EDT');
     if (semaine.mon === 'echec') return Translator.get('AMI_MON_EDT_ECHEC');
     if (semaine.mon === 'lecture' || semaine.son === 'lecture') return null;
     return Translator.get('AMI_AUCUN_COMMUN');
 }
 
-function LibresEnsemble({ semaine, theme, navigation }: { semaine: SemaineDeLAmi; theme: AppThemeType; navigation: Navigation }) {
+function LibresEnsemble({ semaine, theme, navigation, finDuPartage }: { semaine: SemaineDeLAmi; theme: AppThemeType; navigation: Navigation; finDuPartage: string | null }) {
     const aujourdhui = dateDuJour(maintenant());
     // Midi a venir seulement, comme la carte du jour : une fois le trou passe, rien a proposer.
     const midiAVenir = semaine.midi !== null && semaine.minute !== null && semaine.minute < semaine.midi.fenetre.fin;
     const ouManger = useOuManger(semaine.midi, semaine.minute, midiAVenir);
-    const message = semaine.communs.length === 0 ? messageSansCreneau(semaine) : null;
+    const message = semaine.communs.length === 0 ? messageSansCreneau(semaine, finDuPartage) : null;
     return (
         <>
             <Text style={[tokens.texte.intertitre, styles.intertitre, { color: theme.fontSecondary }]}>{Translator.get('AMI_EN_COMMUN')}</Text>
@@ -170,7 +171,7 @@ export default function AmiScreen({ navigation, route, headerPadding, onAnimated
                     <>
                         <Semaines theme={theme} choisie={rang} choisir={setRang} />
                         {/* Son emploi du temps illisible se dit une fois, dessous, avec « Reessayer ». */}
-                        {semaine.son !== 'echec' ? <LibresEnsemble semaine={semaine} theme={theme} navigation={navigation} /> : null}
+                        {semaine.son !== 'echec' ? <LibresEnsemble semaine={semaine} theme={theme} navigation={navigation} finDuPartage={ami.contenu.genre === 'instantane' ? dernierJour(ami.contenu.premierJour) : null} /> : null}
                         <Text style={[tokens.texte.intertitre, styles.intertitre, { color: theme.fontSecondary }]}>
                             {Translator.get(ami.contenu.genre === 'groupes' ? 'AMI_SON_EDT' : 'AMI_SES_CRENEAUX')}
                         </Text>

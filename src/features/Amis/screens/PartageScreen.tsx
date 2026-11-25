@@ -61,7 +61,7 @@ export default function PartageScreen({ headerPadding, onAnimatedScroll }: Parta
             <>
                 <IntroDePage theme={theme}>{intro}</IntroDePage>
                 <GroupeDeReglages theme={theme}>
-                    <ChampDePrenom theme={theme} libelle={Translator.get('PARTAGE_PRENOM')} valeur={prenom} onChange={changerLePrenom} indication={Translator.get('PARTAGE_FACULTATIF')} />
+                    <ChampDePrenom theme={theme} libelle={Translator.get('PARTAGE_PRENOM')} valeur={prenom} onChange={changerLePrenom} indication={Translator.get('PARTAGE_FACULTATIF')} lePropre />
                 </GroupeDeReglages>
                 <View style={[styles.code, { backgroundColor: theme.cardBackground, borderColor: theme.contourDeCarte }]}>
                     <CodeQr valeur={etat.lien} taille={taille} accessibilityLabel={Translator.get('PARTAGE_CODE_QR')} />
@@ -99,6 +99,7 @@ export default function PartageScreen({ headerPadding, onAnimatedScroll }: Parta
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
+                automaticallyAdjustKeyboardInsets
             >
                 {corps}
             </Animated.ScrollView>

@@ -9,12 +9,14 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { NOM_MAXIMUM } from '../services/lienAmi';
 
-export function ChampDePrenom({ theme, libelle, valeur, onChange, indication }: {
+export function ChampDePrenom({ theme, libelle, valeur, onChange, indication, lePropre = false }: {
     theme: AppThemeType;
     libelle: string;
     valeur: string;
     onChange: (valeur: string) => void;
     indication?: string;
+    /** Son propre prenom : iOS peut le proposer. Pas celui d'un ami, ou iOS proposerait le sien. */
+    lePropre?: boolean;
 }) {
     return (
         <View style={styles.rangee}>
@@ -30,7 +32,7 @@ export function ChampDePrenom({ theme, libelle, valeur, onChange, indication }: 
                 autoCorrect={false}
                 returnKeyType="done"
                 accessibilityLabel={libelle}
-                textContentType="givenName"
+                textContentType={lePropre ? 'givenName' : 'none'}
             />
         </View>
     );

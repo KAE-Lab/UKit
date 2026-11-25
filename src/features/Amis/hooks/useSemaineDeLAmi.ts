@@ -34,6 +34,8 @@ export interface SemaineDeLAmi {
     /** Le trou de midi commun d'aujourd'hui, et le cours apres lui dont le batiment compte. */
     readonly midi: TrouDeMidi<PlanningEvent> | null;
     readonly minute: number | null;
+    /** Un instantane qui ne couvre aucun jour de la semaine : elle est inconnue, pas sans creneau. */
+    readonly horsDuPartage: boolean;
     readonly relire: () => void;
 }
 
@@ -154,7 +156,8 @@ export function useSemaineDeLAmi(ami: Ami | null, semaine: SemaineIso): SemaineD
 
     const relire = useCallback(() => setRevision((r) => r + 1), []);
     const son: EtatDeLecture = ami?.contenu.genre === 'instantane' ? 'pret' : etatDe(sienne);
-    return { jours, son, mon: etatDe(mienne), communs, midi, minute, relire };
+    const horsDuPartage = ami?.contenu.genre === 'instantane' && plages.every((jour) => jour.siens === null);
+    return { jours, son, mon: etatDe(mienne), communs, midi, minute, horsDuPartage, relire };
 }
 
 /** Les deux semaines que l'ecran propose : celle d'aujourd'hui et la suivante, comme l'instantane. */
