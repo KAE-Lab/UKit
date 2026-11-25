@@ -737,7 +737,9 @@ create table if not exists public.sujets (
 -- lui-meme. Une reinstallation fait une autre cle : la reputation repart de zero.
 --
 -- `compteur` est celui des assertions App Attest : il ne fait que monter, et une assertion rejouee
--- est refusee. `atteste_le` : la derniere contribution attestee. `bloque_le` : la moderation (lot 2).
+-- est refusee. `atteste_le` : le jour de la derniere contribution attestee. `bloque_le` : la
+-- moderation (lot 2). Les trois dates d'un appareil ne disent que le jour : une heure exacte, egale a
+-- celle d'un signalement ou d'un vote ecrit dans la meme transaction, les relierait a lui.
 create table if not exists public.appareils (
     cle           bytea       primary key check (octet_length(cle) = 32),
     nature        text        not null check (nature in ('app_attest', 'secret')),
@@ -749,8 +751,8 @@ create table if not exists public.appareils (
     reputation    integer     not null default 0 check (reputation >= 0),
     atteste_le    timestamptz,
     bloque_le     timestamptz,
-    cree_le       timestamptz not null default now(),
-    vu_le         timestamptz not null default now(),
+    cree_le       timestamptz not null default date_trunc('day', now()),
+    vu_le         timestamptz not null default date_trunc('day', now()),
     check ((nature = 'app_attest') = (cle_publique is not null)),
     check ((nature = 'app_attest') = (environnement is not null)),
     check (nature = 'secret' or plateforme = 'ios')
@@ -801,7 +803,8 @@ create index if not exists signalements_non_attestes on public.signalements (cre
 -- `jeton` est un HMAC de la cle de l'appareil, du sujet et de la cible, calcule par la fonction
 -- `communaute` avec une cle qui n'est qu'a elle. Il suffit a refuser un second bulletin sur la meme
 -- cible, et ne relie ni deux votes du meme appareil, ni un vote a un appareil, pas meme pour qui lit
--- toute la base. Aucune lecture publique dans ce lot : le lot qui les montre la pose.
+-- toute la base sans le secret de la fonction. `cree_le` ne dit que le jour de Paris, pour la meme
+-- raison. Aucune lecture publique dans ce lot : le lot qui les montre la pose.
 create table if not exists public.votes (
     sujet   text        not null references public.sujets (sujet),
     cible   text        not null check (cible ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$'),

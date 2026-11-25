@@ -663,12 +663,11 @@ begin
     --    vide pas le plafond du parc ; puis pour tout le parc. Un flot de secrets tires au hasard ne
     --    remplit pas `appareils`.
     if not v_atteste and not v_essai then
-        update public.empreintes_ip set non_attestes = non_attestes + 1
-         where jour = v_jour and empreinte = v_empreinte
+        -- `admettre` a ouvert la ligne du jour ; une demande admise juste avant minuit arrive ici le
+        -- lendemain, d'ou l'insertion plutot qu'une mise a jour qui ne trouverait rien.
+        insert into public.empreintes_ip (jour, empreinte, non_attestes) values (v_jour, v_empreinte, 1)
+        on conflict (jour, empreinte) do update set non_attestes = public.empreintes_ip.non_attestes + 1
         returning non_attestes into v_n;
-        if not found then
-            raise exception 'contribuer : adresse non admise' using errcode = '22023';
-        end if;
         if v_n > private.reglage_communaute('plafond_ip_non_attestes_jour') then
             return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_ip');
         end if;
@@ -697,9 +696,9 @@ begin
         return jsonb_build_object('statut', 'refusee', 'raison', 'compteur_rejoue');
     end if;
     update public.appareils
-       set vu_le      = now(),
+       set vu_le      = date_trunc('day', now()),
            compteur   = coalesce(v_compteur, compteur),
-           atteste_le = case when v_atteste then now() else atteste_le end
+           atteste_le = case when v_atteste then date_trunc('day', now()) else atteste_le end
      where cle = v_cle;
     if v_appareil.bloque_le is not null then
         return jsonb_build_object('statut', 'refusee', 'raison', 'appareil_bloque');
@@ -754,8 +753,8 @@ begin
     -- 6a. Un vote : un bulletin par jeton et par cible, definitif, d'un poids d'une voix au plus — un
     --     sondage compte des appareils, pas des reputations.
     if v_sujet.nature = 'vote' then
-        insert into public.votes (sujet, cible, jeton, valeur, poids)
-        values (v_sujet.sujet, v_cible, v_jeton, v_valeur, least(v_poids, 1))
+        insert into public.votes (sujet, cible, jeton, valeur, poids, cree_le)
+        values (v_sujet.sujet, v_cible, v_jeton, v_valeur, least(v_poids, 1), v_debut)
         on conflict (sujet, cible, jeton) do nothing;
         if not found then
             return jsonb_build_object('statut', 'refusee', 'raison', 'deja_vote');
@@ -798,7 +797,7 @@ begin
             update public.signalements t
                set confirme_le = now()
               from candidats c
-             where t.id = c.id
+             where t.id = c.id and t.confirme_le is null
             returning t.appareil
         )
         update public.appareils a

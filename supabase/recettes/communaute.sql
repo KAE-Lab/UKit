@@ -274,6 +274,17 @@ end $$;
 select pg_temp.attendre(35, pg_temp.c('at-4', 'secret', true, 'recette.sondage', 'annonce-1', 'a'), 'acceptee');
 select pg_temp.attendre(36, pg_temp.c('at-4', 'secret', true, 'recette.sondage', 'annonce-1', 'b'), 'refusee', 'deja_vote');
 select pg_temp.attendre(37, pg_temp.c('at-4', 'secret', true, 'recette.sondage', 'annonce-1', 'c'), 'refusee', 'valeur_invalide');
+-- Un vote ne se relie pas a son appareil par l'heure : le vote ne dit que le jour de Paris, l'appareil
+-- que le jour.
+do $$ begin
+    if (select cree_le from public.votes where cible = 'annonce-1')
+           <> (now() at time zone 'Europe/Paris')::date::timestamp at time zone 'Europe/Paris'
+       or (select vu_le from public.appareils where cle = extensions.digest('at-4', 'sha256')) <> date_trunc('day', now())
+       or (select atteste_le from public.appareils where cle = extensions.digest('at-4', 'sha256')) <> date_trunc('day', now()) then
+        raise exception 'ECHEC 37b : une heure exacte relie un vote a son appareil';
+    end if;
+    raise notice 'ok 37b';
+end $$;
 
 -- L'essai joue l'appareil et ses plafonds, sans rien ecrire : ni signalement, ni appareil neuf.
 do $$
