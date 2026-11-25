@@ -30,4 +30,6 @@ export const cles = {
     liste: (nom: string, spec: string) => ['table', nom, 'liste', spec] as const,
     ligne: (nom: string, cle: string) => ['table', nom, 'ligne', cle] as const,
     tout: (nom: string, empreinte: string) => ['table', nom, 'tout', empreinte] as const,
+    /** Une semaine de `mesures`, par son lundi : hors de `table`, aucune ecriture de la console ne la touche. */
+    mesures: (lundi: string) => ['mesures', lundi] as const,
 };

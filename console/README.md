@@ -174,7 +174,10 @@ verrou ; et, depuis sa passe d'ergonomie de 7-F, la zone qu'un cadre garde d'une
 point sous le pointeur ([`src/lib/cadrage.ts`](src/lib/cadrage.ts)), les coordonnées collées d'une carte
 ([`src/lib/coordonnees.ts`](src/lib/coordonnees.ts)), le titre du formulaire et l'état de sa saisie, le
 raccourci d'enregistrement, la ligne du curseur, le nom de fichier d'une adresse, la vue et l'endroit
-de la fiche que l'aperçu montre pour un champ.
+de la fiche que l'aperçu montre pour un champ ; et, depuis le lot 0 de la phase 8, tout le calcul des
+statistiques ([`src/stats/`](src/stats/)) : la période et ses tranches, la lecture d'une ligne de
+`mesures`, les petites cases, les agrégats, l'entonnoir d'une annonce, les échecs de source, le rapport
+partenaire et son CSV.
 
 ## Vérifier
 
