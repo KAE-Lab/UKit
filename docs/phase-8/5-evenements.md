@@ -39,8 +39,9 @@ sait ni qui a ajouté un événement, ni qui le suit, ni qui l'a masqué.
 - Sous le titre et l'accroche, avant le récit : le jour (« Jeudi 3 décembre », dans la grammaire de
   chaque langue), les heures, le lieu, en rangées d'une carte au gabarit du sondage
   ([`EvenementDAnnonce`](../../src/features/Campus/Bde/EvenementDAnnonce.tsx)).
-- **« Ajouter à mon planning »**, un bouton tonal ; ajouté, il devient « Retirer de mon planning ». Un
-  événement fini ne s'ajoute plus : le bouton disparaît.
+- **« Ajouter à mon planning »**, un bouton tonal ; ajouté, il devient « Retirer de mon planning ». Il
+  dit l'ajout un par un, pas la visibilité : un événement que l'abonnement montre déjà s'ajoute encore,
+  pour partir dans l'agenda synchronisé. Un événement fini ne s'ajoute plus : le bouton disparaît.
 - **La proposition d'abonnement**, une fois, après le premier ajout : un dialogue du système, « Suivre
   les événements du campus ? », « Pas maintenant » ou « Les afficher ». Fermer sans répondre vaut « Pas
   maintenant » ; la proposition ne revient jamais, le réglage reste dans les Réglages.
@@ -136,6 +137,28 @@ les organisations étudiantes y ont le même droit ; UKit reste un outil, neutre
   réinstallation.
 - **Une bascule d'établissement ne purge rien** : la lecture suivante retire d'elle-même les événements
   à venir que le nouveau campus ne voit pas.
+
+## Ce que la relecture et le banc ont corrigé
+
+Une relecture du diff avant la mise en production, et le banc : un bloquant, cinq importants ou visibles
+à l'écran, corrigés.
+
+- **Le magasin rejouait l'état du premier chargement** : la promesse de lecture gardait sa valeur, et
+  chaque geste repartait d'elle — deux ajouts s'écrasaient, la proposition revenait (bloquant, avant la
+  mise en production). Le magasin a désormais ses tests, stockage et base remplacés.
+- **L'invitation à choisir un groupe cachait l'événement** d'un étudiant sans groupe ni calendrier coché :
+  elle ne paraît plus que si le jour n'a rien à montrer (`aDuContenu`).
+- **La vue semaine intitulait le lendemain d'une soirée comme la veille** : le jour se datait par le
+  début de son premier élément, celui de la veille pour un événement à cheval sur minuit. Un événement du
+  téléphone ou du campus ne date plus son jour — le défaut valait pour le téléphone depuis 6.1.x-D.
+- **Le compte de la vue semaine disait « 2 cours »** pour deux événements : il ne compte que les cours,
+  et se tait sur un jour qui n'a que des événements.
+- **Un événement de l'abonnement ne pouvait pas partir dans l'agenda** : le bouton de la fiche disait
+  « Retirer » dès qu'il était visible. Il dit l'ajout.
+- Et des mineurs : la synchronisation déclenchée par une relecture passe le disjoncteur en automatique ;
+  un ajout vieux d'un an s'oublie au chargement, sans attendre une lecture ; le lieu se compte en
+  caractères, comme `char_length` ; l'aperçu de la console retire le bouton d'un événement fini ; le
+  guide dit qu'un changement de type annule aussi l'événement.
 
 ## Définition de « terminé »
 
