@@ -69,8 +69,9 @@ Avec l'accord, l'appareil tire 32 octets, garde la clé et n'envoie que son empr
 la copie avec la ligne, et elle n'ouvre rien sans la clé). Un admin répond depuis la console
 (`retours_reponses`, refusée à un retour sans accord) et change l'état. L'appareil relit par
 `lire_mes_retours(clés)` : l'état, la clôture et les réponses, rien d'autre, ni identifiant ni texte.
-La fonction est `volatile`, que PostgREST n'appelle qu'en POST : une clé ne passe jamais dans une
-adresse.
+La fonction refuse le GET (`request.method`) : une clé ne passe jamais dans une adresse.
+`volatile` ne suffisait pas, PostgREST l'appelait en GET dans une transaction en lecture seule —
+mesuré après le déploiement, d'où la seconde migration, `20261125050000_lecture_par_cle_en_post.sql`.
 
 La relecture se fait à l'ouverture de « Mes retours », et au plus toutes les six heures par
 l'entretien (lancement, premier plan, tâche de fond). Une réponse neuve :
@@ -213,8 +214,8 @@ volontaire ; le « moi aussi » et ce qu'il joint ; la notification locale. Les 
    refusés ; le volontaire et son adresse ; un problème inconnu ou en brouillon sans lien ; la
    publication par un admin, refusée à un lecteur, lue par `anon` sans brouillon ; « moi aussi », unique,
    à la forme exigée ; les colonnes lues par l'équipe sans la clé ni l'adresse ; la réponse, refusée à un
-   lecteur et à un retour sans accord ; la lecture par clé, sans identifiant ni texte, `volatile` ; la
-   clôture datée puis retirée ; la purge due, marquée une fois ; les jetons d'hier effacés ; la tâche
+   lecteur et à un retour sans accord ; la lecture par clé, sans identifiant ni texte, refusée en GET ; la
+   clôture datée puis retirée ; le dépôt rejoué, avant et après la clôture ; la purge due, marquée une fois ; les jetons d'hier effacés ; la tâche
    planifiée ; l'espace privé, lu par un admin seul.
 2. **Par `npm test`** : le texte signé et ses refus, le contexte, le masquage (fonction) ; les blocs, le
    parcours, les échecs, la boîte, la lecture fondue, ce qui reste à lire, « moi aussi », la cadence de

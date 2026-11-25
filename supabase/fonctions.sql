@@ -1230,8 +1230,9 @@ $$;
 
 -- Ce que l'appareil lit de ses retours : pour chaque cle, dans l'ordre, l'etat, la cloture et les
 -- reponses, ou `null` pour une cle inconnue. Ni l'identifiant du retour, ni son texte, ni rien qu'une
--- autre cle ouvrirait. `volatile` : PostgREST ne l'appelle qu'en POST, une cle ne s'ecrit jamais dans une
--- adresse ni dans un journal d'acces.
+-- autre cle ouvrirait. En POST seulement : une cle ne s'ecrit jamais dans une adresse ni dans un journal
+-- d'acces. PostgREST pose la methode dans `request.method` ; `volatile` ne suffisait pas, il appelle une
+-- telle fonction en GET dans une transaction en lecture seule (mesure apres le deploiement).
 create or replace function public.lire_mes_retours(p_cles text[])
 returns jsonb
 language plpgsql
@@ -1245,6 +1246,9 @@ declare
     v_octets bytea;
     v_ligne  jsonb;
 begin
+    if current_setting('request.method', true) = 'GET' then
+        raise exception 'lire_mes_retours : en POST seulement' using errcode = '42501';
+    end if;
     if p_cles is null or cardinality(p_cles) > 20 then
         raise exception 'lire_mes_retours : vingt cles au plus' using errcode = '22023';
     end if;

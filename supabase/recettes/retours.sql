@@ -3,7 +3,7 @@
 -- lots 1 et 2. Rien n'y survit : ni la migration, ni les reglages d'essai, ni les comptes d'essai, ni les
 -- retours, les reponses, les problemes, les votes, ni le journal.
 --
---     (echo 'begin;'; cat supabase/migrations/20261125040000_retours_natifs.sql supabase/recettes/retours.sql; echo 'rollback;') \
+--     (echo 'begin;'; cat supabase/migrations/20261125040000_retours_natifs.sql supabase/migrations/20261125050000_lecture_par_cle_en_post.sql supabase/recettes/retours.sql; echo 'rollback;') \
 --       | psql -h aws-0-eu-west-2.pooler.supabase.com -p 5432 -U postgres.<ref> -d postgres -v ON_ERROR_STOP=1 -q
 --
 -- Une fois la migration en production, elle se rejoue sans elle. Chaque cas leve une exception s'il
@@ -20,7 +20,14 @@ insert into private.reglages_communaute (cle, valeur) values
     ('plafond_ip_jour', 200), ('plafond_verdicts_ip_jour', 50), ('plafond_ip_non_attestes_jour', 2),
     ('seuil_fiable', 99), ('anciennete_fiable_jours', 0),
     ('duree_direct_minutes', 30), ('duree_correction_jours', 30), ('fin_max_jours', 30),
-    ('plafond_retours_appareil', 2), ('plafond_retours_non_atteste', 1), ('plafond_retours_non_attestes_jour', 3);
+    ('plafond_retours_appareil', 2), ('plafond_retours_non_atteste', 1);
+-- Le plafond du parc non atteste compte les retours deja deposes aujourd'hui en production : la recette en
+-- ajoute trois au-dessus, pour juger le sien.
+insert into private.reglages_communaute (cle, valeur)
+select 'plafond_retours_non_attestes_jour', 3 + count(*)
+  from public.retours
+ where source = 'app' and not atteste
+   and recu_le >= (now() at time zone 'Europe/Paris')::date::timestamp at time zone 'Europe/Paris';
 insert into public.editeurs (email, role) values ('recette.lecteur@exemple.test', 'lecteur');
 
 -- Un depot d'essai, comme la fonction `communaute` l'appelle : `cle` et `ip` sont des graines, le jeton
@@ -367,9 +374,11 @@ end $$;
 do $$ begin perform public.lire_mes_retours(array_fill('x'::text, array[21])); raise exception 'ECHEC 5e : vingt et une cles';
 exception when sqlstate '22023' then raise notice 'ok 5e'; end $$;
 do $$ begin
-    if (select provolatile from pg_proc where oid = 'public.lire_mes_retours(text[])'::regprocedure) <> 'v' then
-        raise exception 'ECHEC 5f : la lecture doit rester volatile (POST seulement)';
-    end if;
+    perform set_config('request.method', 'GET', true);
+    perform public.lire_mes_retours(array[pg_temp.cle('reponse-a')]);
+    raise exception 'ECHEC 5f : la lecture par cle passe en GET';
+exception when insufficient_privilege then
+    perform set_config('request.method', 'POST', true);
     raise notice 'ok 5f';
 end $$;
 reset role;
