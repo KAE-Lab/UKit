@@ -71,8 +71,8 @@ l'attestation.
 - **Android, et un iPhone sans App Attest** : l'empreinte SHA-256 d'un secret de 32 octets tiré sur
   l'appareil, gardé au trousseau (`UKIT_COMMUNAUTE_SECRET`), envoyé avec chaque contribution. La base
   ne garde que l'empreinte. Une marque d'installation dans AsyncStorage le fait remplacer après une
-  réinstallation, même sur iOS où le trousseau survit à la désinstallation. Le jeton Play Integrity est lié à ce secret par le texte qu'il atteste :
-  il ne se transporte pas d'une clé à une autre.
+  réinstallation, même sur iOS où le trousseau survit à la désinstallation. Le jeton Play Integrity
+  est lié à ce secret par le texte qu'il atteste : il ne se transporte pas d'une clé à une autre.
 - **Jamais l'identifiant d'installation**, que [PRIVACY.md](../../PRIVACY.md) garde sur l'appareil.
 - Une réinstallation fait une autre clé : la réputation repart de zéro, comme le plan le veut.
 
@@ -246,9 +246,12 @@ le contenu publié par l'utilisateur et l'identifiant d'appareil propre à l'app
 
 ## Le protocole sur téléphone
 
-**iPhone**, build de développement « UKit Dev » refait après ce lot (le module est natif) :
-1. Ouvrir le menu de développement (sept touchers sur la version), onglet Testeur, bloc
-   « Communauté ». Attendu : « attestation : App Attest · clé à enregistrer ».
+**iPhone**, build de développement « UKit Dev » refait après ce lot, le module étant natif
+(`npx eas-cli build -p ios --profile development`, avec la clé App Store Connect du poste,
+[plateforme.md](../plateforme.md#le-build-de-développement--les-quatre-choses-qui-se-perdent)) :
+1. Réglages → À propos → sept touchers sur la version → la bulle « UKit » → onglet Testeur, et
+   faire défiler jusqu'au bloc « Communauté ». Attendu : « attestation : App Attest · clé à
+   enregistrer ».
 2. Toucher « Essai d'envoi ». Attendu, en quelques secondes : « essai · attesté · poids 1 », puis
    « App Attest · clé enregistrée ». Échec : « non attesté » (la clé n'a pas été enregistrée : lire le
    journal de la fonction, la raison y est) ou « échec · … ».
