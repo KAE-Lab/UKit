@@ -314,6 +314,8 @@ syncCalendar(origine)        un passage à la fois : un second appel rejoint le 
   ├─ PlanningApiService.fetchCalendarForSynchronization(les groupes favoris, agrégés)
   │     └─ Blueprint ukit.celcat.annee, année universitaire complète (août → août)
   ├─ les filtres d'UE appliqués (coursASynchroniser : un cours reste tant qu'une UE n'est pas filtrée)
+  ├─ les événements du campus ajoutés un par un, à la suite (avecLesEvenementsDuCampus, lot 5) ;
+  │     jamais ceux de l'abonnement
   ├─ pour chaque événement : mise à jour si connu, création sinon
   ├─ suppression des événements devenus obsolètes
   ├─ écriture de previousSyncData / previousSyncTime
@@ -522,6 +524,20 @@ section ([`ConfidentialiteSection`](../../src/features/Settings/components/Setti
 par son hook `useMesureActive` : `AppCore.tsx` est à la limite de ses quatre cents lignes, et un module
 qui porte sa donnée, son réglage et sa purge se retire d'un bloc. `resetSettings` n'y ajoute qu'une
 ligne, et l'écran n'y ajoute qu'une section.
+
+## Les événements du campus
+
+La page Agenda porte, sous la synchronisation, le groupe « Dans le planning » et son interrupteur
+« Événements du campus » : l'abonnement aux annonces d'événement de son campus, **désactivé par
+défaut**, que la fiche d'une annonce propose une fois après le premier ajout. Il vit hors de la
+permission de l'agenda, et s'affiche donc aussi quand elle est refusée : le Planning montre les
+événements sans elle. L'état est celui du magasin de [`shared/evenements`](../../src/shared/evenements/index.ts),
+pas de `SettingsManager` ; la réinitialisation l'efface, une bascule d'établissement non
+([lot 5](../phase-8/5-evenements.md)).
+
+Les événements ajoutés un par un partent dans l'agenda avec les cours, sous `annonce:<id>` dans
+`previousSyncData` : la purge d'un passage retire ce qui a été retiré ou annulé. L'entretien repasse
+quand ce que l'agenda doit porter change (origine `evenements`), et pas à chaque relecture des annonces.
 
 ## Les calendriers du téléphone
 

@@ -33,6 +33,8 @@ export function formatCalendarEventData(event: PlanningEvent): Record<string, un
         timeZone: 'Europe/Paris',
         endTimeZone: 'Europe/Paris',
         notes: event.schedule + '\n' + event.description,
+        // Le lieu d'un evenement du campus (lot 5) ; un cours n'en porte jamais, ses salles sont dans la description.
+        ...(event.lieu !== undefined && event.lieu !== '' ? { location: event.lieu } : {}),
     };
 }
 
@@ -141,6 +143,16 @@ function estBornable(event: PlanningEvent): boolean {
     const debut = new Date(event.date.start).getTime();
     const fin = new Date(event.date.end).getTime();
     return !Number.isNaN(debut) && !Number.isNaN(fin) && debut <= fin;
+}
+
+/**
+ * Les cours d'un passage, suivis des evenements du campus ajoutes un par un (phase 8, lot 5) — jamais
+ * ceux de l'abonnement. Le module s'importe a la demande : `AppCore`, qui appelle ce fichier, ne tire
+ * jamais la base a son import (son en-tete), et le module des evenements la tire par `BdeService`.
+ */
+export async function avecLesEvenementsDuCampus(cours: PlanningEvent[]): Promise<PlanningEvent[]> {
+    const { evenementsASynchroniser } = await import('../evenements');
+    return [...cours, ...(await evenementsASynchroniser())];
 }
 
 /**

@@ -46,6 +46,9 @@ const LIGNE: AnnonceRow = {
     blurhash: null,
     partenaire: null,
     sondage: null,
+    evenement_debut: null,
+    evenement_fin: null,
+    evenement_lieu: null,
 };
 
 function annonce(patch: Partial<BdeAnnonce>): BdeAnnonce {
@@ -232,4 +235,12 @@ test('le sondage se lit de sa colonne, et un sondage hors forme est omis plutot 
     expect(projeterAnnonce({ ...LIGNE, sondage }).sondage?.choix.map((c) => c.id)).toEqual(['a', 'b']);
     expect(projeterAnnonce({ ...LIGNE, sondage: { ...sondage, choix: [] } }).sondage).toBeUndefined();
     expect(projeterAnnonce(LIGNE).sondage).toBeUndefined();
+});
+
+test('l’evenement se lit sur une annonce de type evenement seulement, et un evenement hors forme est omis', () => {
+    const date = { evenement_debut: '2026-12-03T18:00:00+01:00', evenement_fin: '2026-12-03T20:00:00+01:00', evenement_lieu: 'Amphi A22' };
+    expect(projeterAnnonce({ ...LIGNE, ...date }).evenement).toEqual({ debut: Date.parse('2026-12-03T17:00:00Z'), fin: Date.parse('2026-12-03T19:00:00Z'), lieu: 'Amphi A22' });
+    expect(projeterAnnonce({ ...LIGNE, ...date, type: 'info' }).evenement).toBeUndefined();
+    expect(projeterAnnonce({ ...LIGNE, ...date, evenement_fin: date.evenement_debut }).evenement).toBeUndefined();
+    expect(projeterAnnonce(LIGNE).evenement).toBeUndefined();
 });

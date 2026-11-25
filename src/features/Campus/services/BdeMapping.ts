@@ -37,6 +37,7 @@ import {
 } from '../../../shared/annonces/carte';
 import { projeterOrdre, type ParametresDOrdre } from '../../../shared/annonces/ordre';
 import { lireSondage, type Sondage } from '../../../shared/annonces/sondage';
+import { lireEvenement, type EvenementDAnnonce } from '../../../shared/annonces/evenement';
 
 /**
  * Ce qu'un ecran manipule.
@@ -80,6 +81,8 @@ export interface BdeAnnonce {
     ordre: ParametresDOrdre;
     /** Le sondage de la fiche (lot 4), omis sans sondage ou hors forme. */
     sondage?: Sondage;
+    /** L'evenement que « Ajouter a mon planning » ajoute (lot 5) : sur une annonce de type evenement seulement, omis hors forme. */
+    evenement?: EvenementDAnnonce;
 }
 
 /** Une colonne nullable rend `null` ; le contrat applicatif, lui, omet ce qu'il n'a pas. */
@@ -142,6 +145,7 @@ export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
         partenaire: partenaireDeCarte(type, row.partenaire) ?? undefined,
         ordre: projeterOrdre(row),
         sondage: lireSondage(row.sondage) ?? undefined,
+        evenement: lireEvenement(type, row.evenement_debut, row.evenement_fin, row.evenement_lieu) ?? undefined,
     };
 }
 

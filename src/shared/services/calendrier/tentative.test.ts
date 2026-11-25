@@ -44,6 +44,7 @@ describe('origineDuRun', () => {
             favoris: 'utilisateur',
             activation: 'utilisateur',
             filtres: 'utilisateur',
+            evenements: 'automatique',
         };
         for (const [origine, attendu] of Object.entries(table)) {
             expect(origineDuRun(origine as OrigineSynchro)).toBe(attendu);

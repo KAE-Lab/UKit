@@ -87,6 +87,13 @@ export interface PlanningEvent {
      */
     idTelephone?: string;
     /**
+     * L'annonce d'ou vient un evenement du campus (phase 8, lot 5) : il s'affiche comme un calendrier du
+     * telephone — `source` le dit —, sans s'ouvrir dans l'agenda du systeme ; la fiche le masque.
+     */
+    annonce?: string;
+    /** Le point que l'annonce publie : la fiche le montre sur sa carte, sans geocoder le lieu. */
+    point?: { lat: number; lng: number };
+    /**
      * Ce qu'est chaque ligne de `description` quand la source le **dit** (PRONOTE nomme ses champs),
      * pour que l'icone ne se devine plus au contenu : chez Bordeaux Montaigne, un motif d'annulation
      * prenait l'epingle d'une salle (2026-11-11). Absent pour Celcat, ADE et les anciens caches.

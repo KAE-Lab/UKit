@@ -35,6 +35,18 @@ export function joursDeLaSemaine(cible: { week: number; year?: number }): moment
     return Array.from({ length: 6 }, (_, index) => lundi.clone().add(index, 'days'));
 }
 
+/**
+ * Deux lectures du meme jour mises bout a bout : le telephone et les evenements du campus (lot 5), qui
+ * s'affichent comme lui. Le tri revient a `fusionnerJour`.
+ */
+export function joindreParJour(a: TelephoneParJour, b: ReadonlyMap<string, readonly PlanningEvent[]>): TelephoneParJour {
+    if (b.size === 0) return a;
+    if (a.size === 0) return b;
+    const resultat = new Map<string, readonly PlanningEvent[]>(a);
+    for (const [jour, evenements] of b) resultat.set(jour, [...(resultat.get(jour) ?? []), ...evenements]);
+    return resultat;
+}
+
 /** Une journee : les cours, puis le telephone, tries ensemble par le tri d'affichage. */
 export function fusionnerJour(cours: PlanningEvent[], telephone: readonly PlanningEvent[] | undefined): PlanningEvent[] {
     if (telephone === undefined || telephone.length === 0) return cours;

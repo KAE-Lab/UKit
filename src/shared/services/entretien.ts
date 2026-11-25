@@ -53,6 +53,7 @@ import { NotificationManager } from './NotificationService';
 import { deposerLeJeton, retirerLeJeton, type EtatDepot } from '../push';
 import { envoyerLesMesures, type EtatEnvoi } from '../mesure';
 import { relireLesReponses, viderLaBoite } from '../retours';
+import { abonnerALAgenda } from '../evenements';
 import { onRetourAuPremierPlan } from './premierPlan';
 import { maintenantMs } from './Temps';
 import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro, origineDuRun } from './calendrier/tentative';
@@ -109,7 +110,7 @@ function journaliser(message: string): void {
 
 /** Les origines qui ne demandent pas la permission de l'echeance : le systeme, la sonde, un reglage. */
 function force(origine: OrigineEntretien): boolean {
-    return origine === 'tache' || origine === 'sonde' || origine === 'favoris' || origine === 'activation' || origine === 'filtres';
+    return origine === 'tache' || origine === 'sonde' || origine === 'favoris' || origine === 'activation' || origine === 'filtres' || origine === 'evenements';
 }
 
 /**
@@ -371,6 +372,10 @@ export function armerLEntretien(): void {
     // Un filtre d'UE change ce que l'agenda doit porter, comme un favori (6.2.x).
     SettingsManager.on('filter', () => {
         if (SettingsManager.getCalendarSyncEnabled()) differer('filtres');
+    });
+    // Un evenement du campus ajoute, retire, deplace ou annule change l'agenda lui aussi (lot 5).
+    abonnerALAgenda(() => {
+        if (SettingsManager.getCalendarSyncEnabled()) differer('evenements');
     });
 }
 

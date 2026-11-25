@@ -7,7 +7,7 @@
 import { expect, test } from 'vitest';
 
 import type { PlanningEvent, PlanningWeekDay } from './PlanningAssembly';
-import { estDuTelephone, fusionnerJour, fusionnerSemaine, joursDeLaSemaine, separerJourneeEntiere } from './FusionTelephone';
+import { estDuTelephone, fusionnerJour, fusionnerSemaine, joindreParJour, joursDeLaSemaine, separerJourneeEntiere } from './FusionTelephone';
 
 function cours(subject: string, starttime: string, patch: Partial<PlanningEvent> = {}): PlanningEvent {
     return {
@@ -47,4 +47,14 @@ test('les journees entieres se separent des horaires', () => {
     expect(horaires.map((e) => e.subject)).toEqual(['Maths']);
     expect(estDuTelephone(cours('Maths', '08:00'))).toBe(false);
     expect(estDuTelephone(cours('Dentiste', '09:00', { source: 'telephone' }))).toBe(true);
+});
+
+test('le telephone et les evenements du campus se joignent par jour, sans rien perdre de l’un ni de l’autre', () => {
+    const a = new Map([['2026-12-03', [cours('Dentiste', '09:00')]]]);
+    const b = new Map([['2026-12-03', [cours('Conference', '18:00')]], ['2026-12-04', [cours('Soiree', '22:00')]]]);
+    const joints = joindreParJour(a, b);
+    expect(joints.get('2026-12-03')?.map((e) => e.subject)).toEqual(['Dentiste', 'Conference']);
+    expect(joints.get('2026-12-04')?.map((e) => e.subject)).toEqual(['Soiree']);
+    expect(joindreParJour(a, new Map())).toBe(a);
+    expect(a.get('2026-12-03')).toHaveLength(1);
 });

@@ -29,6 +29,8 @@ import CalendarCheck2 from 'lucide-react-native/icons/calendar-check-2';
 import CalendarClock from 'lucide-react-native/icons/calendar-clock';
 import CalendarDays from 'lucide-react-native/icons/calendar-days';
 import CalendarHeart from 'lucide-react-native/icons/calendar-heart';
+import CalendarMinus from 'lucide-react-native/icons/calendar-minus';
+import CalendarPlus from 'lucide-react-native/icons/calendar-plus';
 import CalendarRange from 'lucide-react-native/icons/calendar-range';
 import CalendarSync from 'lucide-react-native/icons/calendar-sync';
 import CalendarX from 'lucide-react-native/icons/calendar-x';
@@ -161,7 +163,9 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'calendar-lock-open-outline': entree(CalendarCheck2),
     'calendar-month-outline': entree(CalendarDays),
     'calendar-multiple': entree(Calendars),
+    'calendar-plus': entree(CalendarPlus),
     'calendar-range': entree(CalendarRange),
+    'calendar-remove': entree(CalendarMinus),
     'calendar-sync-outline': entree(CalendarSync),
     'calendar-today': entree(Calendar1),
     'chart-line': entree(ChartLine),

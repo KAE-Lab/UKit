@@ -39,7 +39,14 @@ const TABLE = 'annonces';
  * publie et deja date (supabase/policies.sql), l'application n'a rien a en decider — et l'ordre du
  * carrousel a remplace celui de la date de publication.
  */
-const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,expire_le,active,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire,sondage';
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,expire_le,active,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire,sondage,evenement_debut,evenement_fin,evenement_lieu';
+
+/**
+ * Ce que le Planning lit des evenements (lot 5) : de quoi les situer, les nommer et les cibler, sans le
+ * recit ni les visuels — une lecture legere, refaite au plus toutes les demi-heures et seulement pour qui
+ * suit un evenement.
+ */
+const COLONNES_D_EVENEMENT = 'id,titre,emetteur,lat,lng,expire_le,active,audience,etablissements,version_min,version_max,plateformes,type,evenement_debut,evenement_fin,evenement_lieu';
 
 /**
  * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.
@@ -103,6 +110,28 @@ const BdeService = {
         // visibles.ts) ordonne lui aussi ce qui reste une fois la visibilite et le ciblage appliques.
         // Ordonner avant changerait la taille des groupes, donc l'ordre.
         return { ok: true, annonces: ordonner(visibles, now, (annonce) => annonce.ordre) };
+    },
+
+    /**
+     * Les annonces d'evenement que cet appareil voit, datees (lot 5), sans ordre : le Planning les range
+     * par jour. Les memes filtres que la liste — la politique de lecture, la peremption, le ciblage — :
+     * un evenement que l'appareil ne voit pas dans le Campus ne s'affiche pas dans son Planning.
+     */
+    fetchEvenements: async (): Promise<BdeAnnoncesResult> => {
+        const supabase = getSupabase();
+        if (supabase === null) return echec(baseNonConfiguree());
+
+        const { data, error } = await supabase.from(TABLE).select(COLONNES_D_EVENEMENT)
+            .eq('type', 'evenement')
+            .not('evenement_debut', 'is', null);
+        if (error) return echec(describeSupabaseFailure(error));
+
+        const now = maintenant();
+        const contexte = contexteDeCiblage();
+        const evenements = (data ?? [])
+            .map(projeterAnnonce)
+            .filter((annonce) => annonce.evenement !== undefined && estValide(annonce, now) && estCible(annonce.ciblage, contexte));
+        return { ok: true, annonces: evenements };
     },
 };
 

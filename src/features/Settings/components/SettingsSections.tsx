@@ -14,6 +14,7 @@ import type { CauseEchecSynchro } from '../../../shared/services/calendrier/cibl
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
+import { useAbonnementAuxEvenements } from '../../../shared/evenements';
 import { formulaireNatif } from '../../../shared/navigation/formulaireDeRetours';
 import { ouvrirLaPageDAvis } from '../../../shared/notation';
 import { detectionPossible } from '../../../shared/retours/captures';
@@ -388,6 +389,24 @@ function EtatDeLaSynchro({ theme, lastSyncDate, derniereTentative }: Pick<Calend
     );
 }
 
+/**
+ * Les evenements du campus dans le Planning (lot 5) : l'abonnement, desactive par defaut, propose une
+ * fois apres le premier ajout. Hors de la permission de l'agenda : le Planning les montre sans elle.
+ */
+function EvenementsDuCampus({ theme }: { theme: AppThemeType }) {
+    const [abonne, abonner] = useAbonnementAuxEvenements();
+    return (
+        <GroupeDeReglages theme={theme} titre={Translator.get('EVENEMENTS_GROUPE')}>
+            <RangeeDeReglage
+                theme={theme}
+                icone="bullhorn-outline"
+                libelle={Translator.get('EVENEMENTS_DU_CAMPUS')}
+                interrupteur={{ valeur: abonne, onChange: abonner }}
+            />
+        </GroupeDeReglages>
+    );
+}
+
 export const CalendarSection = (props: CalendarSectionProps) => {
     const { theme, hasCalendarPermission, demanderPermission, calendarSyncEnabled, toggleCalendarSync, onForceSync, calendarName, openCalendarDialog, isSynchronizingCalendar, selectedCalendar, calendriersAffiches, openCalendriersAffiches } = props;
     if (!hasCalendarPermission) {
@@ -397,6 +416,7 @@ export const CalendarSection = (props: CalendarSectionProps) => {
                 <GroupeDeReglages theme={theme} titre={Translator.get('CALENDAR_SYNCHRONIZATION')}>
                     <RangeeDeReglage theme={theme} icone="calendar-lock-open-outline" libelle={Translator.get('CALENDAR_ALLOW')} onPress={demanderPermission} />
                 </GroupeDeReglages>
+                <EvenementsDuCampus theme={theme} />
             </>
         );
     }
@@ -429,6 +449,7 @@ export const CalendarSection = (props: CalendarSectionProps) => {
                     onPress={openCalendriersAffiches}
                 />
             </GroupeDeReglages>
+            <EvenementsDuCampus theme={theme} />
         </>
     );
 };

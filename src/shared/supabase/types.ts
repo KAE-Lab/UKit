@@ -70,6 +70,10 @@ export interface AnnonceRow {
     readonly partenaire: unknown;
     /** Le sondage de la fiche (phase 8, lot 4) : `{ question, choix, clos_le }`, lu par `shared/annonces/sondage.ts` ; nul sans sondage. */
     readonly sondage: unknown;
+    /** L'evenement d'une annonce (phase 8, lot 5) : les trois ensemble ou aucun, lus par `shared/annonces/evenement.ts`. */
+    readonly evenement_debut: string | null;
+    readonly evenement_fin: string | null;
+    readonly evenement_lieu: string | null;
 }
 
 /**

@@ -23,7 +23,7 @@ import { oublierVus } from '../messages/vus';
 // Le reglage seul, et non l'index de la mesure : l'index importe ce fichier (7-D).
 import { reinitialiserLaMesure } from '../mesure/reglage';
 import { restaurerReglages } from './reglagesParEtablissement';
-import { ecrireEvenementsDansCalendrier, preparerCibleDeSynchro, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
+import { avecLesEvenementsDuCampus, ecrireEvenementsDansCalendrier, preparerCibleDeSynchro, retirerEvenementsSynchronises } from './CalendarSyncHelpers';
 import { lireTentative, origineDuRun, type OrigineSynchro, type TentativeSynchro } from './calendrier/tentative';
 import { CALENDRIER_UKIT, causeDeLaSource, type CauseEchecSynchro } from './calendrier/cible';
 import { NetworkMockService } from './NetworkMockService';
@@ -467,8 +467,9 @@ class SettingsManagerService {
         // L'ecriture vit dans CalendarSyncHelpers, comme les autres pieces sans etat du calendrier.
         // Les filtres d'UE s'appliquent ici comme a l'ecran (6.2.x) : la purge finale de l'ecriture
         // retire d'elle-meme, au passage suivant, les cours qu'un filtre vient de masquer.
+        // Puis les evenements du campus ajoutes un par un (lot 5), jamais ceux de l'abonnement.
         const nextExistingCalendarEvents = await ecrireEvenementsDansCalendrier(
-            cible.id, coursASynchroniser(resultat.courses, this._filters), existingCalendarEvents,
+            cible.id, await avecLesEvenementsDuCampus(coursASynchroniser(resultat.courses, this._filters)), existingCalendarEvents,
         );
 
         await AsyncStorage.setItem('previousSyncData', JSON.stringify(nextExistingCalendarEvents));
@@ -631,6 +632,8 @@ class SettingsManagerService {
         await reinitialiserLaMesure();
         // Les calendriers du telephone survivent a une bascule d'etablissement, pas a un effacement.
         this.setCalendriersAffiches([]);
+        // Les evenements du campus ajoutes, masques, l'abonnement : repartir comme apres une reinstallation (lot 5).
+        await (await import('../evenements')).oublierLesEvenements();
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
         // choix deja fait a quelqu'un qui vient de tout effacer.
         this.setEtablissement(ETABLISSEMENT_DEFAUT);

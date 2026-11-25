@@ -26,7 +26,7 @@ import { CourseManager, isArraysEquals, SettingsManager } from '../../../shared/
 import { NotificationManager } from '../../../shared/services/NotificationService';
 import { fusionnerJour, fusionnerSemaine, joursDeLaSemaine, separerJourneeEntiere, TELEPHONE_VIDE, type TelephoneParJour } from '../services/FusionTelephone';
 import { assemblerSemaine } from '../services/PlanningAssembly';
-import { lireEvenementsDuTelephone } from '../services/TelephoneSource';
+import { lireLeTelephoneEtLeCampus } from '../services/TelephoneSource';
 import { CLE_JOUR } from '../services/TelephoneMapping';
 import { relectureInutile, type DerniereLecture } from '../services/fraicheur';
 import { lireAnneeDesFavoris } from '../services/anneeDesFavoris';
@@ -263,7 +263,8 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
      */
     lireTelephone(): Promise<TelephoneParJour> {
         if (!Array.isArray(this.state.groupName)) return Promise.resolve(TELEPHONE_VIDE);
-        return lireEvenementsDuTelephone(this.joursAffiches());
+        // Les evenements du campus s'affichent comme un calendrier du telephone, relus de meme (lot 5).
+        return lireLeTelephoneEtLeCampus(this.joursAffiches());
     }
 
     /**

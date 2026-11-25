@@ -15,6 +15,7 @@ import { compter } from '../../../shared/mesure';
 import { DayViewHeader } from '../components/DayViewHeader';
 import { FonduDeBord } from '../../../shared/ui/FonduDeBord';
 import { calendrierOuEcrire, ouvrirEditeurDeCreation } from '../services/TelephoneSource';
+import { abonnerAuxEvenements, rafraichirLesEvenements } from '../../../shared/evenements';
 import { lundiDeSemaineIso, semaineIsoDe, type SemaineIso } from '../services/PlanningAssembly';
 
 function capitalize(str: string) {
@@ -71,6 +72,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
     mockListener: import('react-native').EmitterSubscription | null = null;
     desabonnerRetour: (() => void) | null = null;
     desabonnerFocus: (() => void) | null = null;
+    desabonnerEvenements: (() => void) | null = null;
     demonte = false;
     calendarList: import('react-native').FlatList<unknown> | null = null;
 
@@ -129,10 +131,15 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 			// L'agenda a pu changer pendant l'absence : le systeme n'expose aucun evenement pour le
 			// dire, relire au retour suffit (6.1.x-D).
 			this.relireTelephone();
+			void rafraichirLesEvenements();
 		});
 		// Le mode semaine n'a pas de relecture au focus, la journee en a une qui repasse par le reseau :
 		// celle-ci ne lit que le telephone, et cede a un chargement en cours.
-		this.desabonnerFocus = this.props.navigation?.addListener('focus', this.relireTelephone) ?? null;
+		this.desabonnerFocus = this.props.navigation?.addListener('focus', this.surFocus) ?? null;
+		// Les evenements du campus (lot 5) : un ajout, un masque, l'abonnement ou une lecture des annonces
+		// se remelent comme un calendrier du telephone ; la lecture, au plus toutes les demi-heures.
+		this.desabonnerEvenements = abonnerAuxEvenements(this.relireTelephone);
+		void rafraichirLesEvenements();
 		SettingsManager.on('calendriersAffiches', this.surCalendriersAffiches);
 		SettingsManager.on('language', this.relocaliser);
 		void this.relireCalendrierPourAjout();
@@ -154,6 +161,11 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 	};
 
 	relireTelephone = () => this.setState((etat) => ({ revisionTelephone: etat.revisionTelephone + 1 }));
+
+	surFocus = () => {
+		this.relireTelephone();
+		void rafraichirLesEvenements();
+	};
 
 	surCalendriersAffiches = () => {
 		void this.relireCalendrierPourAjout();
@@ -249,6 +261,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
 		if (this.mockListener) this.mockListener.remove();
 		if (this.desabonnerRetour) this.desabonnerRetour();
 		if (this.desabonnerFocus) this.desabonnerFocus();
+		if (this.desabonnerEvenements) this.desabonnerEvenements();
 		SettingsManager.unsubscribe('calendriersAffiches', this.surCalendriersAffiches);
 		SettingsManager.unsubscribe('language', this.relocaliser);
 	}

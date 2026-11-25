@@ -31,6 +31,7 @@ import { useSourceRendue } from '../../../shared/ui/useSourceRendue';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { DescriptionAnnonce } from './DescriptionAnnonce';
 import { SondageDAnnonce } from './SondageDAnnonce';
+import { EvenementDAnnonce } from './EvenementDAnnonce';
 import { BdeAnnonce } from '../services/BdeService';
 import { compter } from '../../../shared/mesure';
 
@@ -190,6 +191,10 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                                     <AccrocheAnnonce texte={annonce.info_label} theme={theme} />
                                 ) : null}
                             </View>
+
+                            {/* Quand et ou, puis « Ajouter a mon planning » (lot 5) : les faits d'abord,
+                                avant le recit qui les raconte. */}
+                            {annonce.evenement !== undefined ? <EvenementDAnnonce theme={theme} annonce={annonce} evenement={annonce.evenement} /> : null}
 
                             {annonce.long_desc ? (
                                 <DescriptionAnnonce texte={annonce.long_desc} couleurDepart={annonce.couleur} theme={theme} />

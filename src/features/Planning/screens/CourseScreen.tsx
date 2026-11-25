@@ -18,6 +18,7 @@ import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { CourseData } from '../components/CourseCard';
 import { couleurDeCours, encreDeCours } from '../services/couleurDeCours';
 import { FicheDuCours } from '../components/FicheDuCours';
+import { masquerDuPlanning } from '../../../shared/evenements';
 
 export interface CourseProps {
 	route: { params: { data: CourseData } };
@@ -63,6 +64,13 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 		// Pas de resolution contre le referentiel pour un evenement du telephone : « Chez Marie »
 		// matcherait un batiment (6.1.x-D). Son lieu se situe par le geocodeur du systeme (6.2.x).
 		if (this.duTelephone()) {
+			// Un evenement du campus porte le point de son annonce, quand elle en publie un : rien a
+			// geocoder, « Amphi A22 » ne se devine pas (lot 5).
+			const { annonce, point, lieu } = this.state.data;
+			if (annonce !== undefined) {
+				if (point !== undefined) this.setState({ locations: [{ title: lieu ?? this.state.data.subject, lat: point.lat, lng: point.lng }] });
+				return;
+			}
 			void this.situerLeLieu();
 			return;
 		}
@@ -75,6 +83,14 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	duTelephone(): boolean {
 		return this.state.data.source === 'telephone';
 	}
+
+	/** Un evenement du campus se retire d'ici comme de sa fiche d'annonce : le Planning le perd au retour. */
+	retirerDuPlanning = async () => {
+		const { annonce } = this.state.data;
+		if (annonce === undefined) return;
+		await masquerDuPlanning(annonce);
+		this.props.navigation.goBack();
+	};
 
 	/** L'agenda du systeme, sur cette occurrence : les recurrents partagent leur identifiant sur iOS. */
 	ouvrirDansCalendrier = async () => {
@@ -170,14 +186,26 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 		if (!this.duTelephone()) return null;
 		return (
 			<>
-				<ActionButton
-					theme={theme}
-					variant="tonal"
-					label={Translator.get('OPEN_IN_CALENDAR')}
-					icon={{ name: 'calendar-export' }}
-					onPress={this.ouvrirDansCalendrier}
-					style={{ marginTop: tokens.space.sm }}
-				/>
+				{/* Un evenement du campus n'est pas dans l'agenda du systeme : il se retire (lot 5). */}
+				{this.state.data.annonce !== undefined ? (
+					<ActionButton
+						theme={theme}
+						variant="tonal"
+						label={Translator.get('EVENEMENT_RETIRER')}
+						icon={{ name: 'calendar-remove' }}
+						onPress={() => { void this.retirerDuPlanning(); }}
+						style={{ marginTop: tokens.space.sm }}
+					/>
+				) : (
+					<ActionButton
+						theme={theme}
+						variant="tonal"
+						label={Translator.get('OPEN_IN_CALENDAR')}
+						icon={{ name: 'calendar-export' }}
+						onPress={this.ouvrirDansCalendrier}
+						style={{ marginTop: tokens.space.sm }}
+					/>
+				)}
 				{/* Seulement sans carte : situee, la carte porte deja son bouton vers les plans. Empile sous le
 				    premier, pas a cote : deux libelles avec icone ne tiennent pas sur 360 dp. */}
 				{this.state.data.lieu && this.state.locations.length === 0 && (

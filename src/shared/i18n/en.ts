@@ -714,6 +714,14 @@ const en = {
 	CAPTURE_PROPOSER_REGLAGE: 'Offer to report after a screenshot',
 	ERREUR_SIGNALER: 'Report this problem',
 	RETOURS_GROUPE: 'Feedback',
+	EVENEMENT_AJOUTER: 'Add to my timetable',
+	EVENEMENT_RETIRER: 'Remove from my timetable',
+	EVENEMENT_ABONNEMENT_TITRE: 'Follow campus events?',
+	EVENEMENT_ABONNEMENT_CORPS: 'Events published for your campus will show in your timetable, without going into the phone calendar. Each one can be removed from its page, and the setting stays in Settings, Calendar.',
+	EVENEMENT_ABONNEMENT_OUI: 'Show them',
+	EVENEMENT_ABONNEMENT_NON: 'Not now',
+	EVENEMENTS_DU_CAMPUS: 'Campus events',
+	EVENEMENTS_GROUPE: 'In the timetable',
 };
 
 export default en;

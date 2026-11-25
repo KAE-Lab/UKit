@@ -96,6 +96,7 @@ en même temps qu'on change de source aurait mélangé deux changements dont un 
 | `focale` | `focale` | `{ x, y }` en fractions de l'image, bornées ; illisible, le défaut de la base `{ x: 0.5, y: 0.3 }`. Le point que le recadrage garde visible, **pas un centre** |
 | `blurhash` | `blurhash` | le placeholder calculé par la console au téléversement ; omis quand il manque, **et quand la table `visuels` remplace ou retire l'image** : il a été calculé sur celle de la ligne |
 | `partenaire` | `partenaire` | `{ nom, logoUrl, lien }`, pour une carte `partenaire` ou `bon_plan` **seulement** : la console garde la valeur quand le type change, pour qu'on puisse la retirer, et la carte ne la montre pas. Omis sans nom, un logo ou un lien vide vaut `null` |
+| `evenement_debut`, `evenement_fin`, `evenement_lieu` | `evenement` | `{ debut, fin, lieu }`, sur une annonce `evenement` **seulement**, omis hors de la forme de `annonces_evenement_check` : la fiche le montre sous le titre avec « Ajouter à mon planning », le Planning l'affiche comme un calendrier du téléphone ([lot 5](../phase-8/5-evenements.md)) |
 | `epinglee`, `priorite`, `creneaux` | `ordre` | ce que l'ordre lit, projeté avec la ligne comme le ciblage ; une ligne d'avant les colonnes n'est ni épinglée ni prioritaire |
 | `statut`, `publiee_le` | — | **pas lus** : la politique de lecture ne laisse sortir que ce qui est publié et déjà daté ([`policies.sql`](../../supabase/policies.sql)). `publiee_le` ordonnait la liste jusqu'à la 6.3 ; l'ordre du carrousel l'a remplacé |
 

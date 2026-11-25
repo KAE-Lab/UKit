@@ -24,7 +24,8 @@ import * as Calendar from 'expo-calendar/legacy';
 import moment from 'moment';
 
 import { SettingsManager } from '../../../shared/services/AppCore';
-import { TELEPHONE_VIDE, type TelephoneParJour } from './FusionTelephone';
+import { evenementsDuCampus } from '../../../shared/evenements';
+import { joindreParJour, TELEPHONE_VIDE, type TelephoneParJour } from './FusionTelephone';
 import { calendriersLisibles, CLE_JOUR, projeterEvenementsDuTelephone, type CalendrierDuTelephone } from './TelephoneMapping';
 
 const MARGE_JOURS = 7;
@@ -121,6 +122,19 @@ export async function lireEvenementsDuTelephone(jours: readonly moment.Moment[])
         console.warn(`[telephone] lecture impossible : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
         return TELEPHONE_VIDE;
     }
+}
+
+/**
+ * Le telephone et les evenements du campus (phase 8, lot 5), qui s'affichent comme lui : deux lectures
+ * locales, sans reseau, mises bout a bout par jour.
+ */
+export async function lireLeTelephoneEtLeCampus(jours: readonly moment.Moment[]): Promise<TelephoneParJour> {
+    const [telephone, campus] = await Promise.all([
+        lireEvenementsDuTelephone(jours),
+        // Comme le telephone : vide sur tout echec, jamais une exception dans le chargement du Planning.
+        evenementsDuCampus(jours).catch(() => TELEPHONE_VIDE),
+    ]);
+    return joindreParJour(telephone, campus);
 }
 
 /** Les evenements d'une journee, **tous calendriers de l'appareil confondus**. Pour savoir ce qui est neuf. */

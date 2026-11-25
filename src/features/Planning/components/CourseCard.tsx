@@ -27,6 +27,9 @@ export interface CourseData {
 	source?: 'telephone';
 	journeeEntiere?: boolean;
 	idTelephone?: string;
+	/** L'annonce d'un evenement du campus, qui s'affiche comme un calendrier du telephone (lot 5, PlanningAssembly.ts). */
+	annonce?: string;
+	point?: { lat: number; lng: number };
 	/** Le lieu d'un rendez-vous du telephone, tel quel ; jamais pose par une source de cours (PlanningAssembly.ts). */
 	lieu?: string;
 	/** Ce qu'est chaque ligne de la description, quand la source le dit (PlanningAssembly.ts). */

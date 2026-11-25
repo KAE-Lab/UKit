@@ -22,7 +22,7 @@ import { lireCause, type CauseEchecSynchro } from './cible';
  * `activation` : l'interrupteur rallume, ou la cible change — l'agenda se remplit sans attendre.
  * `filtres` : un filtre d'UE change — l'agenda suit ce que l'ecran montre (6.2.x).
  */
-export type OrigineSynchro = 'manuel' | 'lancement' | 'premier-plan' | 'tache' | 'sonde' | 'favoris' | 'activation' | 'filtres';
+export type OrigineSynchro = 'manuel' | 'lancement' | 'premier-plan' | 'tache' | 'sonde' | 'favoris' | 'activation' | 'filtres' | 'evenements';
 
 export interface TentativeSynchro {
     /** L'horloge **reelle** : c'est une trace, pas une decision (docs/qualite.md). */
@@ -45,7 +45,7 @@ export interface TentativeSynchro {
 /** Ce que la description des reglages promet : « environ toutes les 12 heures ». */
 export const INTERVALLE_ENTRETIEN_MS = 12 * 60 * 60 * 1000;
 
-const ORIGINES: readonly OrigineSynchro[] = ['manuel', 'lancement', 'premier-plan', 'tache', 'sonde', 'favoris', 'activation', 'filtres'];
+const ORIGINES: readonly OrigineSynchro[] = ['manuel', 'lancement', 'premier-plan', 'tache', 'sonde', 'favoris', 'activation', 'filtres', 'evenements'];
 
 /**
  * Ce qu'un run de l'entretien est pour le disjoncteur (jalon 7-C) : l'application d'elle-meme au
@@ -54,7 +54,8 @@ const ORIGINES: readonly OrigineSynchro[] = ['manuel', 'lancement', 'premier-pla
  * doit passer precisement pour sonder le circuit.
  */
 export function origineDuRun(origine: OrigineSynchro): Origine {
-    return origine === 'lancement' || origine === 'premier-plan' || origine === 'tache' ? 'automatique' : 'utilisateur';
+    // `evenements` (lot 5) : une relecture des annonces le declenche autant qu'un ajout — le disjoncteur garde la main.
+    return origine === 'lancement' || origine === 'premier-plan' || origine === 'tache' || origine === 'evenements' ? 'automatique' : 'utilisateur';
 }
 
 /**

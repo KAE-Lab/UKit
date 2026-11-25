@@ -726,6 +726,14 @@ const fr: TranslationDict = {
 	CAPTURE_PROPOSER_REGLAGE: 'Proposer de signaler après une capture',
 	ERREUR_SIGNALER: 'Signaler ce problème',
 	RETOURS_GROUPE: 'Retours',
+	EVENEMENT_AJOUTER: 'Ajouter à mon planning',
+	EVENEMENT_RETIRER: 'Retirer de mon planning',
+	EVENEMENT_ABONNEMENT_TITRE: 'Suivre les événements du campus ?',
+	EVENEMENT_ABONNEMENT_CORPS: 'Les événements publiés pour ton campus s’afficheront dans ton planning, sans aller dans l’agenda du téléphone. Chacun se retire depuis sa fiche, et le réglage reste dans Réglages, Agenda.',
+	EVENEMENT_ABONNEMENT_OUI: 'Les afficher',
+	EVENEMENT_ABONNEMENT_NON: 'Pas maintenant',
+	EVENEMENTS_DU_CAMPUS: 'Événements du campus',
+	EVENEMENTS_GROUPE: 'Dans le planning',
 };
 
 export default fr;

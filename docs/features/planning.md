@@ -862,6 +862,24 @@ semaine, aujourd'hui si la semaine est courante, sinon le lundi — par `moment(
 `new Date()`, pour suivre la date simulée. `startNewActivityTask: false` est obligatoire : sans lui,
 Android résout l'appel à l'ouverture de l'éditeur, avant la saisie.
 
+## Les événements du campus dans le Planning
+
+Le [lot 5 de la phase 8](../phase-8/5-evenements.md) y mêle les annonces d'événement que l'étudiant
+ajoute, ou toutes celles de son campus s'il s'y abonne. **Elles s'affichent comme un calendrier du
+téléphone**, et c'est littéral : [`shared/evenements`](../../src/shared/evenements/evenements.ts) les
+fait passer par `projeterEvenementsDuTelephone`, avec `source: 'telephone'`, et
+[`lireLeTelephoneEtLeCampus`](../../src/features/Planning/services/TelephoneSource.ts) les joint au
+téléphone, jour par jour. Tout ce que cette section dit du téléphone vaut donc pour eux — la fusion
+après la dérivation, ni rappel ni filtre ni appui long, la journée locale, minuit, les états vides — sans
+une ligne de plus dans `ScheduleList`.
+
+Ce qui diffère tient à leur origine, que `annonce` porte : la couleur est celle de UKit ; la lecture des
+annonces, légère, se fait au plus toutes les demi-heures depuis `DayView` et seulement s'il y a quelque
+chose à suivre, puis le Planning se remêle sans réseau ; la fiche ne géocode pas le lieu — elle montre le
+point de l'annonce s'il y en a un — et porte « Retirer de mon planning » au lieu d'« Ouvrir dans le
+calendrier ». Seuls les événements ajoutés un par un partent dans l'agenda synchronisé
+([settings.md](settings.md#la-synchronisation-calendrier)).
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ

@@ -714,6 +714,14 @@ const es: TranslationDict = {
 	CAPTURE_PROPOSER_REGLAGE: 'Proponer informar tras una captura',
 	ERREUR_SIGNALER: 'Informar de este problema',
 	RETOURS_GROUPE: 'Comentarios',
+	EVENEMENT_AJOUTER: 'Añadir a mi horario',
+	EVENEMENT_RETIRER: 'Quitar de mi horario',
+	EVENEMENT_ABONNEMENT_TITRE: '¿Seguir los eventos del campus?',
+	EVENEMENT_ABONNEMENT_CORPS: 'Los eventos publicados para tu campus aparecerán en tu horario, sin pasar a la agenda del teléfono. Cada uno se quita desde su ficha, y el ajuste queda en Ajustes, Calendario.',
+	EVENEMENT_ABONNEMENT_OUI: 'Mostrarlos',
+	EVENEMENT_ABONNEMENT_NON: 'Ahora no',
+	EVENEMENTS_DU_CAMPUS: 'Eventos del campus',
+	EVENEMENTS_GROUPE: 'En el horario',
 };
 
 export default es;
