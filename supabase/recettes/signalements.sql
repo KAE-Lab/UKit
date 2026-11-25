@@ -196,6 +196,18 @@ begin
     end if;
     raise notice 'ok 5c-5d';
 end $$;
+-- Une voix ecrite avant la periode mais qui vaut encore se lit : la console voit ce que l'application montre.
+reset role;
+update public.signalements set cree_le = now() - interval '3 days', maj_le = now()
+ where id = pg_temp.id_de('l2-a', 'batiment.ferme_jusqu', 'bordeaux/A28');
+set local role authenticated;
+set local request.jwt.claims = :'claims_lecteur';
+do $$ begin
+    if not exists (select 1 from public.signalements_a_moderer(now() - interval '1 hour') where cible = 'bordeaux/A28') then
+        raise exception 'ECHEC 5h : une voix d avant la periode qui vaut encore se lit';
+    end if;
+    raise notice 'ok 5h';
+end $$;
 -- Le type rendu n'a pas de colonne de cle : la demander echoue.
 do $$ begin perform appareil from public.signalements_a_moderer(now()); raise exception 'ECHEC 5e';
 exception when undefined_column then raise notice 'ok 5e'; end $$;
@@ -232,12 +244,28 @@ begin
     if (r ->> 'change')::boolean then raise exception 'ECHEC 6d : masquer deux fois ne change rien'; end if;
     raise notice 'ok 6a-6d';
 end $$;
+
 reset role;
 do $$ begin
     if (select reputation from public.appareils where cle = extensions.digest('l2-a', 'sha256')) <> 0 then
         raise exception 'ECHEC 6e : masquer une voix confirmee retire son point';
     end if;
     raise notice 'ok 6e';
+end $$;
+-- Retablir puis masquer de nouveau ne retire pas un second point : la confirmation s'est effacee.
+update public.appareils set reputation = 5 where cle = extensions.digest('l2-a', 'sha256');
+set local role authenticated;
+set local request.jwt.claims = :'claims_admin';
+do $$ begin
+    perform public.moderer_signalement(pg_temp.id_de('l2-a', 'restaurant.ferme', '921'), 'retablir');
+    perform public.moderer_signalement(pg_temp.id_de('l2-a', 'restaurant.ferme', '921'), 'masquer');
+end $$;
+reset role;
+do $$ begin
+    if (select reputation from public.appareils where cle = extensions.digest('l2-a', 'sha256')) <> 5 then
+        raise exception 'ECHEC 6g : un seul point retire par confirmation';
+    end if;
+    raise notice 'ok 6g';
 end $$;
 -- La voix masquee reste lisible par anon, statut et valeur compris : la lecture incrementale l'apprend.
 set local role anon;

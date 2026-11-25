@@ -871,13 +871,14 @@ revoke execute on function private.valider_etat_officiel() from public, anon, au
 -- (lot 1) ; masquer, retablir et bloquer sont des gestes d'admin. **Masquer est le retrait** : une ligne
 -- supprimee ne parviendrait jamais aux appareils, dont la lecture ne redemande que ce qui a bouge
 -- (`maj_le`), et resterait affichee jusqu'au soir. Une voix masquee garde sa valeur : l'application ne
--- la montre pas, la console en a besoin pour juger et retablir, et la lecture publique la perd au soir
--- de son jour. Chaque geste s'ecrit au journal a la main, sans la cle de l'appareil : le declencheur
--- `journaliser` copierait la ligne entiere.
+-- la montre pas, la console en a besoin pour juger et retablir, et la lecture publique la garde tant
+-- qu'elle aurait valu, comme toute voix. Chaque geste s'ecrit au journal a la main, sans la cle de
+-- l'appareil : le declencheur `journaliser` copierait la ligne entiere.
 
--- Les signalements depuis un instant, pour la console : les colonnes que l'equipe lit deja, et, pour
--- chacun, si son auteur est bloque et combien il en a ecrit ce jour-la. Jamais la cle. Trente et un
--- jours au plus : la purge efface le reste.
+-- Les signalements ecrits depuis un instant, et tous ceux qui valent encore aujourd'hui — ce que
+-- l'application lit, d'ou qu'ils datent : un « ferme jusqu'a vendredi » de lundi se modere mardi.
+-- Les colonnes que l'equipe lit deja, et, pour chacun, si son auteur est bloque et combien il en a ecrit
+-- ce jour-la parmi les lignes rendues. Jamais la cle. Trente et un jours au plus en arriere.
 create or replace function public.signalements_a_moderer(p_depuis timestamptz)
 returns table (
     id uuid, sujet text, cible text, valeur text, fin date, poids smallint, statut text,
@@ -900,12 +901,14 @@ begin
       from public.signalements s
       join public.appareils a on a.cle = s.appareil
      where s.cree_le >= greatest(coalesce(p_depuis, now() - interval '1 day'), now() - interval '31 days')
+        or s.expire_le > date_trunc('day', now() at time zone 'Europe/Paris') at time zone 'Europe/Paris'
      order by s.cree_le desc, s.id;
 end;
 $$;
 
 -- Masquer une voix, ou la retablir. Masquer une voix qui avait valu un point de reputation a son
--- auteur le lui retire ; la retablir ne le lui rend pas. Retablie, une voix redevient active, sauf si son
+-- auteur le lui retire, une fois : sa confirmation s'efface avec. Retablie, elle peut etre confirmee de
+-- nouveau, comme toute voix. Retablie, une voix redevient active, sauf si son
 -- appareil en a ecrit une plus recente, ou en porte une vivante, sur le meme sujet et la meme cible : elle
 -- reste alors remplacee, une seule voix vivante par appareil. Celle d'un appareil bloque ne se retablit pas.
 create or replace function public.moderer_signalement(p_id uuid, p_geste text)
@@ -953,7 +956,9 @@ begin
         ) then 'remplacee' else 'active' end;
     end if;
 
-    update public.signalements set statut = v_nouveau where id = p_id;
+    update public.signalements
+       set statut = v_nouveau, confirme_le = case when p_geste = 'masquer' then null else confirme_le end
+     where id = p_id;
     insert into public.journal (table_name, operation, ligne_id, avant, apres, par)
     values ('signalements', 'UPDATE', p_id::text,
             jsonb_build_object('statut', v_s.statut),
