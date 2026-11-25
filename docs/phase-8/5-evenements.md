@@ -1,5 +1,10 @@
 # Lot 5 — Les événements dans le Planning
 
+> **Livré le 2026-11-25** : la migration `20261125080000_evenements.sql` est **en production**, recettée
+> en transaction annulée puis rejouée sans elle ; la console en ligne depuis `main` (#49) ; la fiche, le
+> Planning jour et semaine, le retrait, la proposition, le réglage et la synchronisation joués au banc,
+> en français et en espagnol, dans les deux thèmes. **Reste** : le passage sur iPhone de la 7.0.
+
 > **Ouvert le 2026-11-25**, sur `prochaine-version` pour la 7.0 ; la console sur
 > `feat/console-evenements`, fusionnée dans `main`. Une annonce d'événement gagne une date, des heures et
 > un lieu ; l'étudiant l'ajoute à son planning d'un toucher, ou suit tous les événements de son campus.
@@ -193,6 +198,23 @@ banc : un bloquant, quatre défauts visibles à l'écran, et des mineurs, corrig
    calendrier de l'émulateur ; en clair et en français, en sombre et dans une autre langue.
 4. **Dans la console locale**, un compte jetable : le groupe « Événement », ses refus, son aperçu.
 
+*Joué le 2026-11-25.* La recette SQL, dix vérifications conformes en transaction annulée avec la
+migration, puis sans elle une fois appliquée. Par l'API publique : les colonnes lisibles avec la clé
+publiable, une annonce datée refusée à l'écriture (401). `npm test` : 1 673 tests ; la console construite ;
+pas de dépendance native, donc pas de build : l'APK `ukit-dev-2026-11-25-store-review.apk`.
+
+Sur le banc (`ukit`), en clair et en français puis en sombre et en espagnol, deux annonces d'essai en
+audience `testeurs` : la fiche et son bloc, « Ajouter à mon planning », la proposition (« Pas
+maintenant », puis « Mostrarlos » après remise à zéro du magasin), le Planning jour et semaine, une soirée
+qui passe minuit sur ses deux jours, la fiche du Planning et « Retirer », le réglage ; l'heure et le lieu
+changés en base, repris à la relecture ; l'annonce archivée, retirée du Planning ; la synchronisation
+vers un calendrier « UKit » de l'émulateur, qui n'a porté que l'événement ajouté, avec son lieu, et l'a
+retiré au « Retirer » suivant. Le banc a fait corriger l'invitation qui cachait l'événement, la vue
+semaine, et le bouton de la fiche. Dans la console locale (compte jetable admin, supprimé de
+l'authentification et d'`editeurs`) : le groupe « Événement », l'aperçu de la fiche, un refus à 390 pixels.
+Les essais (annonces, testeur du banc, mesures clées par les annonces, lignes du journal) sont effacés de
+la production.
+
 ## Limites écrites
 
 - **Un événement tient en vingt-quatre heures** : une semaine d'intégration se publie en plusieurs
@@ -210,3 +232,7 @@ banc : un bloquant, quatre défauts visibles à l'écran, et des mineurs, corrig
 - **Les heures se lisent à l'heure du téléphone** : un étudiant hors de France voit l'heure de son
   fuseau, comme pour les cours.
 - **Le texte des annonces est en français**, comme les annonces.
+- **Le chemin iOS n'est pas joué** : la proposition (un `Alert` à deux boutons), la synchronisation et le
+  rendu se jugent sur l'iPhone, au passage de la 7.0.
+- **Les compteurs anonymes génériques du banc restent** (onglets vus, sessions), agrégés avec les autres
+  appareils testeurs du jour : seuls ceux qui portaient l'identifiant des annonces d'essai sont effacés.
