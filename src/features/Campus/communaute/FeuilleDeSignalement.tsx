@@ -43,7 +43,10 @@ export interface FeuilleDeSignalementProps {
 
 /** Ce qu'un etat date peut viser au plus loin, a l'ecran ; la base borne aussi, de son cote. */
 const FIN_MAX_JOURS = 30;
-/** Des horaires de depart plausibles, que l'etudiant corrige : un service de RU, une journee de BU. */
+/**
+ * Des heures de depart plausibles, que l'etudiant corrige : un service de RU, une journee de BU. Elles ne
+ * partent jamais telles quelles — un service qu'on n'a pas touche n'est pas dans la correction.
+ */
 const PAR_DEFAUT: Readonly<Record<ServiceHoraire, { debut: number; fin: number }>> = {
     midi: { debut: 11 * 60 + 30, fin: 13 * 60 + 45 },
     soir: { debut: 18 * 60 + 30, fin: 20 * 60 },
@@ -84,7 +87,11 @@ function Option({ theme, libelle, choisie, onPress }: { theme: AppThemeType; lib
 }
 
 /** Une heure ou un jour a toucher : le selecteur du systeme s'ouvre. */
-function Puce({ theme, libelle, onPress, actif = true, choisie = false }: { theme: AppThemeType; libelle: string; onPress: () => void; actif?: boolean; choisie?: boolean }) {
+function Puce({ theme, libelle, onPress, actif = true, choisie = false, estimee = false }: {
+    theme: AppThemeType; libelle: string; onPress: () => void; actif?: boolean; choisie?: boolean;
+    /** Une heure proposee, pas encore choisie : elle se lit en retrait et ne part pas. */
+    estimee?: boolean;
+}) {
     return (
         <Pressable
             onPress={onPress}
@@ -94,7 +101,7 @@ function Puce({ theme, libelle, onPress, actif = true, choisie = false }: { them
             accessibilityState={{ selected: choisie, disabled: !actif }}
             style={[styles.puce, { backgroundColor: choisie ? theme.primarySoft : theme.greyBackground, borderColor: choisie ? theme.accent : theme.greyBackground, opacity: actif ? 1 : 0.4 }]}
         >
-            <Text style={[styles.libelleDePuce, tokens.texte.chiffres, { color: theme.accent }]}>{libelle}</Text>
+            <Text style={[styles.libelleDePuce, tokens.texte.chiffres, { color: estimee ? theme.fontSecondary : theme.accent }]}>{libelle}</Text>
         </Pressable>
     );
 }
@@ -108,16 +115,17 @@ function useFeuille({ visible, horaires, surPlace, fermer }: Pick<FeuilleDeSigna
     const [selecteur, setSelecteur] = useState<Selecteur | null>(null);
     const [regles, setRegles] = useState(false);
 
-    // Une feuille rouverte repart de zero : un choix d'hier ne doit pas partir d'un toucher.
+    // Une feuille rouverte repart de zero : un choix d'hier ne doit pas partir d'un toucher. A
+    // l'ouverture seulement : un rendu de l'ecran hote (le tic de la demi-minute) ne doit rien effacer.
     useEffect(() => {
         if (!visible) return;
         setChoisi(null);
         setNiveau(null);
         setFin(demain());
-        setSaisie(Object.fromEntries((horaires?.services ?? []).map((s) => [s, PAR_DEFAUT[s]])) as Saisie);
+        setSaisie({});
         setSelecteur(null);
         setRegles(false);
-    }, [visible, horaires]);
+    }, [visible]);
 
     /** La valeur a envoyer pour le choix courant, ou `null` tant qu'il manque quelque chose. */
     const valeur = (): string | null => {
@@ -139,7 +147,10 @@ function useFeuille({ visible, horaires, surPlace, fermer }: Pick<FeuilleDeSigna
         choisir: (sujet: SujetDeLieu) => { setChoisi(sujet); setNiveau(null); },
         setNiveau,
         setSelecteur,
-        basculerFerme: (service: ServiceHoraire) => setSaisie((s) => ({ ...s, [service]: s[service] === 'ferme' ? PAR_DEFAUT[service] : 'ferme' })),
+        basculerFerme: (service: ServiceHoraire) => setSaisie((s) => {
+            const { [service]: avant, ...autres } = s;
+            return avant === 'ferme' ? autres : { ...autres, [service]: 'ferme' };
+        }),
         quitter: () => {
             if (regles) surPlace.renoncer();
             fermer();
@@ -186,13 +197,14 @@ function SaisieDuChoix({ theme, feuille, horaires, plats }: { theme: AppThemeTyp
             <>
                 {(horaires?.services ?? []).map((service) => {
                     const ferme = feuille.saisie[service] === 'ferme';
+                    const estimee = feuille.saisie[service] === undefined;
                     const creneau = feuille.creneauDe(service);
                     return (
                         <View key={service} style={styles.saisie}>
                             <Text style={[styles.libelleDeSaisie, { color: theme.fontSecondary }]}>{nomDuService(service)}</Text>
-                            <Puce theme={theme} actif={!ferme} libelle={formaterMinutes(creneau.debut, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'debut' })} />
+                            <Puce theme={theme} actif={!ferme} estimee={estimee} libelle={formaterMinutes(creneau.debut, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'debut' })} />
                             <Text style={{ color: theme.fontSecondary }}>–</Text>
-                            <Puce theme={theme} actif={!ferme} libelle={formaterMinutes(creneau.fin, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'fin' })} />
+                            <Puce theme={theme} actif={!ferme} estimee={estimee} libelle={formaterMinutes(creneau.fin, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'fin' })} />
                             <Puce theme={theme} choisie={ferme} libelle={Translator.get('SIGNAL_SERVICE_FERME')} onPress={() => feuille.basculerFerme(service)} />
                         </View>
                     );
@@ -223,7 +235,7 @@ function Selecteur({ feuille }: { feuille: Feuille }) {
             value={s.quoi === 'fin' ? enDate(feuille.fin) : enHeure(feuille.creneauDe(s.service)[s.borne])}
             mode={s.quoi === 'fin' ? 'date' : 'time'}
             is24Hour
-            minimumDate={s.quoi === 'fin' ? enDate(jourDeParis(maintenant())) : undefined}
+            minimumDate={s.quoi === 'fin' ? enDate(demain()) : undefined}
             maximumDate={s.quoi === 'fin' ? max : undefined}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             // Sans lui, la roue d'iOS suit l'apparence du systeme, pas celle de l'application (ModMenu).

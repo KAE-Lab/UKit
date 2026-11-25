@@ -20,6 +20,7 @@ import { maintenant } from '../../../shared/services/Temps';
 import { URL } from '../../../shared/constants/urls';
 import { empreinteDesHoraires } from '../../../shared/communaute/horaires';
 import { cibleDuLieu } from '../../../shared/communaute/vocabulaire';
+import type { HorairesASaisir } from '../communaute/FeuilleDeSignalement';
 import { SectionSurPlace } from '../communaute/SectionSurPlace';
 import { useSurPlace } from '../communaute/useSurPlace';
 
@@ -49,6 +50,9 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
         [loading, failure, aujourdHui],
     );
     const surPlace = useSurPlace({ domaine: 'bibliotheque', cible, empreinteDesHoraires: empreinte });
+    // Memorise : la feuille repart de zero quand ses horaires changent, et un objet neuf a chaque rendu
+    // (le tic de la demi-minute) effacait la saisie en cours.
+    const horaires = useMemo((): HorairesASaisir | null => (empreinte === null ? null : { empreinte, services: ['jour'] }), [empreinte]);
 
     // La fiche ouverte compte (7-D), par l'identifiant Affluences de la bibliotheque.
     useEffect(() => {
@@ -82,7 +86,7 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
                         theme={theme}
                         surPlace={surPlace}
                         domaine="bibliotheque"
-                        horaires={empreinte === null ? null : { empreinte, services: ['jour'] }}
+                        horaires={horaires}
                         ouvrirLesRegles={() => navigation.navigate('WebBrowser', { href: URL.REGLES_DE_LA_COMMUNAUTE })}
                         retrait={0}
                         style={{ marginBottom: tokens.space.xl }}

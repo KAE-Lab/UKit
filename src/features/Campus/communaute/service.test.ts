@@ -32,6 +32,12 @@ describe('en service', () => {
         expect(enService(['du lundi au vendredi', '11h30-13h45'], le(12, 0, 27))).toBe(true);
     });
 
+    test('le self quand la source le nomme, pas la cafeteria ouverte tout le jour', () => {
+        expect(enService(LIGNES, le(15))).toBe(false);
+        expect(enService(LIGNES, le(12))).toBe(true);
+        expect(enService(["CAFET' : 8h-16h"], le(15))).toBe(true);
+    });
+
     test('sans horaires lisibles, jamais', () => {
         expect(enService([], le(12))).toBe(false);
     });

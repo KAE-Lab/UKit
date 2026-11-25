@@ -42,7 +42,9 @@ export function useSurPlaceDuRestaurant({ restaurantId, openingLines, location, 
     const cible = cibleDuLieu('restaurant', String(restaurantId));
     const empreinte = useMemo(() => (openingLines !== undefined && openingLines.length > 0 ? empreinteDesHoraires(openingLines) : null), [openingLines]);
     const horaires = useMemo((): HorairesASaisir | null => (empreinte === null ? null : { empreinte, services: ['midi', 'soir'] }), [empreinte]);
-    const plats = useMemo(() => platsDuJour(menus.find((menu) => menu.date === jourDeParis(maintenant()))), [menus]);
+    // Le jour se relit a chaque rendu : une fiche laissee ouverte apres minuit ne propose plus les plats de la veille.
+    const jour = jourDeParis(maintenant());
+    const plats = useMemo(() => platsDuJour(menus.find((menu) => menu.date === jour)), [menus, jour]);
     const platsPermis = useMemo(() => new Set(plats), [plats]);
     const surPlace = useSurPlace({ domaine: 'restaurant', cible, empreinteDesHoraires: empreinte, platsDuJour: platsPermis });
     // La position se lit une fois pour tout le Campus : tant qu'elle ne l'est pas, la question attend,

@@ -50,11 +50,23 @@ function jourOuvre(lignes: readonly string[], jour: number): boolean {
     return true;
 }
 
-/** L'instant est-il dans un service lu (marges comprises), un jour ou le restaurant sert ? */
+/**
+ * Les lignes du service ou l'on fait la queue : celles du self quand la source le nomme — une cafeteria
+ * ouverte de 8 h a 16 h ne doit pas faire poser la question toute la journee —, sinon toutes.
+ */
+function lignesDuSelf(lignes: readonly string[]): readonly string[] {
+    const self = lignes.filter((ligne) => /\bself\b/i.test(ligne));
+    return self.length > 0 ? self : lignes;
+}
+
+/**
+ * L'instant est-il dans un service lu (marges comprises), un jour ou le restaurant sert ? L'heure est
+ * celle de l'appareil : le parc est a Bordeaux (annonces/ordre.ts).
+ */
 export function enService(lignes: readonly string[], maintenant: Date): boolean {
     if (!jourOuvre(lignes, maintenant.getDay())) return false;
     const minutes = maintenant.getHours() * 60 + maintenant.getMinutes();
-    return creneauxDeService(lignes).some((c) => minutes >= c.debut - MARGE_MINUTES && minutes <= c.fin + MARGE_MINUTES);
+    return creneauxDeService(lignesDuSelf(lignes)).some((c) => minutes >= c.debut - MARGE_MINUTES && minutes <= c.fin + MARGE_MINUTES);
 }
 
 export interface Position { readonly lat: number; readonly lon: number }

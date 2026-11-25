@@ -43,7 +43,10 @@ export interface SurPlace {
     readonly envoiEnCours: boolean;
     /** Une contribution attend le rappel des regles : l'ecran le montre, puis `confirmerLesRegles`. */
     readonly reglesARappeler: boolean;
-    /** `regles` : rien n'est parti, le rappel est a montrer d'abord. */
+    /**
+     * `regles` : rien n'est parti, le rappel est a montrer d'abord. `envoyee` : l'envoi est parti, sans
+     * l'attendre — la feuille se ferme aussitot, et le toast du resultat ne se dessine pas sous elle.
+     */
     contribuer(sujet: string, valeur: string, fin?: string | null): Promise<'envoyee' | 'regles' | 'impossible'>;
     confirmerLesRegles(): Promise<void>;
     renoncer(): void;
@@ -57,7 +60,8 @@ function annoncer(resultat: ResultatDeContribution): void {
     else if (resultat.etat === 'refusee' && resultat.raison === 'appareil_bloque') cle = 'SIGNAL_BLOQUE';
     else if (resultat.etat === 'refusee') cle = 'SIGNAL_REFUSE';
     else cle = 'SIGNAL_ECHEC';
-    new ErrorAlert(Translator.get(cle), ErrorAlert.durations.SHORT).show();
+    // Le non verifie a une phrase de plus a lire : il reste le temps de la lire.
+    new ErrorAlert(Translator.get(cle), cle === 'SIGNAL_EN_RETRAIT' ? ErrorAlert.durations.LONG : ErrorAlert.durations.SHORT).show();
 }
 
 export function useSurPlace({ domaine, cible, empreinteDesHoraires, platsDuJour = null }: ParametresSurPlace): SurPlace {
@@ -89,8 +93,8 @@ export function useSurPlace({ domaine, cible, empreinteDesHoraires, platsDuJour 
     }, [cible, relire]);
 
     const etats = useMemo(
-        () => (cible === null ? [] : lireLeLieu(signalements, officiels, domaine, cible, instant)),
-        [signalements, officiels, domaine, cible, instant],
+        () => (cible === null ? [] : lireLeLieu(signalements, officiels, domaine, cible, instant, { empreinteDesHoraires })),
+        [signalements, officiels, domaine, cible, instant, empreinteDesHoraires],
     );
     const lignes = useMemo(() => lignesSurPlace(etats, { maintenant: instant, empreinteDesHoraires }), [etats, instant, empreinteDesHoraires]);
     const plat = useMemo(() => {
@@ -114,7 +118,7 @@ export function useSurPlace({ domaine, cible, empreinteDesHoraires, platsDuJour 
             setEnAttente(contribution);
             return 'regles' as const;
         }
-        await envoyer(contribution);
+        void envoyer(contribution);
         return 'envoyee' as const;
     }, [cible, envoiEnCours, envoyer]);
 
@@ -122,7 +126,7 @@ export function useSurPlace({ domaine, cible, empreinteDesHoraires, platsDuJour 
         const contribution = enAttente;
         setEnAttente(null);
         await retenirLeRappel();
-        if (contribution !== null) await envoyer(contribution);
+        if (contribution !== null) void envoyer(contribution);
     }, [enAttente, envoyer]);
 
     const renoncer = useCallback(() => setEnAttente(null), []);
