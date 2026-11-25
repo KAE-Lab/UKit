@@ -14,6 +14,8 @@ const FAMILLES: Readonly<Record<string, string>> = {
     config: 'configuration', blueprint: 'Blueprint', cancelled: 'annulé', unsupported: 'non pris en charge', engine: 'moteur',
 };
 const RESEAUX: Readonly<Record<string, string>> = { wifi: 'Wi-Fi', cellulaire: 'données mobiles', hors_ligne: 'hors ligne', autre: 'autre' };
+/** L'onglet part au vocabulaire du formulaire Google : `Settings` se lit « Réglages ». */
+const ONGLETS: Readonly<Record<string, string>> = { Settings: 'Réglages' };
 
 function texte(v: unknown): string | null {
     return typeof v === 'string' && v.trim() !== '' ? v : null;
@@ -41,7 +43,7 @@ export function rangeesDuContexte(contexte: unknown): Rangee[] {
     ajouter('Appareil et système', [texte(c.appareil), texte(c.systeme)].filter((p) => p !== null).join(', '));
     ajouter('Établissement', texte(c.etablissement));
     ajouter('Langue et thème', [texte(c.langue), c.theme === 'dark' ? 'sombre' : c.theme === 'light' ? 'clair' : null].filter((p) => p !== null).join(', '));
-    ajouter('Onglet de départ', texte(c.onglet));
+    ajouter('Onglet de départ', typeof c.onglet === 'string' ? ONGLETS[c.onglet] ?? c.onglet : null);
     ajouter('Réseau', typeof c.reseau === 'string' ? RESEAUX[c.reseau] ?? c.reseau : null);
     ajouter('Erreur affichée', echecLisible(c.erreur));
     ajouter('Derniers échecs de source', Array.isArray(c.echecs) ? c.echecs.map(echecLisible).filter((e): e is string => e !== null).join(' ; ') : null);

@@ -5,7 +5,7 @@ import { echecLisible, lireReponses, rangeesDuContexte, reponseValide } from './
 describe('le contexte joint d\'un retour de l\'application', () => {
     test('chaque bloc garde se lit, dans l\'ordre de l\'ecran ; un bloc retire manque', () => {
         const rangees = rangeesDuContexte({
-            version: '7.0.0', appareil: 'Pixel 7', systeme: 'Android 15', langue: 'fr', theme: 'dark', reseau: 'hors_ligne',
+            version: '7.0.0', appareil: 'Pixel 7', systeme: 'Android 15', langue: 'fr', theme: 'dark', onglet: 'Settings', reseau: 'hors_ligne',
             erreur: { famille: 'unavailable' }, echecs: [{ hote: 'api.croustillant.menu', famille: 'rejected', minutes: 3 }],
             parcours: ['CampusTab', 'CrousMenu'],
         });
@@ -13,6 +13,7 @@ describe('le contexte joint d\'un retour de l\'application', () => {
             { intitule: 'Version', valeur: '7.0.0' },
             { intitule: 'Appareil et système', valeur: 'Pixel 7, Android 15' },
             { intitule: 'Langue et thème', valeur: 'fr, sombre' },
+            { intitule: 'Onglet de départ', valeur: 'Réglages' },
             { intitule: 'Réseau', valeur: 'hors ligne' },
             { intitule: 'Erreur affichée', valeur: 'service indisponible' },
             { intitule: 'Derniers échecs de source', valeur: 'api.croustillant.menu, réponse inattendue, il y a 3 min' },
