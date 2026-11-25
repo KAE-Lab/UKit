@@ -17,6 +17,7 @@ import { AppState } from 'react-native';
 import { envoyerSigne } from '../communaute';
 import { jourDeParis, versBase64 } from '../communaute/donnees';
 import Translator from '../i18n/Translator';
+import { noterUneQuestionDAvis } from '../notation';
 import { notificationsNatives } from '../services/notificationsNatives';
 import { describeSupabaseFailure, getSupabase, reportSupabaseFailure } from '../supabase';
 import { appeler } from '../supabase/rpc';
@@ -42,6 +43,8 @@ export interface SaisieDeRetour {
     readonly volontaire: boolean;
     readonly contact: string | null;
     readonly probleme: string | null;
+    /** L'idee publiee sous laquelle le detail se range (lot 4). */
+    readonly idee: string | null;
     readonly contexte: Readonly<Record<string, unknown>> | null;
     /** Les captures compressees, dans le cache. */
     readonly captures: readonly string[];
@@ -148,6 +151,8 @@ export function viderLaBoite(): Promise<void> {
  * part s'il le peut. « En attente » veut dire qu'il partira au retour du reseau, sans rien demander.
  */
 export async function deposerUnRetour(saisie: SaisieDeRetour): Promise<IssueDuDepot> {
+    // Un retour est une question d'avis : la fiche de notation ne se proposera pas ce jour-la (lot 4).
+    noterUneQuestionDAvis();
     const local = randomUUID();
     let cle: string | null = null;
     let cleReponse: string | null = null;
@@ -173,7 +178,7 @@ export async function deposerUnRetour(saisie: SaisieDeRetour): Promise<IssueDuDe
             // L'identifiant du depot est celui de la boite : un depot rejoue retrouve sa ligne (lot 3).
             depot: local,
             nature: saisie.nature, texte: saisie.texte.trim(), campus: saisie.campus, volontaire: saisie.volontaire,
-            contact: saisie.contact, probleme: saisie.probleme, contexte: saisie.contexte, captures: fichiers.length,
+            contact: saisie.contact, probleme: saisie.probleme, idee: saisie.idee, contexte: saisie.contexte, captures: fichiers.length,
             cle_reponse: cleReponse,
         },
     };

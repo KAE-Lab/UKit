@@ -19,11 +19,14 @@ import style, { tokens, type AppThemeType } from '../../shared/theme/Theme';
 import { ActionButton } from '../../shared/ui/ActionButton';
 import { ErrorAlert } from '../../shared/ui/Alerts';
 import type { IssueDuDepot } from '../../shared/retours';
+import { soutenir } from '../../shared/retours/idees';
+import { direMoiAussi } from '../../shared/retours/problemes';
 import type { NatureDeRetour } from '../../shared/retours/donnees';
 import { GroupeDeReglages, IntroDePage, RangeeDeReglage } from '../../shared/ui/GroupeDeReglages';
 import { Champ, Paragraphe } from './components/Elements';
 import { BlocsJoints, CapturesJointes } from './components/Joints';
-import { ProblemesConnus } from './components/ProblemesConnus';
+import { ElementsSuivis } from './components/ElementsSuivis';
+import { elementDIdee, elementDeProbleme } from './elementsSuivis';
 import { CAPTURES_MAX, TEXTE_MAX, useFormulaireDeRetour, type ParametresDuFormulaire } from './useFormulaireDeRetour';
 
 interface RetourScreenProps {
@@ -56,7 +59,7 @@ function direLIssue(issue: IssueDuDepot): boolean {
 function clesDuTexte(f: ReturnType<typeof useFormulaireDeRetour>, moiAussiVisible: boolean) {
     return {
         intro: f.nature === 'campus' ? 'RETOUR_INTRO_CAMPUS' : moiAussiVisible ? 'RETOUR_INTRO_BUG' : 'RETOUR_INTRO',
-        invite: f.probleme !== null ? 'RETOUR_TEXTE_DETAIL' : f.nature === 'bug' ? 'RETOUR_TEXTE_BUG' : 'RETOUR_TEXTE_IDEE',
+        invite: f.rattache !== null ? 'RETOUR_TEXTE_DETAIL' : f.nature === 'bug' ? 'RETOUR_TEXTE_BUG' : 'RETOUR_TEXTE_IDEE',
     } as const;
 }
 
@@ -90,7 +93,7 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
     const f = useFormulaireDeRetour(parametres);
     const deCampus = f.nature === 'campus';
     // « Moi aussi » ne se montre qu'avec des problemes connus : le paragraphe n'en parle qu'alors.
-    const moiAussiVisible = f.nature === 'bug' && f.probleme === null && f.problemes.some((p) => p.statut === 'publie');
+    const moiAussiVisible = f.nature === 'bug' && f.rattache === null && f.problemes.some((p) => p.statut === 'publie');
     const cles = clesDuTexte(f, moiAussiVisible);
 
     const envoyer = async () => {
@@ -109,8 +112,8 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
             >
                 <IntroDePage theme={theme}>{Translator.get(cles.intro)}</IntroDePage>
 
-                {f.probleme !== null ? (
-                    <Text style={[styles.detailPour, { color: theme.font }]}>{Translator.get('RETOUR_DETAIL_POUR', f.probleme.titre)}</Text>
+                {f.rattache !== null ? (
+                    <Text style={[styles.detailPour, { color: theme.font }]}>{Translator.get('RETOUR_DETAIL_POUR', f.rattache.titre)}</Text>
                 ) : (
                     <GroupeDeReglages theme={theme} titre={Translator.get('RETOUR_NATURE')} filetCourt>
                         {NATURES.map(({ nature, cle }) => (
@@ -119,13 +122,28 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
                     </GroupeDeReglages>
                 )}
 
-                {f.nature === 'bug' && f.probleme === null ? (
-                    <ProblemesConnus
+                {f.nature === 'bug' && f.rattache === null ? (
+                    <ElementsSuivis
                         theme={theme}
-                        problemes={f.problemes}
+                        titre={Translator.get('PROBLEMES_CONNUS')}
+                        elements={f.problemes.map(elementDeProbleme)}
                         votes={f.votes}
+                        soutenir={direMoiAussi}
                         aVote={(id) => f.setVotes((avant) => [...avant, id])}
                         detailler={(p) => navigation.push('Retour', { ...parametres, nature: 'bug', probleme: { id: p.id, titre: p.titre } })}
+                    />
+                ) : null}
+
+                {/* La case « idee » montre la boite avant d'ecrire (lot 4) : l'idee y est peut-etre deja. */}
+                {f.nature === 'fonctionnalite' && f.rattache === null ? (
+                    <ElementsSuivis
+                        theme={theme}
+                        titre={Translator.get('IDEES_DEJA_PROPOSEES')}
+                        elements={f.idees.map(elementDIdee)}
+                        votes={f.soutiens}
+                        soutenir={soutenir}
+                        aVote={(id) => f.setSoutiens((avant) => [...avant, id])}
+                        detailler={(i) => navigation.push('Retour', { ...parametres, nature: 'fonctionnalite', idee: { id: i.id, titre: i.titre } })}
                     />
                 ) : null}
 

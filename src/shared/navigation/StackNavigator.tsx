@@ -27,6 +27,7 @@ import FreeRoomScreen from '../../features/Campus/FreeRoom/FreeRoomScreen';
 import FreeRoomDetailsScreen from '../../features/Campus/FreeRoom/FreeRoomDetailsScreen';
 import RetourScreen from '../../features/Retours/RetourScreen';
 import MesRetoursScreen from '../../features/Retours/MesRetoursScreen';
+import IdeesScreen from '../../features/Retours/IdeesScreen';
 import type { ParametresDuFormulaire } from '../../features/Retours/useFormulaireDeRetour';
 
 import style, { tokens } from '../theme/Theme';
@@ -68,6 +69,8 @@ export type RootStackParamList = {
     /** Le formulaire de retour natif (phase 8, lot 3). */
     Retour: ParametresDuFormulaire | undefined;
     MesRetours: undefined;
+    /** La boite a idees (phase 8, lot 4). */
+    Idees: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -77,6 +80,7 @@ const PageDeReglageEcran = withHeaderAnimation(Settings);
 const EcranDuJeuAvecEnTete = withStaticHeader(EcranDuJeu);
 const RetourEcran = withHeaderAnimation(RetourScreen);
 const MesRetoursEcran = withHeaderAnimation(MesRetoursScreen);
+const IdeesEcran = withHeaderAnimation(IdeesScreen);
 
 /** Le titre d'une fiche : le nom de ce qu'elle montre, « Details » s'il manque. */
 function nomOuDetails(nom: unknown): string {
@@ -140,6 +144,7 @@ export default function StackNavigator() {
                             {/* Le formulaire de retour et ce qui en revient (phase 8, lot 3). */}
                             <Stack.Screen name="Retour" component={RetourEcran} options={({ route }) => NavBarHelper({ title: Translator.get('RETOUR_TITRE'), themeName, route, gestureEnabled: true })} />
                             <Stack.Screen name="MesRetours" component={MesRetoursEcran} options={({ route }) => NavBarHelper({ title: Translator.get('MES_RETOURS'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="Idees" component={IdeesEcran} options={({ route }) => NavBarHelper({ title: Translator.get('IDEES_TITRE'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Filters" component={FiltersScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FILTERS'), themeName, route, gestureEnabled: true })} />
 

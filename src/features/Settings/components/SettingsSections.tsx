@@ -15,6 +15,7 @@ import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
 import { formulaireNatif } from '../../../shared/navigation/formulaireDeRetours';
+import { ouvrirLaPageDAvis } from '../../../shared/notation';
 import { detectionPossible } from '../../../shared/retours/captures';
 import { usePropositionApresCapture, useReponsesNonLues } from '../../../shared/retours/useRetours';
 import { GroupeDeReglages, IntroDePage, RangeeDeReglage } from '../../../shared/ui/GroupeDeReglages';
@@ -160,13 +161,18 @@ export const PreferencesSection = ({ theme, valeurNotifications, valeurAgenda, o
  * porte le nombre de reponses non lues, comme la pastille de l'onglet. Sans base de publication, le
  * formulaire natif n'existe pas : le groupe non plus.
  */
-export const RetoursSection = ({ theme, ecrire, ouvrirMesRetours }: { theme: AppThemeType; ecrire: () => void; ouvrirMesRetours: () => void }) => {
+export const RetoursSection = ({ theme, ecrire, ouvrirMesRetours, ouvrirIdees }: {
+    theme: AppThemeType; ecrire: () => void; ouvrirMesRetours: () => void; ouvrirIdees: () => void;
+}) => {
     const nonLues = useReponsesNonLues();
-    if (!formulaireNatif()) return null;
+    const natif = formulaireNatif();
+    // « Noter UKit » (lot 4) ne depend pas de la base : sans elle, le groupe ne porte que lui.
     return (
         <GroupeDeReglages theme={theme} titre={Translator.get('RETOURS_GROUPE')}>
-            <RangeeDeReglage theme={theme} icone="message-text-outline" libelle={Translator.get('RETOUR_TITRE')} onPress={ecrire} />
-            <RangeeDeReglage theme={theme} icone="message-reply-text-outline" libelle={Translator.get('MES_RETOURS')} valeur={nonLues > 0 ? String(nonLues) : undefined} onPress={ouvrirMesRetours} />
+            {natif ? <RangeeDeReglage theme={theme} icone="message-text-outline" libelle={Translator.get('RETOUR_TITRE')} onPress={ecrire} /> : null}
+            {natif ? <RangeeDeReglage theme={theme} icone="message-reply-text-outline" libelle={Translator.get('MES_RETOURS')} valeur={nonLues > 0 ? String(nonLues) : undefined} onPress={ouvrirMesRetours} /> : null}
+            {natif ? <RangeeDeReglage theme={theme} icone="lightbulb-on-outline" libelle={Translator.get('IDEES_TITRE')} onPress={ouvrirIdees} /> : null}
+            <RangeeDeReglage theme={theme} icone="star-outline" libelle={Translator.get('NOTER_UKIT')} onPress={() => { void ouvrirLaPageDAvis(); }} />
         </GroupeDeReglages>
     );
 };

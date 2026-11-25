@@ -13,6 +13,7 @@ import { choisirUneImage, oublierLeFichier } from '../../shared/retours/captures
 import { blocsDuContexte, contexteAEnvoyer, type Bloc, type CleDeBloc, type EchecJoint } from '../../shared/retours/contexte';
 import type { NatureDeRetour } from '../../shared/retours/donnees';
 import { ecrireBrouillon, lireBrouillon } from '../../shared/retours/memoire';
+import { lireLesIdees, lireLesSoutiens, type Idee } from '../../shared/retours/idees';
 import { lireLesProblemes, lireVotes, type ProblemeConnu } from '../../shared/retours/problemes';
 import { sourcesDuContexte } from '../../shared/retours/sources';
 
@@ -26,6 +27,8 @@ export interface ParametresDuFormulaire {
     readonly capture?: string;
     /** « Moi aussi, et j'ajoute un detail » : le probleme connu auquel le retour se range. */
     readonly probleme?: { readonly id: string; readonly titre: string };
+    /** De meme, l'idee publiee (lot 4). */
+    readonly idee?: { readonly id: string; readonly titre: string };
 }
 
 export const TEXTE_MAX = 2000;
@@ -83,9 +86,14 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
     const [reponseIci, setReponseIci] = useState(false);
     const [problemes, setProblemes] = useState<ProblemeConnu[]>([]);
     const [votes, setVotes] = useState<string[]>([]);
+    const [idees, setIdees] = useState<Idee[]>([]);
+    const [soutiens, setSoutiens] = useState<string[]>([]);
     const [envoi, setEnvoi] = useState(false);
     const [ajout, setAjout] = useState(false);
     const probleme = parametres.probleme ?? null;
+    const idee = parametres.idee ?? null;
+    // Le detail se range sous un probleme ou une idee : un seul a la fois.
+    const rattache = probleme ?? idee;
     const saisie = useMemo(() => ({ nature, texte, campus, volontaire, contact }), [nature, texte, campus, volontaire, contact]);
     const oublierLeBrouillon = useBrouillon(saisie, (b) => {
         setNature(b.nature);
@@ -93,7 +101,7 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
         setCampus(b.campus);
         setVolontaire(b.volontaire);
         setContact(b.contact);
-    }, probleme === null && parametres.capture === undefined && parametres.erreur === undefined, parametres.nature);
+    }, rattache === null && parametres.capture === undefined && parametres.erreur === undefined, parametres.nature);
 
     // Les captures du cache s'effacent avec l'ecran : envoyees, elles ont ete recopiees dans la boite ;
     // abandonnees, elles ne restent pas sur l'appareil.
@@ -106,6 +114,8 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
         void sourcesDuContexte(parametres.onglet ?? null, parametres.erreur ?? null).then((s) => setBlocs(blocsDuContexte(s)));
         void lireLesProblemes().then(setProblemes);
         void lireVotes().then(setVotes);
+        void lireLesIdees().then((lues) => setIdees(lues.filter((i) => i.statut !== 'livree')));
+        void lireLesSoutiens().then(setSoutiens);
     // Une fois, a l'ouverture : les parametres de la route ne changent pas pendant la vie de l'ecran.
     }, []);
 
@@ -150,6 +160,7 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
                 volontaire: deCampus && volontaire,
                 contact: deCampus && volontaire ? contact.trim() : null,
                 probleme: probleme?.id ?? null,
+                idee: probleme === null ? idee?.id ?? null : null,
                 contexte: contexteAEnvoyer(blocs, retires),
                 captures: deCampus ? [] : captures,
                 reponseIci,
@@ -159,13 +170,13 @@ export function useFormulaireDeRetour(parametres: ParametresDuFormulaire) {
         } finally {
             setEnvoi(false);
         }
-    }, [pret, envoi, nature, texte, campus, volontaire, contact, probleme, blocs, retires, captures, reponseIci, oublierLeBrouillon]);
+    }, [pret, envoi, nature, texte, campus, volontaire, contact, probleme, idee, blocs, retires, captures, reponseIci, oublierLeBrouillon]);
 
     return {
         nature, setNature, texte, setTexte, campus, setCampus, volontaire, setVolontaire, contact, setContact, adresseValide,
         captures, ajouterUneCapture, retirerUneCapture, ajout,
         blocs, retires, basculerBloc, reponseIci, setReponseIci,
-        problemes, votes, setVotes, probleme,
+        problemes, votes, setVotes, probleme, idees, soutiens, setSoutiens, idee, rattache,
         pret, envoi, envoyer,
     };
 }

@@ -19,6 +19,8 @@ export interface RetourASigner {
     readonly volontaire: boolean;
     readonly contact: string | null;
     readonly probleme: string | null;
+    /** L'idee publiee sous laquelle le detail se range (lot 4). */
+    readonly idee: string | null;
     readonly contexte: Readonly<Record<string, unknown>> | null;
     readonly captures: number;
     /** L'empreinte SHA-256, en hexadecimal, de la cle de reponse tiree sur l'appareil ; `null` sans accord. */
@@ -215,6 +217,54 @@ export function contexteDuVote(plateforme: string, appareil: string | null, syst
     const propre = (v: string | null, max: number) => (v ?? '').replace(MORCEAU, ' ').trim().slice(0, max);
     const valeur = [plateforme, propre(appareil, 48), propre(systeme, 24), propre(version, 15)].join('|');
     return /^(ios|android)[|][^|]{1,48}[|][^|]{1,24}[|][0-9]{1,3}([.][0-9]{1,3}){1,3}$/.test(valeur) ? valeur : null;
+}
+
+// ---------------------------------------------------------------------------
+// La boite a idees (lot 4)
+// ---------------------------------------------------------------------------
+
+export type StatutDIdee = 'proposee' | 'en_cours' | 'livree';
+
+export interface Idee {
+    readonly id: string;
+    readonly titre: string;
+    readonly detail: string | null;
+    readonly statut: StatutDIdee;
+    readonly versionLivree: string | null;
+    /** La derniere modification, en millisecondes : l'age d'une idee livree. */
+    readonly majLe: number;
+}
+
+const STATUTS_D_IDEE: readonly string[] = ['proposee', 'en_cours', 'livree'];
+/** Une idee livree reste montree deux mois, le temps de la remarquer ; son annonce, elle, n'a pas d'age. */
+const LIVREE_MONTREE_MS = 60 * 24 * 60 * 60_000;
+
+/** Une ligne de la base, ou `null` hors forme. Les livrees anciennes se lisent : l'annonce de leur sortie en a besoin. */
+export function lireIdee(ligne: unknown): Idee | null {
+    if (typeof ligne !== 'object' || ligne === null) return null;
+    const l = ligne as Record<string, unknown>;
+    if (typeof l.id !== 'string' || typeof l.titre !== 'string' || typeof l.statut !== 'string' || !STATUTS_D_IDEE.includes(l.statut)) return null;
+    const majLe = Date.parse(String(l.maj_le));
+    return {
+        id: l.id,
+        titre: l.titre,
+        detail: typeof l.detail === 'string' && l.detail.trim() !== '' ? l.detail : null,
+        statut: l.statut as StatutDIdee,
+        versionLivree: typeof l.version_livree === 'string' ? l.version_livree : null,
+        majLe: Number.isFinite(majLe) ? majLe : 0,
+    };
+}
+
+/** Ce que la boite montre : les idees ouvertes, puis les livrees recentes. */
+export function ideesAMontrer(idees: readonly Idee[], maintenant: number): Idee[] {
+    return idees.filter((i) => i.statut !== 'livree' || maintenant - i.majLe <= LIVREE_MONTREE_MS);
+}
+
+/** L'idee soutenue par cet appareil, livree depuis, et pas encore annoncee ; la plus recente d'abord. */
+export function ideeAAnnoncer(idees: readonly Idee[], soutiens: readonly string[], annoncees: readonly string[]): Idee | null {
+    return [...idees]
+        .filter((i) => i.statut === 'livree' && soutiens.includes(i.id) && !annoncees.includes(i.id))
+        .sort((a, b) => b.majLe - a.majLe)[0] ?? null;
 }
 
 // ---------------------------------------------------------------------------

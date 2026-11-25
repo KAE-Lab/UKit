@@ -17,6 +17,7 @@ import { jourDeParis } from '../../shared/communaute/donnees';
 import Translator from '../../shared/i18n/Translator';
 import { EVENEMENT_RETOURS, relireLesReponses } from '../../shared/retours';
 import { capturerLEcran, ecouterLesCaptures, oublierLeFichier } from '../../shared/retours/captures';
+import { guetterUneSortie, marquerAnnoncee, type Idee } from '../../shared/retours/idees';
 import { aAnnoncer, marquer, peutProposer, type RetourConnu } from '../../shared/retours/donnees';
 import { ecrireProposition, lireConnus, lireProposition, modifierConnus } from '../../shared/retours/memoire';
 import { allerA, ecranCourant } from '../../shared/retours/navigation';
@@ -66,6 +67,42 @@ function ReponseEnTete({ theme }: { theme: AppThemeType }) {
             titre={Translator.get('REPONSE_DE_L_EQUIPE')}
             corps={derniere?.texte ?? ''}
             action={{ libelle: Translator.get('REPONSE_VOIR'), onPress: () => fermer(true) }}
+        />
+    );
+}
+
+/**
+ * La sortie d'une idee que cet appareil a soutenue (lot 4) : en tete, une fois, au lancement ou au retour au
+ * premier plan. L'appareil compare ses soutiens aux statuts publies ; la base ne sait pas qui a soutenu quoi.
+ */
+function IdeeLivreeEnTete({ theme }: { theme: AppThemeType }) {
+    const [idee, setIdee] = useState<Idee | null>(null);
+
+    useEffect(() => {
+        let actif = true;
+        const guetter = () => { void guetterUneSortie().then((i) => { if (actif && i !== null) setIdee(i); }); };
+        guetter();
+        const desabonner = onRetourAuPremierPlan(guetter);
+        return () => {
+            actif = false;
+            desabonner();
+        };
+    }, []);
+
+    const fermer = (voir: boolean) => {
+        if (idee !== null) void marquerAnnoncee(idee.id);
+        setIdee(null);
+        if (voir) allerA('Idees');
+    };
+
+    return (
+        <Dialogue
+            theme={theme}
+            visible={idee !== null && ecranCourant() !== 'Idees'}
+            fermer={() => fermer(false)}
+            titre={Translator.get('IDEE_LIVREE_TITRE')}
+            corps={idee === null ? '' : idee.versionLivree !== null ? Translator.get('IDEE_LIVREE_CORPS', idee.titre, idee.versionLivree) : idee.titre}
+            action={{ libelle: Translator.get('IDEE_LIVREE_VOIR'), onPress: () => fermer(true) }}
         />
     );
 }
@@ -150,6 +187,7 @@ export function RetoursHote({ actif }: { actif: boolean }) {
     return (
         <>
             <ReponseEnTete theme={theme} />
+            <IdeeLivreeEnTete theme={theme} />
             <PropositionDeCapture theme={theme} />
         </>
     );

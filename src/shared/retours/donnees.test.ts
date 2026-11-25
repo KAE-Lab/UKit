@@ -1,13 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-    aAnnoncer, aNotifier, aRedeposer, clesALire, contexteDuVote, fusionnerLecture, lireEnvois, lireLigne, lireProbleme, marquer, nonLues, nouveauRetourConnu,
+    aAnnoncer, aNotifier, aRedeposer, clesALire, contexteDuVote, fusionnerLecture, ideeAAnnoncer, ideesAMontrer, lireEnvois, lireIdee, lireLigne, lireProbleme, marquer, nonLues,
+    nouveauRetourConnu,
     peutProposer, serialiserRetour, type RetourConnu, type RetourEnAttente,
 } from './donnees';
 
 const ATTENTE: RetourEnAttente = {
     local: 'l1', creeLe: Date.parse('2026-11-25T10:00:00Z'), fichiers: [], cle: 'Y2xl',
-    retour: { depot: '0b6f3c8e-2a41-4e57-9b8d-6f1e2c3d4a5b', nature: 'bug', texte: 'Le menu reste vide', campus: null, volontaire: false, contact: null, probleme: null, contexte: null, captures: 0, cle_reponse: 'ab'.repeat(32) },
+    retour: { depot: '0b6f3c8e-2a41-4e57-9b8d-6f1e2c3d4a5b', nature: 'bug', texte: 'Le menu reste vide', campus: null, volontaire: false, contact: null, probleme: null, idee: null, contexte: null, captures: 0, cle_reponse: 'ab'.repeat(32) },
 };
 
 function connu(local: string, cle: string | null, envoyeLe: number, extra: Partial<RetourConnu> = {}): RetourConnu {
@@ -118,5 +119,28 @@ describe('la boite d\'envoi', () => {
         const boite = [{ ...ATTENTE, local: 'a', differe: '2026-11-25' }, { ...ATTENTE, local: 'b' }];
         expect(aRedeposer(boite, '2026-11-25').map((a) => a.local)).toEqual(['b']);
         expect(aRedeposer(boite, '2026-11-26').map((a) => a.local)).toEqual(['a', 'b']);
+    });
+});
+
+describe('la boite a idees', () => {
+    const maintenant = Date.parse('2026-11-25T12:00:00Z');
+    const ligne = { id: 'i1', titre: 'Le planning hors ligne', detail: '', statut: 'proposee', version_livree: null, maj_le: '2026-11-20T00:00:00Z' };
+
+    test('une idee publiee se lit ; un brouillon, une close ou une ligne hors forme, non', () => {
+        expect(lireIdee(ligne)).toEqual({ id: 'i1', titre: 'Le planning hors ligne', detail: null, statut: 'proposee', versionLivree: null, majLe: Date.parse('2026-11-20T00:00:00Z') });
+        expect(lireIdee({ ...ligne, statut: 'brouillon' })).toBeNull();
+        expect(lireIdee({ ...ligne, statut: 'close' })).toBeNull();
+        expect(lireIdee({ ...ligne, titre: 3 })).toBeNull();
+    });
+
+    test('une idee livree depuis plus de deux mois ne se montre plus, mais s annonce encore', () => {
+        const ancienne = lireIdee({ ...ligne, id: 'i2', statut: 'livree', version_livree: '7.1.0', maj_le: '2026-08-01T00:00:00Z' });
+        const recente = lireIdee({ ...ligne, id: 'i3', statut: 'livree', version_livree: '7.1.0', maj_le: '2026-11-24T00:00:00Z' });
+        const ouverte = lireIdee(ligne);
+        if (ancienne === null || recente === null || ouverte === null) throw new Error('fixture');
+        expect(ideesAMontrer([ouverte, ancienne, recente], maintenant).map((i) => i.id)).toEqual(['i1', 'i3']);
+        expect(ideeAAnnoncer([ouverte, ancienne, recente], ['i1', 'i2', 'i3'], [])?.id).toBe('i3');
+        expect(ideeAAnnoncer([ouverte, ancienne, recente], ['i1', 'i2', 'i3'], ['i3'])?.id).toBe('i2');
+        expect(ideeAAnnoncer([ouverte, ancienne, recente], ['i1'], [])).toBeNull();
     });
 });

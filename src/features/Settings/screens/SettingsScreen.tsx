@@ -531,6 +531,7 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     theme={theme}
                     ecrire={() => ouvrirLeFormulaire(this.props.navigation as never, { porte: 'pastille', onglet: 'Settings' })}
                     ouvrirMesRetours={() => this.props.navigation.navigate('MesRetours')}
+                    ouvrirIdees={() => this.props.navigation.navigate('Idees')}
                 />
                 <ReinitialisationSection theme={theme} openResetDialog={this.openResetDialog} />
                 {this.renderPopups(theme)}

@@ -125,13 +125,17 @@ export function noterLecture(at: number): Promise<void> {
     return AsyncStorage.setItem(CLE_LECTURE, String(at)).catch(() => undefined);
 }
 
-export function lireVotes(): Promise<string[]> {
-    return lireJson<string[]>(CLE_VOTES, [], estListe);
+/**
+ * Les « moi aussi » donnes, par liste : `problemes-votes@1` (lot 3), `idees-votes@1` (lot 4) ; et, sous
+ * la meme forme, les idees livrees deja annoncees (`idees-annoncees@1`).
+ */
+export function lireVotes(cle: string = CLE_VOTES): Promise<string[]> {
+    return lireJson<string[]>(cle, [], estListe);
 }
 
-export async function noterVote(id: string): Promise<string[]> {
-    const votes = await lireVotes();
+export async function noterVote(id: string, cle: string = CLE_VOTES): Promise<string[]> {
+    const votes = await lireVotes(cle);
     const suivants = votes.includes(id) ? votes : [...votes, id].slice(-200);
-    await ecrireJson(CLE_VOTES, suivants);
+    await ecrireJson(cle, suivants);
     return suivants;
 }
