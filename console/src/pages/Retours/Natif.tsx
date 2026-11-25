@@ -59,7 +59,7 @@ export function CapturesDuRetour({ id, annoncees, purgeesLe }: { readonly id: st
         <div className="carte">
             <h2>Captures</h2>
             {!admin ? <p className="secondaire petit">Les captures ne se lisent que par un admin.</p>
-                : purgeesLe !== null ? <p className="secondaire">Effacées le {formaterDate(purgeesLe)}, trente jours après la clôture.</p>
+                : purgeesLe !== null ? <p className="secondaire">Effacées le {formaterDate(purgeesLe)}.</p>
                 : requete.isError ? <ErreurDeLecture erreur={requete.error} reessayer={() => { void requete.refetch(); }} enCours={requete.isFetching} />
                 : requete.data === undefined ? <SqueletteBloc hauteur={160} />
                 : requete.data.length === 0 ? <p className="secondaire"><ImageOff className="icone" aria-hidden="true" /> {annoncees} annoncée{annoncees > 1 ? 's' : ''}, aucune arrivée.</p>
@@ -107,7 +107,7 @@ export function ReponsesDuRetour({ id, reponsePossible }: { readonly id: string;
         await relire();
     };
     const retirer = async (reponse: string) => {
-        if (!(await demander({ titre: 'Retirer cette réponse ?', texte: 'Un appareil qui l’a déjà lue la garde ; les autres ne la verront pas.', confirmer: 'Retirer', destructif: true }))) return;
+        if (!(await demander({ titre: 'Retirer cette réponse ?', texte: 'Elle disparaît de « Mes retours » à la prochaine lecture de l’appareil ; une notification déjà reçue ne se reprend pas.', confirmer: 'Retirer', destructif: true }))) return;
         const { error } = await supabase.from('retours_reponses').delete().eq('id', reponse);
         if (error !== null) setErreur(messageDErreur(traduire(error)));
         await relire();
