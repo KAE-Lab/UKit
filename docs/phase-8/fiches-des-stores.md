@@ -15,9 +15,12 @@
 - **App Store Connect** : juste avant d'envoyer la 7.0 en examen. Une réponse *App Privacy* se publie
   sans mise à jour de l'application et vaut aussitôt pour la version en ligne ; déclarer un jour plus tôt
   ce que la 6.3 ne collecte pas encore ne trompe personne, l'inverse si.
-- **L'adresse de la politique** reste `https://github.com/KAE-Lab/UKit/blob/main/PRIVACY.md` : elle
-  montrera le texte de la 7.0 dès que `main` avance à la sortie. Vérifier qu'elle l'a fait avant de
-  publier la fiche d'Apple.
+- **L'adresse de la politique** reste `https://github.com/KAE-Lab/UKit/blob/main/PRIVACY.md`, que
+  les deux stores et l'application (`URL.LEGAL_NOTICE`) lisent sur `main`. Or `main` n'avance qu'à la
+  sortie : **avant l'envoi en examen, porter `PRIVACY.md` seul sur `main`** (un commit `docs:` qui
+  reprend le fichier de `prochaine-version`), pour que l'examen des deux stores lise le texte de la
+  7.0. Pendant l'examen, la 6.3 en ligne a une politique qui en dit plus qu'elle ne fait : c'est le
+  sens sans risque.
 
 ## Ce qui change, en une table
 
@@ -29,7 +32,7 @@
 | les votes (sondages, « moi aussi ») | lots 3 et 4 | compris dans Other User Content | **App activity → Other actions** |
 | le texte d'un retour, les réponses | lot 3 | **User Content → Customer Support**, *linked* | compris dans Other user-generated content |
 | les captures d'un retour | lot 3 | **User Content → Photos or Videos**, *linked* | **Photos and videos → Photos** |
-| le contexte d'un retour (version, appareil, système, échecs de source) | lot 3 | **Diagnostics → Other Diagnostic Data**, *linked* | **App info and performance → Diagnostics** |
+| le contexte d'un retour (version, appareil, système, échecs de source, derniers écrans parcourus) | lot 3 | **Diagnostics → Other Diagnostic Data**, *linked* | **App info and performance → Diagnostics** |
 | l'adresse d'un volontaire | lot 3 (et l'ancien formulaire) | **Contact Info → Email Address**, *linked* | **Personal info → Email address** |
 | la position, le calendrier, les documents, les identifiants universitaires, la carte du jour | — | rien : traité sur l'appareil, jamais envoyé | rien, pour la même raison |
 
@@ -53,6 +56,11 @@ Les choix qui ne vont pas de soi, et leur raison :
   interrupteur, et le reste ne part que d'un geste (contribuer, écrire). Apple n'a pas cette case :
   rien de la communauté ne remplit ses critères de déclaration facultative (une collecte rare, hors de
   la fonction principale) ; tout se déclare.
+- **Les derniers écrans parcourus, joints à un retour, vont en diagnostic**, pas en *Product
+  Interaction* : ils ne servent qu'à reproduire le bug signalé, et les déclarer en *Product
+  Interaction* rendrait ce type *linked*, alors que la mesure, qui le remplit, ne l'est pas. Un
+  juriste ou l'examen d'Apple peut en juger autrement : la ligne est alors *Product Interaction*,
+  *linked*, finalités *Analytics* et *App Functionality*.
 - **Le retour en *Customer Support*** chez Apple (« données produites par l'utilisateur pendant une
   demande d'assistance »), et en *Other user-generated content* chez Google (« open-ended
   responses ») plutôt qu'en *Messages*, que Google réserve à la messagerie et au chat.
@@ -63,7 +71,9 @@ App Store Connect → Apps → UKit → *App Privacy* (barre latérale).
 
 1. **Privacy Policy** : l'adresse ci-dessus, inchangée. Vérifier qu'elle montre le texte de la 7.0.
 2. **Data Types** → *Edit*. À « Do you or your third-party partners collect data from this app? » :
-   **Yes, we collect data from this app** (inchangé).
+   **Yes, we collect data from this app**. La fiche en ligne a été remplie avant la 6.3.1 et jamais
+   relue depuis ([7-K](../phase-7/7-k-sortie-6-3.md)) : noter d'abord ce qu'elle porte, puis
+   décocher tout type qui n'est pas dans la liste ci-dessous.
 3. Cocher, en plus de **Usage Data → Product Interaction** déjà coché :
    - **Contact Info** → *Email Address* ;
    - **User Content** → *Photos or Videos*, *Customer Support*, *Other User Content* ;
