@@ -70,7 +70,10 @@ async function ecrire(suivant: EtatDesEvenements): Promise<void> {
 }
 
 async function modifier(geste: (courant: EtatDesEvenements) => EtatDesEvenements): Promise<EtatDesEvenements> {
-    await ecrire(geste(await charger()));
+    await charger();
+    // `etat` relu ici, au moment du geste : deux gestes lances ensemble attendent la meme lecture, et
+    // l'etat qu'elle rend serait le meme pour les deux — le second effacerait le premier.
+    await ecrire(geste(etat));
     return etat;
 }
 
@@ -124,7 +127,8 @@ export async function evenementsASynchroniser(): Promise<PlanningEvent[]> {
 export async function ajouterAuPlanning(annonce: BdeAnnonce): Promise<{ readonly proposer: boolean }> {
     const suivi = suiviDe(annonce);
     if (suivi === null) return { proposer: false };
-    const proposer = doitProposer(await charger());
+    await charger();
+    const proposer = doitProposer(etat);
     await modifier((courant) => ajouter(courant, suivi));
     return { proposer };
 }

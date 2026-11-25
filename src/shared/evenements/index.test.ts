@@ -55,6 +55,13 @@ describe('le magasin des evenements', () => {
         expect(garde.propose).toBe(true);
     });
 
+    test('deux gestes lances ensemble, avant meme la lecture du stockage, s’ajoutent aussi', async () => {
+        const m = await magasin();
+        await Promise.all([m.masquerDuPlanning('x'), m.masquerDuPlanning('y')]);
+        const garde = JSON.parse(stockage.get('evenements-planning@1') ?? '{}') as { masques: string[] };
+        expect([...garde.masques].sort()).toEqual(['x', 'y']);
+    });
+
     test('l’etat survit a un redemarrage, et la reinitialisation l’efface', async () => {
         lecture.mockResolvedValue({ ok: true, annonces: [annonce('a')] });
         let m = await magasin();
