@@ -20,6 +20,7 @@ import { Equipe } from './pages/Equipe';
 import { Journal } from './pages/Journal';
 import { Ressource } from './pages/Ressource';
 import { Retours } from './pages/Retours';
+import { Signalements } from './pages/Signalements';
 import { Sources } from './pages/Sources';
 import { TableauDeBord } from './pages/TableauDeBord';
 import { segmentsDe, useRoute } from './routeur';
@@ -36,6 +37,7 @@ function Page({ chemin, session }: { readonly chemin: string; readonly session: 
         case 'statistiques': return <Suspense fallback={<SquelettePage />}><Statistiques reste={segments.reste} /></Suspense>;
         case 'journal': return <Journal reste={segments.reste} />;
         case 'retours': return <Retours reste={segments.reste} />;
+        case 'signalements': return <Signalements />;
         case 'annonces': return <Annonces reste={segments.reste} />;
         case 'equipe': return <Equipe reste={segments.reste} />;
         case 'compte': return <Compte session={session} />;

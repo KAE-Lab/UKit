@@ -19,6 +19,12 @@ export const TABLES_JOURNALISEES: readonly string[] = [
     // Depuis 7-H : qui a donne quel role a qui. Ses lignes, comme celles des retours, ne se lisent que
     // par un admin (policies.sql).
     'editeurs',
+    // Depuis le lot 2 de la phase 8 : les etats officiels publies sur un lieu, par leur declencheur ; et les
+    // gestes de la moderation, ecrits par leurs portes sans la cle de l'appareil — un signalement masque ou
+    // retabli, un appareil bloque ou debloque, designe par l'un de ses signalements.
+    'etats_officiels',
+    'signalements',
+    'appareils',
 ];
 
 /** Les tables dont le journal ne se lit que par un admin : un retour y copie l'adresse laissee, l'equipe ses membres (7-H). */
