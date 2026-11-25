@@ -19,6 +19,16 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### La recherche des restaurants laisse une liste blanche — relevé au banc le 2026-11-25
+
+Sur `ukit` (Android 15), la recherche de l'écran Restaurants tapée par `adb shell input text` —
+« Mascaret », « Campus » — laisse la liste **blanche**, sans cartes et sans l'état « Aucun résultat »,
+quand le restaurant cherché est pourtant dans la liste (« Resto » en montre plusieurs, « Space », qui ne
+correspond à rien, montre bien l'état vide). Le filtre de [`CrousScreen`](../src/features/Campus/Crous/CrousScreen.tsx)
+est juste à la lecture ; la piste est le rendu d'une liste réduite à peu de cartes (entrée en cascade,
+décalage du défilement). Vu en passant au lot 2 de la phase 8, hors de son périmètre ; à reproduire au
+clavier de l'émulateur avant tout correctif.
+
 ### Treize paquets Expo ont des correctifs de retard sur le SDK 57 — relevé par `expo install --check` le 2026-11-25
 
 Relevé au lot 1 de la 7.0, en ajoutant `@expo/app-integrity` : `npx expo install --check` attend
