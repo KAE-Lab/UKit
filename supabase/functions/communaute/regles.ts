@@ -14,6 +14,8 @@ export type Plateforme = 'ios' | 'android';
 export const LIMITES = {
     corps: 32_768,
     donnees: 2_048,
+    /** Le texte signe d'un retour (lot 3) : son texte libre, son contexte. */
+    retour: 12_288,
     attestation: 16_384,
     assertion: 2_048,
     jeton: 8_192,
@@ -35,7 +37,9 @@ export type Preuve = { readonly assertion: Uint8Array<ArrayBuffer> } | { readonl
 export type Demande =
     | { readonly action: 'defi' }
     | { readonly action: 'enregistrer'; readonly cle: Uint8Array<ArrayBuffer>; readonly attestation: Uint8Array<ArrayBuffer>; readonly defi: string }
-    | { readonly action: 'contribuer'; readonly donnees: string; readonly appareil: AppareilDemande; readonly preuve: Preuve | null };
+    | { readonly action: 'contribuer'; readonly donnees: string; readonly appareil: AppareilDemande; readonly preuve: Preuve | null }
+    | { readonly action: 'deposer'; readonly donnees: string; readonly appareil: AppareilDemande; readonly preuve: Preuve | null }
+    | { readonly action: 'purger' };
 
 export interface Contribution {
     readonly sujet: string;
@@ -259,15 +263,17 @@ function lireEnregistrement(d: Record<string, unknown>): Lecture<Demande> {
     return { ok: true, valeur: { action: 'enregistrer', cle, attestation, defi: d.defi } };
 }
 
-function lireContribuer(d: Record<string, unknown>): Lecture<Demande> {
+/** Une contribution ou un retour : le texte signe, l'appareil, sa preuve ; seule la borne du texte change. */
+function lireUnEnvoi(d: Record<string, unknown>, action: 'contribuer' | 'deposer'): Lecture<Demande> {
     const appareil = lireAppareil(d.appareil);
-    if (typeof d.donnees !== 'string' || d.donnees.length > LIMITES.donnees || appareil === null) return refus('forme');
+    const borne = action === 'deposer' ? LIMITES.retour : LIMITES.donnees;
+    if (typeof d.donnees !== 'string' || d.donnees.length > borne || appareil === null) return refus('forme');
     const preuve = lirePreuve(d.preuve);
     if (preuve.ok === false) return preuve;
     // Une cle App Attest prouve par une assertion, et seulement elle ; un secret, par un jeton ou rien.
     const assertion = preuve.valeur !== null && 'assertion' in preuve.valeur;
     if ((appareil.nature === 'app_attest') !== assertion) return refus('preuve');
-    return { ok: true, valeur: { action: 'contribuer', donnees: d.donnees, appareil, preuve: preuve.valeur } };
+    return { ok: true, valeur: { action, donnees: d.donnees, appareil, preuve: preuve.valeur } };
 }
 
 /** Le corps d'une demande, deja lu en JSON. Aucune valeur n'en sort sans avoir ete bornee. */
@@ -276,7 +282,10 @@ export function lireDemande(corps: unknown): Lecture<Demande> {
     if (d === null) return refus('forme');
     if (d.action === 'defi') return { ok: true, valeur: { action: 'defi' } };
     if (d.action === 'enregistrer') return lireEnregistrement(d);
-    if (d.action === 'contribuer') return lireContribuer(d);
+    if (d.action === 'contribuer' || d.action === 'deposer') return lireUnEnvoi(d, d.action);
+    // La purge des captures (lot 3), que la tache horaire de la base declenche : elle n'efface que ce
+    // que la base designe, et ne prend aucun parametre.
+    if (d.action === 'purger') return { ok: true, valeur: { action: 'purger' } };
     return refus('action');
 }
 
@@ -366,11 +375,15 @@ function ecartDeDemande(demande: Record<string, unknown>, attendu: VerdictAttend
  * appareil bloque, 401 pour une preuve fausse, 422 pour une contribution que le vocabulaire refuse,
  * 400 pour une demande mal formee.
  */
+const A_REFAIRE = new Set(['appareil_inconnu', 'compteur_rejoue', 'deja_vote', 'cle_differente']);
+const PREUVES_FAUSSES = new Set(['defi', 'attestation', 'assertion', 'cle']);
+const HORS_VOCABULAIRE = new Set(['sujet_inconnu', 'valeur_invalide', 'cible_invalide', 'fin_invalide', 'retour_invalide']);
+
 export function statutDuRefus(raison: string): number {
     if (raison.startsWith('plafond_')) return 429;
-    if (raison === 'appareil_inconnu' || raison === 'compteur_rejoue' || raison === 'deja_vote' || raison === 'cle_differente') return 409;
+    if (A_REFAIRE.has(raison)) return 409;
     if (raison === 'appareil_bloque') return 403;
-    if (raison === 'defi' || raison === 'attestation' || raison === 'assertion' || raison === 'cle') return 401;
-    if (raison === 'sujet_inconnu' || raison === 'valeur_invalide' || raison === 'cible_invalide' || raison === 'fin_invalide') return 422;
+    if (PREUVES_FAUSSES.has(raison)) return 401;
+    if (HORS_VOCABULAIRE.has(raison)) return 422;
     return 400;
 }
