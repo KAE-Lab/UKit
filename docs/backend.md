@@ -100,8 +100,8 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `sujets` | le vocabulaire fermé de la communauté : un sujet, sa nature (signalement ou vote), son domaine, sa famille de durée, ses valeurs ou sa forme ; chaque lot y ajoute ses lignes par migration | la fonction `contribuer`, les éditeurs | [phase 8, lot 1](phase-8/1-base-communautaire.md) | — |
 | `appareils` | **écrite par la fonction `communaute`** : la clé serveur d'un appareil (l'identifiant de sa clé App Attest, ou l'empreinte d'un secret tiré sur l'appareil), sa clé publique, son compteur d'assertions, sa réputation, son blocage — jamais l'identifiant d'installation | la fonction ; un admin compte les lignes, sans la clé | lot 1 | — |
 | `signalements` | **écrite par la fonction `communaute`** : une voix sur une cible — sujet, valeur, fin, poids fixé à l'écriture, statut, borne de validité —, et l'appareil qui l'a écrite, que la lecture publique ne voit pas | l'application, par [`shared/communaute`](../src/shared/communaute/index.ts) : les signalements encore valables aujourd'hui, colonne par colonne | lot 1 | — |
-| `votes` | **écrite par la fonction `communaute`** : un bulletin par appareil, sujet et cible | les éditeurs ; l'application au lot 4 | lot 1 | — |
-| `empreintes_ip` | un compteur par empreinte d'adresse et par jour de Paris, pour le plafond par adresse ; l'adresse n'y entre pas | la fonction `contribuer` seule | lot 1 | — |
+| `votes` | **écrite par la fonction `communaute`** : un bulletin par appareil, sujet et cible, qui porte un jeton (HMAC de la clé de l'appareil, du sujet et de la cible) et non la clé — aucun vote ne porte d'identifiant | les éditeurs ; l'application au lot 4 | lot 1 | — |
+| `empreintes_ip` | par empreinte d'adresse et par jour de Paris : les demandes, les verdicts Play Integrity, les contributions non attestées, pour les plafonds par adresse ; l'adresse n'y entre pas, et la tâche horaire `communaute-purge` efface les jours passés | les portes `admettre` et `contribuer` seules | lot 1 | — |
 
 `batiments` est **lue depuis le jalon [6-D](phase-6/6-d-campus.md)**, par
 [`shared/locations`](../src/shared/locations/index.ts), et elle est une **surcouche** :
@@ -363,8 +363,8 @@ sans politique est une table qu'on oubliera de protéger le jour où elle en aur
 - **Le jeton d'un appareil ne se lit par aucun compte de la console**, admin compris (7-H) : le service
   d'envoi d'Expo accepte une notification vers tout jeton connu, et la console compte le parc sans lui.
 - **La communauté** ([lot 1](phase-8/1-base-communautaire.md)) : aucune écriture par `anon` ni par un
-  compte authentifié, ni par les tables ni par les portes — `contribuer` et `enregistrer_appareil` ne
-  s'exécutent que par le `service_role`, que seule la fonction `communaute` détient. La clé publiable
+  compte authentifié, ni par les tables ni par les portes — `admettre`, `enregistrer_appareil` et
+  `contribuer` ne s'exécutent que par le `service_role`, que seule la fonction `communaute` détient. La clé publiable
   lit les signalements encore valables aujourd'hui, à l'heure de Paris, statuts compris, **sans
   l'appareil** ni la confirmation, par un privilège de colonne ; un `select *` lui est refusé. Les
   éditeurs lisent les mêmes colonnes sur toutes les lignes, un admin compte les appareils sans leur
@@ -416,8 +416,9 @@ l'attestation. Le chemin a trois étages.
    fonction `communaute`, écrit le texte exact de sa contribution, et le prouve — une assertion App
    Attest sur iOS, un jeton Play Integrity sur Android, rien sinon.
 2. **La fonction** ([`supabase/functions/communaute`](../supabase/functions/communaute/index.ts))
-   vérifie le défi, la preuve et le lien entre la clé et le texte, calcule l'empreinte de l'adresse, et
-   appelle `public.contribuer` avec la clé de service. Elle est appelée avec la clé publiable, sans
+   vérifie le défi et le lien entre la clé et le texte, fait compter l'adresse par `public.admettre`
+   avant toute vérification coûteuse, vérifie la preuve, et appelle `public.contribuer` avec la clé de
+   service. Elle est appelée avec la clé publiable, sans
    JWT (`verify_jwt = false`) : sa porte est l'attestation.
 3. **La base** juge les plafonds, le blocage, le poids et le vocabulaire, écrit, et crédite la
    réputation des voix confirmées.

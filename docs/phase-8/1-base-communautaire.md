@@ -22,15 +22,16 @@ Et la lecture reste anonyme : tous les signalements du jour, triés sur l'appare
 ### 1. Le modèle de données
 
 Une migration, [`20261125020000_communaute.sql`](../../supabase/migrations/20261125020000_communaute.sql),
-additive : cinq tables neuves, une table de configuration, deux fonctions d'écriture, des politiques.
+additive : cinq tables neuves, une table de configuration, trois portes réservées au `service_role`,
+une purge horaire, des politiques.
 
 | Table | Ce qu'elle porte |
 |---|---|
 | `sujets` | le vocabulaire fermé : un sujet (`restaurant.ferme`), sa nature (`signalement` ou `vote`), son domaine (ce que désigne la cible), sa famille de durée, ses valeurs permises (une liste, ou une forme pour un choix lu ailleurs, comme un plat du menu) ; les lots 2 à 4 y ajoutent leurs lignes par migration |
 | `appareils` | la clé serveur, sa nature (`app_attest` ou `secret`), la plateforme, la clé publique et l'environnement App Attest, le compteur des assertions, la réputation, la dernière attestation, le blocage |
 | `signalements` | une voix sur une cible : sujet, cible, valeur, fin (pour un état daté), poids, statut (`active`, `remplacee`, `masquee`), création, borne de validité, version de ligne, appareil, première confirmation |
-| `votes` | un bulletin par appareil, sujet et cible (sondages, « moi aussi ») ; aucune lecture publique avant le lot 4 |
-| `empreintes_ip` | un compteur par empreinte d'adresse et par jour de Paris |
+| `votes` | un bulletin par appareil, sujet et cible (sondages, « moi aussi »), **sans identifiant** : le bulletin porte un HMAC de la clé de l'appareil, du sujet et de la cible, sous une clé que la fonction seule détient — de quoi refuser un second bulletin, rien pour relier deux votes ni un vote à un appareil, comme le plan le veut pour la boîte à idées ; aucune lecture publique avant le lot 4 |
+| `empreintes_ip` | par empreinte d'adresse et par jour de Paris : les demandes, les verdicts Play Integrity demandés à Google, les contributions non attestées |
 | `private.reglages_communaute` | les plafonds, seuils, poids et durées, hors de l'API et hors du dépôt |
 
 La cible d'un signalement est l'identifiant du lieu **chez sa source**, comme pour `visuels` : le code
@@ -46,18 +47,21 @@ pour un bâtiment — la [limite de `visuels`](../backend.md#le-schéma) (un cod
    valeur, la fin, `essai` ([`serialiserDonnees`](../../src/shared/communaute/donnees.ts)).
 3. Elle le **prouve** : sur iOS, une assertion App Attest de ce texte ; sur Android, un jeton Play
    Integrity dont le `requestHash` est le SHA-256 de ce texte ; sinon, rien.
-4. La fonction vérifie le défi, le lien entre la clé annoncée et le texte, puis la preuve, et en tire
-   `atteste` ; elle calcule l'empreinte de l'adresse et appelle `public.contribuer` avec la clé de
-   service.
-5. `contribuer` compte l'adresse, verrouille l'appareil, fait monter son compteur, juge le blocage,
-   les plafonds, le poids, puis — sauf en essai — le vocabulaire ; elle écrit, remplace la voix
-   précédente du même appareil sur le même sujet et la même cible, et crédite la réputation des voix
-   concordantes.
+4. La fonction vérifie le défi et le lien entre la clé annoncée et le texte ; elle **compte
+   l'adresse** (`public.admettre`) avant toute vérification coûteuse — un jeton Play Integrity ne part
+   chez Google que sous le plafond des verdicts de l'adresse —, puis vérifie la preuve, en tire
+   `atteste`, et appelle `public.contribuer` avec la clé de service.
+5. `contribuer` applique au non attesté le plafond de son adresse puis celui de tout le parc, avant de
+   créer quoi que ce soit, verrouille l'appareil, fait monter son compteur, juge le blocage, son plafond, le
+   poids, puis — sauf en essai — le vocabulaire ; elle écrit, remplace la voix précédente du même
+   appareil sur le même sujet et la même cible, et crédite la réputation des voix concordantes. Un
+   interblocage entre deux contributions qui se confirment l'une l'autre se rejoue une fois.
 6. La réponse est rangée ([`lireResultat`](../../src/shared/communaute/donnees.ts)) : acceptée, refusée
    (définitif), à refaire (la clé App Attest à réenregistrer, une fois), en échec (à rejouer).
 
-`essai` joue les étapes 1 à 5 jusqu'au poids, sans rien publier : le menu de développement s'en sert
-pour juger le chemin sans écran, et le protocole sur téléphone pour juger l'attestation.
+`essai` joue les étapes 1 à 5 jusqu'au poids, sans rien publier ni créer d'appareil : le menu de
+développement s'en sert pour juger le chemin sans écran, et le protocole sur téléphone pour juger
+l'attestation.
 
 ### 3. La clé serveur d'un appareil
 
@@ -66,7 +70,8 @@ pour juger le chemin sans écran, et le protocole sur téléphone pour juger l'a
   contribution ; elle ne survit ni à une réinstallation ni à une restauration.
 - **Android, et un iPhone sans App Attest** : l'empreinte SHA-256 d'un secret de 32 octets tiré sur
   l'appareil, gardé au trousseau (`UKIT_COMMUNAUTE_SECRET`), envoyé avec chaque contribution. La base
-  ne garde que l'empreinte. Le jeton Play Integrity est lié à ce secret par le texte qu'il atteste :
+  ne garde que l'empreinte. Une marque d'installation dans AsyncStorage le fait remplacer après une
+  réinstallation, même sur iOS où le trousseau survit à la désinstallation. Le jeton Play Integrity est lié à ce secret par le texte qu'il atteste :
   il ne se transporte pas d'une clé à une autre.
 - **Jamais l'identifiant d'installation**, que [PRIVACY.md](../../PRIVACY.md) garde sur l'appareil.
 - Une réinstallation fait une autre clé : la réputation repart de zéro, comme le plan le veut.
@@ -89,10 +94,13 @@ attendu, un verdict de moins de cinq minutes, `PLAY_RECOGNIZED` et `MEETS_DEVICE
 rejoué revient de Google avec des verdicts vides : il tombe en « non attesté ».
 
 **Le repli.** Une contribution non attestée — un émulateur, un build de développement Android, un
-appareil sans services Google, Google injoignable, aucun compte de service — **passe**, sous un plafond
-bas par appareil et un plafond de tout le parc par jour, avec un poids nul : elle s'affiche en retrait,
-ne compte jamais comme voix, ne confirme rien et n'est confirmée par rien. Une preuve **fausse** —
-une assertion qui ne vérifie pas, une attestation refusée — est refusée, pas repliée.
+appareil sans services Google ou dont Google refuse l'intégrité, Google injoignable ou son plafond de
+verdicts atteint, aucun compte de service — **passe**, sous un plafond bas par appareil, un plafond par
+adresse et un plafond de tout le parc par jour, avec un poids nul : elle s'affiche en retrait, ne compte
+jamais comme voix, ne confirme rien et n'est confirmée par rien. Un verdict Play Integrity négatif se
+replie ainsi, parce qu'un vrai téléphone peut l'obtenir ; une preuve App Attest **fausse** — une
+assertion qui ne vérifie pas, une attestation refusée — est refusée, parce qu'aucun iPhone honnête ne la
+produit.
 
 ### 5. Les plafonds et la réputation
 
@@ -104,10 +112,14 @@ l'écriture au lieu de la laisser sans borne.
   `plafond_appareil_non_atteste`, bas.
 - **Pour tout le parc non attesté, par jour** : `plafond_non_attestes_jour` — un flot venu de
   nombreuses adresses ne noie pas l'écran.
-- **Par adresse et par jour** : `plafond_ip_jour`, haut — un amphi sort par une seule adresse.
-- **La réputation** : un point quand une voix attestée est confirmée, la première fois, par la voix
-  attestée concordante d'un autre appareil. Un appareil est **fiable** quand sa réputation atteint
-  `seuil_fiable` et qu'il a au moins `anciennete_fiable_jours` : sa voix pèse deux.
+- **Par adresse et par jour** : `plafond_ip_jour`, haut — un amphi sort par une seule adresse ;
+  `plafond_ip_non_attestes_jour`, pour qu'une seule adresse ne vide pas le plafond du parc ;
+  `plafond_verdicts_ip_jour`, pour qu'un script n'épuise pas le quota Play Integrity de tout le parc.
+- **La réputation** : un point quand une voix attestée est confirmée par la voix attestée concordante
+  d'un autre appareil, **un point par jour au plus** — « souvent confirmé » veut dire confirmé des jours
+  différents, et deux appareils qui se confirment en boucle n'y gagnent qu'un point par jour chacun. Un
+  appareil est **fiable** quand sa réputation atteint `seuil_fiable` et qu'il a au moins
+  `anciennete_fiable_jours` : sa voix pèse deux. Un vote ne pèse jamais plus d'une voix.
 - **Les durées** : un signalement du jour vaut jusqu'à minuit à Paris, un daté jusqu'au soir de sa
   fin (au plus `fin_max_jours`), un direct `duree_direct_minutes`, une correction
   `duree_correction_jours` au plus, avant sa validation par la console (lot 2).
@@ -137,11 +149,11 @@ recouvrement — et garde le jour de Paris en cache (`communaute-signalements@1`
 
 | Donnée | Durée | Comment |
 |---|---|---|
-| un signalement | trente jours après sa fin | effacé par `contribuer` à chaque écriture |
+| un signalement | trente jours après sa fin | la tâche horaire `communaute-purge` (pg_cron) |
 | un appareil, sa réputation | douze mois après sa dernière contribution, s'il ne porte plus rien | idem |
-| l'empreinte d'une adresse | le jour de Paris | la clé du HMAC change chaque jour ; la ligne s'efface à la première écriture du lendemain |
+| l'empreinte d'une adresse | son jour de Paris, effacée dans l'heure qui suit minuit : vingt-quatre heures au plus pour une empreinte du matin, vingt-cinq pour une de minuit | idem ; elle est calculée sous une clé du jour, et deux jours ne se relient pas |
 | un défi | jamais stocké | — |
-| un vote | fixée au lot 4, avec les sondages | aucun vote n'existe avant |
+| un vote | fixée au lot 4, avec les sondages | aucun vote n'existe avant ; il ne porte de toute façon aucun identifiant |
 
 ### 9. Ce que les documents du lot 7 devront dire
 
@@ -160,6 +172,15 @@ le contenu publié par l'utilisateur et l'identifiant d'appareil propre à l'app
 - **`verify_jwt = false`** pour `communaute` ([config.toml](../../supabase/config.toml)) : la clé
   publiable (`sb_publishable_…`) n'est pas un JWT, et la vérifier n'ajouterait rien. La porte, c'est
   l'attestation, le défi, les plafonds.
+- **La purge est une tâche horaire de pg_cron**, et non un geste à la main comme celles du journal et
+  de la mesure : ce sont des données d'étudiants, et la durée promise ne doit dépendre ni d'un geste
+  oublié ni d'une écriture qui vienne la déclencher. L'extension s'active par la migration, éprouvée en
+  transaction annulée.
+- **L'adresse se compte avant Google** : `admettre` passe avant le déchiffrement d'un jeton, qui coûte
+  au quota de tout le parc ; sans cela, un script envoyant de faux jetons l'épuiserait d'une adresse.
+- **Les votes ne portent aucun identifiant** : le plan le demande pour la boîte à idées, et un sondage
+  n'en a pas plus besoin. Le jeton de vote suffit à « un vote par appareil ». Changer
+  `COMMUNAUTE_SECRET` pendant un sondage rouvrirait le vote : ne pas le faire.
 - **Un défi sans état**, signé par la fonction : aucune table, aucune écriture pour en obtenir un. Le
   rejeu se ferme ailleurs — le compteur App Attest sous verrou, la protection de Google pour Play
   Integrity, la voix unique par appareil, sujet et cible.
@@ -201,13 +222,17 @@ le contenu publié par l'utilisateur et l'identifiant d'appareil propre à l'app
 
 1. **En SQL, dans une transaction annulée sur la production**
    ([`recettes/communaute.sql`](../../supabase/recettes/communaute.sql)) : `anon` et un compte
-   authentifié n'appellent aucune porte et n'écrivent dans aucune table ; le poids nul du non attesté,
-   ses deux plafonds ; la voix attestée, sa confirmation, le crédit, le poids deux du fiable ; le
+   authentifié n'appellent aucune porte et n'écrivent dans aucune table ; une forme fausse ou un champ
+   absent qui lèvent ; le poids nul du non attesté, ses trois plafonds — appareil, adresse, parc —, et
+   aucun appareil créé par un refus ; le plafond des verdicts par adresse ; la voix attestée, sa
+   confirmation, le crédit d'un point par jour au plus même en boucle, le poids deux du fiable ; le
    remplacement et le curseur ; l'enregistrement App Attest, le compteur rejoué ; le vocabulaire, la
-   valeur, la forme, la fin ; le vote unique ; l'essai qui n'écrit rien ; le blocage ; le plafond par
-   adresse ; l'empreinte d'hier effacée ; un réglage absent qui fait échouer ; la lecture publique
-   sans l'appareil ni la confirmation, ni ligne d'hier ; l'éditeur qui lit tout, l'admin qui compte les
-   appareils sans leur clé.
+   valeur, la forme, la fin ; le vote unique, sans clé d'appareil ; l'essai qui n'écrit rien ; le
+   blocage ; le plafond par adresse ; la purge horaire et sa planification ; un réglage absent qui fait
+   échouer ; la lecture publique sans l'appareil ni la confirmation, ni ligne d'hier ; l'éditeur qui lit
+   tout, l'admin qui compte les appareils sans leur clé. Puis la vue lisible rejouée de même : l'état
+   obtenu est identique à celui de la migration (une empreinte des colonnes, contraintes, index,
+   politiques, privilèges, fonctions, déclencheurs et de la tâche planifiée).
 2. **Par `npm test`** : la vérification App Attest sur l'attestation et l'assertion d'un vrai iPhone
    (fixture enregistrée), et sur une chaîne fabriquée pour la production ; le client Google sans
    réseau ; la frontière de la fonction, le défi, l'empreinte, le verdict sur la réponse de la
@@ -268,8 +293,14 @@ Un build de production fait ensuite la preuve, sur la piste de test interne.
   blocage (lot 2) bornent l'abus ; Play Integrity a un rappel d'appareil (*device recall*) qui le
   fermerait mieux, à évaluer après la sortie.
 - **La réputation ne fait que monter** dans ce lot ; la modération (lot 2) la retire et bloque.
+- **La lecture publique montre les voix remplacées et masquées**, avec leur statut, pour que la
+  lecture incrémentale apprenne qu'elles ne comptent plus. Deux conséquences : l'heure d'un remplacement
+  relie deux voix successives du même appareil sur un même sujet et une même cible, ce jour-là ; une
+  voix masquée reste lisible avec sa valeur. Le lot 2 décide si masquer efface la valeur publique.
+- **Une clé App Attest remplacée** après un échec laisse sa dernière voix vivante jusqu'à son
+  expiration : ce jour-là, le même iPhone peut avoir deux voix sur un même sujet et une même cible.
+- **Un plafond du parc se dépasse de peu** : deux contributions simultanées d'appareils différents se
+  comptent sans verrou commun.
 - **Le reçu App Attest** et sa mesure de risque ne sont pas lus.
-- **L'empreinte d'un jour sans écriture le lendemain survit** jusqu'à la première écriture qui suit ;
-  la clé du jour la rend déjà inutilisable pour compter.
 - **Une contribution non attestée passe** : c'est le plan. Le plafond de tout le parc la borne, et son
   poids nul l'empêche de rien changer.

@@ -375,12 +375,12 @@ déjà dans l'équipe, ou que la révocation retirerait le dernier admin.
 ## La communauté
 
 Le [lot 1 de la phase 8](../docs/phase-8/1-base-communautaire.md) : la fonction `communaute`, seule
-porte des contributions, et `public.contribuer`, qu'elle seule appelle. Trois choses vivent hors du
-dépôt, et chacune se pose une fois.
+porte des contributions, et les trois portes qu'elle seule appelle — `admettre`, `enregistrer_appareil`,
+`contribuer`. Deux choses vivent hors du dépôt, et chacune se pose une fois.
 
 **Les réglages**, dans `private.reglages_communaute` : les plafonds, les seuils, les poids et les
 durées, que la documentation publique ne donne pas. Une clé absente fait échouer l'écriture (503) au
-lieu de la laisser passer sans borne. Les neuf clés sont nommées dans la migration ; les valeurs se
+lieu de la laisser passer sans borne. Les onze clés sont nommées dans la migration ; les valeurs se
 posent par `psql`, jamais par un fichier versionné :
 
 ```sql
@@ -392,7 +392,7 @@ on conflict (cle) do update set valeur = excluded.valeur, description = excluded
 
 | Secret | Ce qu'il fait | Absent |
 |---|---|---|
-| `COMMUNAUTE_SECRET` | 32 octets en base64 : la clé des défis et celle des empreintes d'adresse, tirées de lui | la fonction refuse tout (503) |
+| `COMMUNAUTE_SECRET` | 32 octets en base64 : la clé des défis, celle des empreintes d'adresse et celle des jetons de vote, tirées de lui | la fonction refuse tout (503) |
 | `APPLE_EQUIPE` | l'identifiant d'équipe Apple, qui fait les deux applications acceptées par App Attest | aucune clé App Attest ne s'enregistre : les iPhone contribuent sans attestation |
 | `PLAY_INTEGRITY_COMPTE_DE_SERVICE` | le JSON du compte de service Google qui déchiffre les jetons Play Integrity | Android contribue sans attestation |
 
@@ -403,8 +403,9 @@ npx --yes supabase@2.117.0 secrets set --project-ref owiksddeqcyyifnmpyqm APPLE_
 npx --yes supabase@2.117.0 functions deploy communaute --project-ref owiksddeqcyyifnmpyqm --use-api --no-verify-jwt
 ```
 
-Changer `COMMUNAUTE_SECRET` périme les défis en cours et change les empreintes du jour : sans autre
-conséquence. Le typage se vérifie avec le `deno.json` de la fonction, qui épingle ses paquets :
+Changer `COMMUNAUTE_SECRET` périme les défis en cours ; change les empreintes du jour, ce qui remet à
+zéro les comptes par adresse de la journée — leurs plafonds valent double ce jour-là ; et change les
+jetons de vote, ce qui rouvre le vote d'un sondage en cours. À ne faire qu'en cas de fuite. Le typage se vérifie avec le `deno.json` de la fonction, qui épingle ses paquets :
 `npx --yes deno check --no-lock --config supabase/functions/communaute/deno.json supabase/functions/communaute/index.ts`.
 
 **La recette**, [`recettes/communaute.sql`](recettes/communaute.sql), se joue en transaction annulée,
@@ -419,10 +420,13 @@ curl -s -X POST "$SUPABASE_URL/functions/v1/communaute" -H "apikey: $SUPABASE_AN
   -H "Content-Type: application/json" -d '{"action": "defi"}'                                        # {"defi": "..."}
 ```
 
-**Les durées de conservation se tiennent seules**, à chaque écriture de `contribuer` : un signalement
-trente jours après sa fin, un appareil douze mois après sa dernière contribution, une empreinte
-d'adresse le jour même. À l'inverse du journal et de la mesure, ce sont des données des étudiants, et
-la promesse de [PRIVACY.md](../PRIVACY.md) ne doit pas dépendre d'un geste oublié.
+**Les durées de conservation se tiennent seules**, par la tâche horaire `communaute-purge` de pg_cron
+(`private.purger_communaute()`) : une empreinte d'adresse dans l'heure qui suit la fin de son jour, un
+signalement trente jours après sa fin, un appareil douze mois après sa dernière contribution. À
+l'inverse du journal et de la mesure, ce sont des données des étudiants, et la promesse de
+[PRIVACY.md](../PRIVACY.md) ne doit dépendre ni d'un geste oublié ni d'une écriture qui la déclenche.
+`select * from cron.job_run_details where jobid = (select jobid from cron.job where jobname = 'communaute-purge') order by start_time desc limit 5;`
+dit si elle tourne.
 
 ## Ce qui n'a pas sa place ici
 
