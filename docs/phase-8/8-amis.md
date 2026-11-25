@@ -1,5 +1,9 @@
 # Lot 8 — Les amis (7.1, premier lot)
 
+> **Livré le 2026-11-25** sur `v7.1` : l'application, la page `/ami` publiée sur le site, le build de
+> développement Android `c7cb8900`, le banc joué. **Reste** : le passage sur iPhone, et le rejeu du lien
+> de lancement sur Android (natif, avec le lot suivant).
+
 > **Ouvert le 2026-11-25**, sur la branche `v7.1`, créée depuis `prochaine-version` (`066350d5`, la 7.0
 > livrée et pas encore sortie) : la 7.0 sort telle quelle. Le partage de l'emploi du temps et les
 > créneaux communs, sans compte, par un lien ou un code QR. Le cadre est celui du
@@ -161,6 +165,46 @@ toute autre adresse est ignorée, celle du build de développement comprise.
 - **Les heures sont locales** : un instantané écrit des heures de Paris, et deux téléphones dans un autre
   fuseau liraient un décalage (limite écrite).
 
+## Ce que le banc a corrigé
+
+- **Le code QR ne se dessinait pas** : `lean-qr` essaie par défaut le Shift-JIS, dont Hermes n'a pas le
+  décodeur (`RangeError: Unknown encoding: sjis`). Un lien d'ami est de l'ASCII : les modes numérique,
+  alphanumérique et ASCII sont nommés ([`codeQr.ts`](../../src/features/Amis/services/codeQr.ts)), et un
+  test le joue avec un décodeur qui ne connaît que l'UTF-8.
+- **Midi se disait deux fois** : la rangée du créneau commun, puis l'en-tête « Midi » de la carte du jour
+  avec la même fenêtre. Les restaurants se rangent sous la rangée du créneau (`Midi` sans en-tête).
+- **Un jour d'instantané disait « 2 cours »** pour deux plages « Occupé », qui peuvent fondre plusieurs
+  cours : l'agenda ne compte plus des plages qui ne sont pas des cours, et garde « Libre ».
+- **Hors ligne, l'échec de son emploi du temps se disait deux fois** : « Libres ensemble » se tait, la
+  carte d'erreur et son « Réessayer » restent.
+- **« Jusqu'au 8 déce… » se coupait** dans la rangée de « Nouvel ami » : le mois s'abrège.
+- **L'état vide de la liste débordait** de la marge des groupes : il s'aligne sur eux.
+
+## Ce que la relecture a corrigé
+
+Une relecture du diff complet, application et site, sans bloquant ; trois défauts importants et des
+mineurs, corrigés et testés :
+
+- **Le nom de l'étudiant pouvait partir comme code de groupe.** Le choix entre groupes et instantané
+  comparait les favoris à la table personnelle en mémoire, vide quand le trousseau n'a pas pu être lu
+  au démarrage ; le favori personnel, lui, est le nom lu dans le dossier. Un favori part désormais en
+  groupe seulement s'il est au référentiel publié
+  ([`partage.ts`](../../src/features/Amis/services/partage.ts)), et seulement si le lien qui les porte se
+  relit (plus de dix favoris, un nom trop long ou un filtre qui n'est pas un code d'UE font partir un
+  instantané).
+- **Un second lien reçu gardait le prénom du premier** : « Nouvel ami » ouvert est réutilisé par la
+  navigation ; le prénom suit maintenant le lien.
+- **Une lecture ratée de la liste la vidait** : le prochain ajout aurait écrit par-dessus tous les amis.
+  L'échec ne se garde plus, et un ajout échoue plutôt que d'écraser.
+- Mineurs : un instantané daté de l'avenir est refusé (il n'expirerait jamais) ; les caractères
+  invisibles (largeur nulle, inversion de sens, C1) sont refusés dans un prénom et un groupe ; un groupe
+  que le référentiel ne résout plus rend la semaine de l'ami inconnue au lieu de libre ; une semaine que
+  l'instantané ne couvre pas le dit au lieu de « aucun créneau » ; le champ du prénom d'un ami ne propose
+  plus le sien sur iOS, et les deux formulaires remontent au-dessus du clavier ; les rangées de l'agenda
+  d'un ami ne s'annoncent plus comme des boutons ; « Rien ne passe par nos serveurs » au lieu de « par
+  un serveur » ; `PRIVACY.md` dit qu'un instantané expiré reste chez l'ami jusqu'au retrait ; la page
+  `/ami` relit le fragment à chaque changement.
+
 ## Définition de « terminé »
 
 - les services purs testés : l'encodage et le décodage, l'expiration, la liste, les créneaux communs et
@@ -190,6 +234,26 @@ toute autre adresse est ignorée, celle du build de développement comprise.
 3. **La page du site** : le lien sur le téléphone sans l'application (les stores), puis le bouton qui
    ouvre l'application ; le fragment absent des requêtes.
 
+*Joué le 2026-11-25.* `npm test` : 1 777 tests ; la console construite, `expo export` des deux
+plateformes. Build de développement Android `c7cb8900` (le schéma `ukit-bordeaux-dev`, vérifié dans le
+manifeste par `aapt2`). Sur le banc (`ukit`, Android 15), le groupe Celcat `INF501A1` en favori : le
+partage par groupes, son code QR décodé hors de l'application (`jsQR`) en
+`https://ukit-bordeaux.fr/ami#v=1&e=bordeaux&n=Lea&g=INF501A1`, la feuille de partage du système ;
+le lien d'un ami par groupes (`INF501A2`) ouvert par `adb shell am start` sur le schéma, « Nouvel ami »,
+l'ajout, sa semaine en lecture et « Libres ensemble » ; un emploi du temps personnel simulé (un
+instantané de l'IUT, écrit par `fragmentDu` avec des créneaux de synthèse), l'horloge de l'émulateur à
+11 h : le trou de midi commun et deux restaurants à 110 et 340 m, les plages « Occupé », la semaine
+prochaine ; en sombre et en français, puis en clair et en espagnol ; un lien expiré, un lien abîmé ; le
+retrait, avec sa confirmation ; hors ligne, l'emploi du temps d'un ami illisible et « Réessayer ». La
+page `/ami` construite et lue dans un Chrome sans fenêtre à 390 et 1 280 px : le bouton porte
+`ukit-bordeaux://ami#…`, l'état « incomplet » sans fragment. Le banc rendu à son état d'avant (thème,
+langue, heure automatique), le nouveau build installé.
+
+**Non joué au banc** : le partage d'un emploi du temps personnel depuis l'application (il demande un
+lien d'abonnement ou un dossier de l'INP réels) ; ses pièces sont testées (`partage.test.ts`,
+`instantane.test.ts`), et la réception l'a été avec un instantané de synthèse. L'ouverture par la page du
+site sur le banc : le build de développement a son propre schéma, que la page n'ouvre pas.
+
 ## Limites écrites
 
 - **Pas de lecteur de code dans l'application** : l'appareil photo du système lit le code et ouvre le
@@ -199,6 +263,16 @@ toute autre adresse est ignorée, celle du build de développement comprise.
   universels, qui l'ouvriraient directement, sont le lot suivant de la 7.1.
 - **Un étudiant qui installe l'application depuis le lien** le retouche après l'accueil : le lien ne
   survit pas à l'installation.
+- **Sur Android, rouvrir l'application depuis les applications récentes** après que le système l'a
+  fermée rejoue le lien qui l'avait ouverte : « Nouvel ami » revient, même pour un ami retiré, et rien ne
+  se range sans « Ajouter ». React Native relit l'intention de l'activité sans regarder
+  `FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY` ; le remède est natif (effacer la donnée de l'intention dans
+  `MainActivity`, par un greffon comme `tools/expo/graisse-du-systeme.js`), à faire avec le build des
+  liens universels du lot suivant. Garder une empreinte du lien déjà vu l'aurait réglé sans natif, mais
+  aurait aussi ignoré un lien retouché exprès.
+- **Les navigateurs intégrés des messageries** (Instagram, Snapchat, Messenger) peuvent bloquer les
+  schémas d'application : « Ouvrir dans UKit » pourrait n'y rien faire. Non vérifié ; les liens
+  universels du lot suivant le règlent.
 - **Ses heures à soi ne comptent ni le téléphone ni les événements du campus** : un rendez-vous noté
   dans l'agenda ne retire pas un créneau commun. Ils restent sur l'appareil, mais les lire demande la
   permission du calendrier sur cet écran ; à rejuger à l'usage.

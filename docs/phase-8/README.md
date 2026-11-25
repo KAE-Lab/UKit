@@ -238,6 +238,6 @@ La 7.1 se découpe en lots sur `v7.1`, chacun avec sa spécification ; les numé
 
 | Lot de la 7.1 | Contenu | État |
 |---|---|---|
-| 8. Les amis | le partage d'emploi du temps par un lien ou un code QR, sans compte ; les créneaux communs ; la page `/ami` du site | **en cours** ([spécification](8-amis.md)) |
+| 8. Les amis | le partage d'emploi du temps par un lien ou un code QR, sans compte ; les créneaux communs ; la page `/ami` du site | **livré le 2026-11-25** : la page `/ami` en ligne, build de développement Android `c7cb8900` (le schéma), banc joué ; reste le passage sur iPhone et le rejeu du lien de lancement sur Android, natif, avec le lot 9 ([spécification](8-amis.md)) |
 | 9. Le partage d'une annonce | les liens universels, les pages du site qu'il demande | à ouvrir |
 | 10. Les annonces en notification | sur consentement | à ouvrir |
