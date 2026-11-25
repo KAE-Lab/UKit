@@ -27,6 +27,7 @@ import type { RootStackParamList } from '../../../shared/navigation/StackNavigat
 import { URL } from '../../../shared/constants/urls';
 import { SectionSurPlace } from '../communaute/SectionSurPlace';
 import { useSurPlaceDuRestaurant } from '../communaute/useSurPlaceDuRestaurant';
+import { apresUnUsageReussi } from '../../../shared/notation';
 
 /**
  * Un ecran de menu qui n'a rien a lister : un etat, centre comme partout ailleurs.
@@ -239,12 +240,15 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const mountedRef = useRef(true);
+    // Un menu lu est un usage reussi (lot 4) : la fiche de notation peut se proposer en quittant l'ecran.
+    const menuLu = useRef(false);
     // « Sur place » (phase 8, lot 2) : ce que les etudiants et l'equipe disent du restaurant aujourd'hui.
     const lieu = useSurPlaceDuRestaurant({ restaurantId, openingLines, location, menus });
 
     useEffect(() => {
         return () => {
             mountedRef.current = false;
+            if (menuLu.current) void apresUnUsageReussi();
         };
     }, []);
 
@@ -269,6 +273,7 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
         } else {
             setMenus(resultat.menus);
             setFailure(undefined);
+            menuLu.current = resultat.menus.length > 0;
         }
         setLoading(false);
     };

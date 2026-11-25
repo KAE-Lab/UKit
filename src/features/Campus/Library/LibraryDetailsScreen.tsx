@@ -23,6 +23,7 @@ import { cibleDuLieu } from '../../../shared/communaute/vocabulaire';
 import type { HorairesASaisir } from '../communaute/FeuilleDeSignalement';
 import { SectionSurPlace } from '../communaute/SectionSurPlace';
 import { useSurPlace } from '../communaute/useSurPlace';
+import { apresUnUsageReussi } from '../../../shared/notation';
 
 export default function LibraryDetailsScreen({ route }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } } }) {
     const { library, affluence } = route.params;
@@ -57,6 +58,8 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
     // La fiche ouverte compte (7-D), par l'identifiant Affluences de la bibliotheque.
     useEffect(() => {
         compter('bu.ouverture', library.id);
+        // Une fiche de bibliotheque lue est un usage reussi (lot 4) : la notation peut se proposer en la quittant.
+        return () => { void apresUnUsageReussi(); };
     }, []);
 
     // Le titre vient du navigateur (« Details », neutre) : l'ecran surchargeait le sien en violet,
