@@ -64,6 +64,8 @@ const RESEAU: Readonly<Record<string, TranslationKey>> = {
     wifi: 'RESEAU_WIFI', cellulaire: 'RESEAU_CELLULAIRE', hors_ligne: 'RESEAU_HORS_LIGNE', autre: 'RESEAU_AUTRE',
 };
 const LANGUE: Readonly<Record<string, TranslationKey>> = { fr: 'FRENCH', en: 'ENGLISH', es: 'SPANISH' };
+/** L'onglet part au vocabulaire du formulaire Google, qui est celui de la console ; il se lit dans la langue de l'ecran. */
+const ONGLET: Readonly<Record<string, TranslationKey>> = { Planning: 'MY_PLANNING', Campus: 'CAMPUS', 'Scolarité': 'SCOLARITY', Settings: 'SETTINGS' };
 
 /** Un echec, tel qu'il part, dit dans la langue de l'ecran : l'hote, ce qui s'est passe, quand. */
 function echecLisible(e: EchecJoint): string {
@@ -79,6 +81,7 @@ export function valeurDuBloc(bloc: Bloc): string {
         case 'appareil': return [e.appareil, e.systeme].filter((v) => typeof v === 'string').join(', ');
         case 'langueTheme': return `${Translator.get(LANGUE[String(e.langue)] ?? 'FRENCH')}, ${Translator.get(e.theme === 'dark' ? 'DARK_THEME' : 'LIGHT_THEME')}`;
         case 'reseau': return Translator.get(RESEAU[String(e.reseau)] ?? 'RESEAU_AUTRE');
+        case 'onglet': return ONGLET[String(e.onglet)] !== undefined ? Translator.get(ONGLET[String(e.onglet)] as TranslationKey) : String(e.onglet);
         case 'erreur': return echecLisible(e.erreur as EchecJoint);
         case 'echecs': return (e.echecs as EchecJoint[]).map(echecLisible).join(' ; ');
         case 'parcours': return (e.parcours as string[]).join(' › ');

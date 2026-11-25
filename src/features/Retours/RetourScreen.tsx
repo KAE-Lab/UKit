@@ -9,7 +9,7 @@
  */
 
 import React, { useContext } from 'react';
-import { Animated, KeyboardAvoidingView, StyleSheet, Text } from 'react-native';
+import { Animated, KeyboardAvoidingView, StyleSheet, Text, View } from 'react-native';
 
 import Translator from '../../shared/i18n/Translator';
 import { URL } from '../../shared/constants/urls';
@@ -63,8 +63,11 @@ function BrancheDuCampus({ theme, f, ouvrirEngagement }: { theme: AppThemeType; 
     return (
         <>
             <GroupeDeReglages theme={theme} titre={Translator.get('CAMPUS_NOM')}>
-                <Champ theme={theme} value={f.campus} onChangeText={f.setCampus} placeholder={Translator.get('CAMPUS_NOM_EXEMPLE')} maxLength={120} />
-                <Champ theme={theme} lignes={3} value={f.texte} onChangeText={f.setTexte} placeholder={Translator.get('CAMPUS_ATTENTES')} maxLength={TEXTE_MAX} />
+                {/* Un seul enfant : deux champs ne se separent pas d'un filet comme deux rangees. */}
+                <View>
+                    <Champ theme={theme} value={f.campus} onChangeText={f.setCampus} placeholder={Translator.get('CAMPUS_NOM_EXEMPLE')} maxLength={120} />
+                    <Champ theme={theme} lignes={3} value={f.texte} onChangeText={f.setTexte} placeholder={Translator.get('CAMPUS_ATTENTES')} maxLength={TEXTE_MAX} />
+                </View>
             </GroupeDeReglages>
             <GroupeDeReglages theme={theme} pied={f.adresseValide ? undefined : Translator.get('ADRESSE_INVALIDE')}>
                 <RangeeDeReglage theme={theme} icone="hand-heart-outline" libelle={Translator.get('VOLONTAIRE')} interrupteur={{ valeur: f.volontaire, onChange: f.setVolontaire }} />

@@ -6,7 +6,6 @@
 
 import NetInfo from '@react-native-community/netinfo';
 import * as Device from 'expo-device';
-import { Platform } from 'react-native';
 
 import { versionApplication } from '../ciblage/contexte';
 import { getEtablissementActif } from '../etablissements/catalogue';
@@ -14,14 +13,13 @@ import { SettingsManager } from '../services/AppCore';
 import type { EchecJoint, Reseau, SourcesDuContexte } from './contexte';
 import { echecsRecents, parcoursRecent } from './journalDeSession';
 
+/** Les ecrans du formulaire lui-meme : ils ne disent rien de ce qui s'est passe avant. */
+const ECRANS_DU_FORMULAIRE = new Set(['Retour', 'MesRetours']);
+
 /** « iOS 18.5 », « Android 15 » ; `null` quand l'appareil ne se nomme pas. */
-export function systemeDeLAppareil(): string | null {
+function systemeDeLAppareil(): string | null {
     const parties = [Device.osName, Device.osVersion].filter((partie): partie is string => typeof partie === 'string' && partie !== '');
     return parties.length === 0 ? null : parties.join(' ');
-}
-
-export function plateforme(): 'ios' | 'android' {
-    return Platform.OS === 'ios' ? 'ios' : 'android';
 }
 
 async function reseau(): Promise<Reseau | null> {
@@ -48,7 +46,7 @@ export async function sourcesDuContexte(onglet: string | null, erreur: EchecJoin
         onglet,
         reseau: await reseau(),
         echecs: echecsRecents(),
-        parcours: parcoursRecent(),
+        parcours: parcoursRecent().filter((ecran) => !ECRANS_DU_FORMULAIRE.has(ecran)),
         erreur,
     };
 }
