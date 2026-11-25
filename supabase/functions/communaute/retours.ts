@@ -163,6 +163,13 @@ function lireTexte(valeur: unknown, nature: NatureDeRetour): string | null {
     return texte.length > BORNES.texte || (nature !== 'campus' && texte.length < 3) ? null : texte;
 }
 
+/** Le probleme connu ou l'idee sous lesquels le detail se range ; `null` si l'un est hors forme. */
+function lireRattachements(r: Record<string, unknown>): { readonly probleme: string | null; readonly idee: string | null } | null {
+    const probleme = facultatif(r.probleme, lireUuid);
+    const idee = facultatif(r.idee, lireUuid);
+    return probleme === false || idee === false ? null : { probleme, idee };
+}
+
 function lireRetour(valeur: unknown): Retour | null {
     const r = objet(valeur);
     if (r === null || !NATURES.includes(r.nature as NatureDeRetour)) return null;
@@ -173,15 +180,14 @@ function lireRetour(valeur: unknown): Retour | null {
     const campus = facultatif(r.campus, (v) => champ(v, BORNES.campus));
     const contact = facultatif(r.contact, (v) => champ(v, BORNES.contact));
     const depot = lireUuid(r.depot);
-    const probleme = facultatif(r.probleme, lireUuid);
-    const idee = facultatif(r.idee, lireUuid);
+    const rattachements = lireRattachements(r);
     const cleReponse = facultatif(r.cle_reponse, lireEmpreinte);
     const captures = r.captures === undefined ? 0 : lireNombreDeCaptures(r.captures);
     const contexte = lireContexte(r.contexte);
-    if (depot === undefined || campus === false || contact === false || probleme === false || idee === false || cleReponse === false
+    if (depot === undefined || campus === false || contact === false || rattachements === null || cleReponse === false
         || captures === undefined || contexte === undefined) return null;
     if (!brancheValide(nature, campus, volontaire, contact)) return null;
-    return { depot, nature, texte, campus, volontaire, contact, probleme, idee, contexte, captures, cleReponse };
+    return { depot, nature, texte, campus, volontaire, contact, ...rattachements, contexte, captures, cleReponse };
 }
 
 /** Les donnees signees d'un depot, relues apres la preuve. */
