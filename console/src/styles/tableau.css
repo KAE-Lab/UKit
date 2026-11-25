@@ -58,7 +58,7 @@
 /* L'erreur d'une liste prend la place des lignes, a la hauteur qu'elles auraient eue. */
 .corps-liste { min-height: calc(var(--hauteur-ligne) * 5); display: grid; align-content: start; }
 .erreur-lecture { display: grid; place-items: center; gap: var(--espace-sm); padding: var(--espace-xl); text-align: center; color: var(--texte-2); }
-.erreur-lecture .icone { width: 28px; height: 28px; color: var(--danger); }
+.erreur-lecture > .icone { width: 28px; height: 28px; color: var(--danger); }
 .erreur-lecture strong { color: var(--texte); }
 
 .pagination { display: flex; align-items: center; gap: var(--espace-sm); flex-wrap: wrap; margin-top: var(--espace-md); font-size: var(--taille-xs); color: var(--texte-2); }
