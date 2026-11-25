@@ -75,7 +75,7 @@ un problème que la console avait :
 | **TanStack Query** | toute lecture et toute écriture ([`src/requetes/`](src/requetes/)) : les états de chargement et d'erreur, le cache, l'invalidation d'une table et du journal après une écriture |
 | **TanStack Table v9** | les listes, en **mode serveur** : l'état (tri, filtres, recherche, page) est traduit en requête — `.order`, `.eq`, `.in`, `.or(ilike)`, `.range` avec `count: 'exact'` — par un module pur ([`src/lib/requete.ts`](src/lib/requete.ts)) ; la base trie et pagine, jamais le navigateur |
 | **react-hook-form** et **zod** | l'état et la validation des formulaires : le schéma se **dérive du descripteur** ([`src/schema/schemas.ts`](src/schema/schemas.ts)) — le vide qui devient nul sauf là où il est une valeur, une date locale qui redevient UTC, une version ou un JSON hors forme qui ne partent pas, une valeur hors liste qui ne repart pas en nommant ce qu'il faut corriger |
-| **Base UI** | les primitives sans style : le dialogue de confirmation, le menu de navigation sous 800 px |
+| **Base UI** | les primitives sans style : les dialogues, le sélecteur, l'interrupteur et la case à cocher, le menu de navigation sous 800 px |
 | **lucide-react** | la seule famille d'icônes |
 | **browser-image-compression** et **blurhash** | le pipeline de téléversement : réduction et re-encodage en WebP dans le navigateur, un nom d'objet unique, un cache d'un an, le placeholder ([`src/lib/televerser.ts`](src/lib/televerser.ts)) |
 | **@dnd-kit** | la galerie d'une annonce réordonnée par glisser-déposer, à la souris comme au clavier (7-F) |
@@ -95,7 +95,11 @@ partout.
 colonnes, leur type de saisie, la clé, celles qui se filtrent, se cherchent et se trient, le ciblage
 par campus, les avertissements qu'il faut lire avant d'écrire, les actions hors écriture (« Notifier »),
 et les colonnes de liste calculées sur la ligne entière — l'état d'une annonce, tel que les téléphones
-le voient, que son statut seul ne dit pas. Un test de cohérence vérifie que chaque nom cité désigne un
+le voient, que son statut seul ne dit pas. Depuis le lot 0 de la phase 8, il nomme aussi ses **repères** :
+les champs qui ne prennent pas de colonne et ne se disent, à côté du titre de la ligne, que lorsqu'ils
+s'écartent du cas courant — le vide ou la valeur par défaut du champ
+([`reperes.ts`](src/composants/liste/reperes.ts)). Le titre de la ligne prend la place que les autres
+colonnes laissent et se tronque à sa mesure : une liste tient dans sa largeur sans défiler. Un test de cohérence vérifie que chaque nom cité désigne un
 champ réel, ou une colonne calculée de la liste. La liste et le formulaire sont
 génériques ; les pages qui méritent mieux ont la leur — le tableau de bord, les retours (compteurs par
 état, nature, campus et semaine ; les réponses question par question), le journal, les sources — ou
@@ -196,6 +200,10 @@ fera, sur un écran de portable, en clair et en sombre, chaque promesse mesurée
 l'aperçu qui tient dans la fenêtre, la fiche calée sur la section du curseur, Ctrl+S, la garde des liens.
 **Une recette ne publie qu'en audience `testeurs`** : la politique de lecture ne regarde pas
 l'audience, et rien de ce qu'elle crée ne doit paraître sur le parc.
+
+La recette du lot 0 de la phase 8 s'est jouée de la même façon le 2026-11-25, par un Chromium sans
+fenêtre piloté par son protocole de débogage, avec un admin, un rédacteur borné invité par la page
+Équipe et un lecteur, tous jetables : [le tableau des cas](../docs/phase-8/0-console.md#la-recette-du-2026-11-25).
 
 La recette du jalon 7-H s'est jouée en trois temps, avec des comptes jetables — un admin créé par le
 script, un rédacteur borné et un lecteur invités par la page Équipe elle-même : cinquante-six cas en

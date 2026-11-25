@@ -62,6 +62,12 @@ et la fiche donneront sur un téléphone, en clair et en sombre, et suit le cham
 
 ![Le ciblage d'une annonce pour un rédacteur : son campus déjà coché, les autres grisés](screenshots/console/console-annonce-campus-redacteur.png)
 
+Dans la liste des annonces, ce qui sort de l'ordinaire se lit en petit à côté du titre : **Testeurs**
+pour une annonce encore réservée aux testeurs, les **campus** qu'elle vise quand ce ne sont pas tous,
+**Épinglée**, et le type quand ce n'est pas un événement. Rien à côté du titre veut dire : pour tout le
+monde, sur tous les campus. Les autres listes suivent la même règle (le ciblage d'un message, un
+établissement inactif). Une case cochée se lit « oui » en liste, une case vide ne s'écrit pas.
+
 **Dupliquer** refait une annonce à partir d'une autre (la même affiche d'une semaine à l'autre) :
 la copie naît en brouillon, et, pour un rédacteur, sur ses campus. **Archiver** retire une annonce des
 téléphones en gardant sa trace et ses chiffres ; une annonce archivée se republie en changeant son
@@ -105,8 +111,10 @@ les réglages et le rapport partenaire.
 
 - **La période** se choisit une fois, en haut, et vaut pour tous les onglets : les 7, 28 ou 90 derniers
   jours, les flèches pour reculer ou avancer d'autant, ou **Dates** pour une plage précise. Chaque
-  chiffre se compare à la période d'avant, de même durée. Le filtre de campus, en haut à droite,
-  s'applique aussi.
+  chiffre se compare à la période d'avant, de même durée, **quand elle est comparable** : la période
+  d'avant doit commencer le 2 décembre 2026 ou après, sinon elle comptait encore la mise à jour vers la
+  6.3 et l'évolution se lit « — ». Sur la semaine du tableau de bord, les évolutions reviennent le
+  16 décembre. Le filtre de campus, en haut à droite, s'applique aussi.
 - **Les téléphones des testeurs** sont exclus : **Avec testeurs** les remet, pour vérifier qu'un essai
   a bien été compté.
 - **Une annonce** : dans l'onglet Annonces, clique sur son titre dans le classement. Les chiffres, la

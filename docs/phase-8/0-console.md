@@ -1,5 +1,10 @@
 # Lot 0 — La console
 
+> **Livré le 2026-11-25**, publié sur https://kae-lab.github.io/UKit/ depuis `main` : le socle et les
+> écrans (lot 0a), les statistiques et le tableau de bord (lot 0b), les finitions, la recette et les
+> vérifications de 7-Z (lot 0c) — [ce qui a été fait](#ce-qui-a-été-fait), [la recette](#la-recette-du-2026-11-25).
+> Ce qui reste est écrit dans les [limites](#limites-écrites).
+
 > **Ouvert le 2026-11-24.** Aucune publication de l'application : la console se publie sur GitHub Pages
 > à chaque poussée sur `main` qui touche `console/` ([README de la console](../../console/README.md)).
 > Branche `feat/console-refonte`, fusionnée dans `main` à la livraison, puis `main` dans
@@ -82,7 +87,8 @@ impression, les agrégats calculés dans la console, aucune case sous cinq. Ce q
 L'egress du cycle en cours face au quota du Pro, les sauvegardes quotidiennes actives, les sondes
 vertes ; et les échecs de connexion universitaire lus contre les sondes, maintenant qu'une page les
 montre. Les constats vont dans [7-K](../phase-7/7-k-sortie-6-3.md) ou au registre, pas les chiffres
-bruts, qui restent dans l'équipe ([mesure.md](../mesure.md#les-petites-cases)).
+bruts, qui restent dans l'équipe ([mesure.md](../mesure.md#les-petites-cases)). **Faites le
+2026-11-25** : [les constats](../phase-7/7-k-sortie-6-3.md#les-vérifications-de-7-z-le-2026-11-25).
 
 ## Décisions et pièges
 
@@ -132,6 +138,62 @@ bruts, qui restent dans l'équipe ([mesure.md](../mesure.md#les-petites-cases)).
 - **Le rapport partenaire** s'exporte pour un tableur français (point-virgule, virgule décimale,
   indicateur d'ordre des octets) et s'imprime en thème clair, quel que soit celui de la console.
 
+## Ce qui a été fait
+
+- **Lot 0a, le socle et les écrans** : le thème tiré de `src/shared/theme`, les deux thèmes et la
+  bascule, la teinte de domaine, les composants de base (Base UI pour le sélecteur, les dialogues, le
+  menu), chaque écran de la liste refait.
+- **Lot 0b, les statistiques** : le calcul pur de `src/stats/`, Recharts chargé à part, les quatre
+  pages et le rapport partenaire, le tableau de bord sur le modèle de Plausible, la page Sources qui
+  montre les échecs mesurés par l'application.
+- **Lot 0c, les finitions** :
+  - une variation ne se compare qu'à une période comparable (voir les décisions) ;
+  - les listes tiennent dans leur largeur à 1 440 et 1 024 pixels, sur une ligne : le titre de la
+    ligne prend la place qui reste et se tronque, un autre texte se tronque à une largeur bornée, une
+    date de l'année se lit sans l'année ; ce qui n'a d'ordinaire rien à dire ne prend plus de colonne
+    et devient un **repère** à côté du titre, seulement quand la valeur s'écarte du cas courant
+    ([`reperes.ts`](../../console/src/composants/liste/reperes.ts)) : le type, l'épingle, l'audience et
+    les campus d'une annonce, le ciblage d'un message, l'établissement inactif, les campus d'un
+    rédacteur et son mot de passe provisoire ; une case fausse ne remplit plus une colonne de « non » ;
+  - un court paragraphe en tête de page, le mode d'emploi d'une table sur sa page de détail ;
+  - la barre latérale tient sans défiler à 1 440 × 900, et défile en barre fine plus bas ; les barres
+    de défilement prennent les couleurs du thème ;
+  - l'interrupteur (`Switch`) et la case (`Checkbox`) de Base UI à la place des cases du navigateur ;
+    les champs de date et d'heure **restent natifs**, habillés aux couleurs du thème (contour, rayon,
+    fond, `color-scheme` posé par le module de thème, qui donne au calendrier du navigateur le thème de
+    la console) : un sélecteur de dates maison aurait coûté une dépendance pour un geste que le
+    navigateur fait bien ;
+  - `.pile` ne s'élargit plus à son contenu ; les compteurs et les semaines des Retours tiennent à
+    1 024 pixels ; les logos des établissements se montrent entiers ; l'icône de « Réessayer » reprend
+    sa taille dans une erreur de lecture.
+
+## La recette du 2026-11-25
+
+Jouée dans la console locale par un Chromium sans fenêtre, avec trois comptes jetables supprimés après
+(un admin créé par `console:editeur`, un rédacteur borné invité par la page Équipe, un lecteur créé par
+l'API d'administration), une annonce et un visuel de recette en audience « testeurs », supprimés après.
+
+| Cas | Résultat |
+|---|---|
+| La bascule de thème suit le système, puis retient le choix après rechargement | passé |
+| Une couleur changée dans `palettes.ts` change la console sans toucher `console/` | passé (accent changé puis rétabli) |
+| Un conflit d'écriture à deux onglets : « Modifiée entre-temps », par qui et quand, « Recharger » | passé |
+| Ctrl+S enregistre ; une valeur hors catalogue bloque l'enregistrement en la nommant | passé |
+| La garde de sortie sur une saisie non enregistrée, Échap garde la saisie | passé |
+| Une adresse filtrée (`?q=&f.audience=`) rouverte garde la recherche et le filtre | passé |
+| La valeur inconnue : marquée en liste (repère) et dans le formulaire, « décoche-la » | passé |
+| Le téléversement : réduit, en WebP, blurhash calculé, enregistré | passé |
+| L'erreur de lecture : base coupée, l'erreur à la place des lignes, « Réessayer » relit | passé |
+| L'invitation : le mot de passe provisoire montré une fois, la première connexion n'offre que le choix du mot de passe | passé |
+| Le rédacteur borné : bandeau de ses campus, une annonce de tous les campus en lecture seule, la sienne modifiable, page Équipe refusée et absente du menu | passé |
+| Le lecteur : « Lecture seule » et sa raison, boutons et champs inertes, page Équipe absente | passé |
+| Le tableau de bord contre le SQL joué au même instant (sessions, ouvertures, échecs de la semaine) | passé, égalité exacte |
+| Les largeurs : aucun défilement horizontal de la page à 1 440, 1 024 et 390 pixels ; aucune liste qui défile à 1 440 et 1 024 | passé ; à 390, une liste défile dans sa carte |
+
+Les états partagés que le lot 0a avait cochés sans les voir (conflit, garde de sortie, lecture seule,
+erreur de lecture, valeur inconnue, téléversement) ont été vus là, et leurs captures reprises dans
+[`docs/screenshots/console/`](../screenshots/console/).
+
 ## Définition de « terminé »
 
 - Chaque écran de la liste refait et coché, vérifié à 1 440, 1 024 et 390 pixels de large, dans les
@@ -154,6 +216,17 @@ bruts, qui restent dans l'équipe ([mesure.md](../mesure.md#les-petites-cases)).
 4. **Les largeurs** : chaque écran à 390 pixels sans défilement horizontal de la page.
 
 ## Limites écrites
+
+- **À 390 pixels, une liste défile dans sa carte** : ses colonnes ne se replient pas. La page, elle, ne
+  défile jamais en largeur.
+- **Aucune variation avant le 16 décembre 2026** sur la semaine du tableau de bord, et plus tard sur
+  une période plus longue : la période d'avant doit commencer le 2 décembre ou après.
+- **La planche avant et après** n'est pas dans le dépôt : les captures d'avant restent dans l'historique
+  de git, celles d'après remplacent les anciennes sous le même nom.
+- **Ce que la recette a relevé hors du lot** est au [registre](../defauts-fonctionnels.md) : les failles
+  des dépendances de la console et les alertes Dependabot, `jetons_push` sans colonne unique lisible, la
+  page Équipe blanche après une lecture des droits en échec, les sondes « du matin » qui passent
+  l'après-midi, les refus de connexion universitaire que les sondes n'expliquent pas.
 
 - **La console n'est pas une application mobile** : elle se lit sur un téléphone, elle s'utilise sur
   un ordinateur. La version mobile garde la lecture et les gestes courts.

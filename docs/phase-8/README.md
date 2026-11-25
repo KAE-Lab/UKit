@@ -184,7 +184,7 @@ la 7.0.
 
 | Lot | État |
 |---|---|
-| 0. La console | **ouvert le 2026-11-24** ([spécification](0-console.md)) |
+| 0. La console | **livré le 2026-11-25**, en ligne sur https://kae-lab.github.io/UKit/ ([spécification](0-console.md)) |
 | 7.0 | à ouvrir, après le lot 0 |
 | 7.1 | à ouvrir, après la 7.0 |
 | 7.2 | à ouvrir, après la 7.1 |
