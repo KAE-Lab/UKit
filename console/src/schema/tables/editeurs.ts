@@ -32,6 +32,9 @@ export const EDITEURS: Descripteur = {
     cle: ['email'],
     tri: { colonne: 'ajoute_le' },
     liste: ['email', 'role', 'etablissements', 'ajoute_le', 'provisoire_le'],
+    // Des campus pour un redacteur borne, un mot de passe provisoire pas encore change : l'exception
+    // se lit a cote de l'adresse, le cas courant ne prend pas de colonne.
+    reperes: ['etablissements', 'provisoire_le'],
     filtres: ['role'],
     recherche: ['email'],
     avertissement: 'Un admin peut tout, l’équipe comprise ; un rédacteur crée, modifie, programme et archive les annonces de ses campus ; un lecteur lit. Inviter crée le compte avec un mot de passe provisoire, montré une seule fois : transmets-le de vive voix, il se change à la première connexion. Révoquer coupe les droits à la requête suivante et supprime le compte ; le journal garde l’adresse.',
@@ -46,7 +49,7 @@ export const EDITEURS: Descripteur = {
             aide: 'Aucune case cochée : tous les campus. Un rédacteur ne publie que les annonces dont tous les campus sont les siens ; une annonce pour tous les campus reste un geste d’admin.',
         },
         { nom: 'ajoute_le', libelle: 'Dans l’équipe depuis', type: { type: 'date' }, lectureSeule: true },
-        { nom: 'provisoire_le', libelle: 'Mot de passe provisoire', type: { type: 'date' }, lectureSeule: true, aide: 'Quand la console a donné le dernier ; la base ne sait pas quand il a été changé.' },
+        { nom: 'provisoire_le', libelle: 'Mot de passe provisoire', type: { type: 'date' }, lectureSeule: true, repere: 'provisoire depuis le', aide: 'Quand la console a donné le dernier ; la base ne sait pas quand il a été changé.' },
     ],
     // L'adresse telle que l'authentification la range ; et des campus pour un redacteur seulement, comme
     // le `check` de la table l'exige.

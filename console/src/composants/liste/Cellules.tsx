@@ -24,8 +24,9 @@ function celluleBooleen(valeur: unknown) {
     return valeur === true ? <>oui</> : <span className="secondaire">non</span>;
 }
 
-function celluleImage(valeur: unknown) {
-    if (typeof valeur === 'string' && valeur !== '') return <img className="vignette" src={valeur} alt="" loading="lazy" />;
+/** Un logo se montre entier sur un fond clair ; une affiche ou une photo remplit sa vignette. */
+function celluleImage(champ: Champ, valeur: unknown) {
+    if (typeof valeur === 'string' && valeur !== '') return <img className={champ.nom.startsWith('logo') ? 'vignette logo' : 'vignette'} src={valeur} alt="" loading="lazy" />;
     return valeur === '' ? <ImageOff className="icone secondaire" aria-label="aucune image" /> : <Tiret />;
 }
 
@@ -73,7 +74,7 @@ export interface CelluleProps {
 const CELLULES: Record<string, (props: CelluleProps & { readonly champ: Champ }) => JSX.Element> = {
     booleen: ({ valeur }) => celluleBooleen(valeur),
     date: ({ valeur }) => <span title={formaterDate(valeur)}>{formaterDateDeListe(valeur)}</span>,
-    image: ({ valeur }) => celluleImage(valeur),
+    image: ({ champ, valeur }) => celluleImage(champ, valeur),
     json: ({ valeur }) => celluleJson(valeur),
     etablissements: ({ valeur, codesConnus }) => celluleEtablissements(valeur, codesConnus),
     cases: ({ champ, valeur }) => celluleCases(champ, valeur),
@@ -114,7 +115,7 @@ export function Reperes({ champs, ligne, codesConnus }: { readonly champs: reado
 
 /** Un texte long (une zone) se tronque comme un titre : sans ca, la colonne s'elargit a la longueur de la plus longue reponse. */
 export function seTronque(nom: string, champ: Champ | undefined): boolean {
-    return nom === 'titre' || nom === 'nom' || nom === 'texte' || champ?.type.type === 'zone' || champ?.type.type === 'description';
+    return nom === 'titre' || nom === 'nom' || nom === 'texte' || nom === 'email' || champ?.type.type === 'zone' || champ?.type.type === 'description';
 }
 
 /**

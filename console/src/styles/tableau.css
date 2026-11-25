@@ -50,6 +50,8 @@
 .repere { display: inline-flex; align-items: center; gap: var(--espace-xs); padding: 0 var(--espace-sm); line-height: 20px; border-radius: var(--rayon-pilule); border: 1px solid var(--bordure); font-size: var(--taille-xs); color: var(--texte-2); white-space: nowrap; }
 .tableau td.date { white-space: nowrap; color: var(--texte-2); }
 .tableau .vignette { width: 36px; height: 36px; object-fit: cover; border-radius: var(--rayon-sm); background: var(--surface-2); display: block; }
+/* Un logo garde ses bords, sur le blanc pour lequel il est dessine, quel que soit le theme. */
+.tableau .vignette.logo { object-fit: contain; padding: 3px; background: var(--sur-image); box-shadow: inset 0 0 0 1px var(--bordure); }
 .tableau tbody.perime { opacity: 0.6; transition: opacity var(--duree-courte); }
 .tableau td .squelette { height: 14px; width: 70%; }
 
