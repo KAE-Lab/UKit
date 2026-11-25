@@ -12,8 +12,8 @@ export function Case({ valeur, onChange, desactive = false }: {
     readonly desactive?: boolean;
 }) {
     return (
-        <Checkbox.Root className="coche" checked={valeur} disabled={desactive} onCheckedChange={(coche) => onChange(coche)}>
-            <Checkbox.Indicator className="coche-indicateur"><Check className="icone" aria-hidden="true" /></Checkbox.Indicator>
+        <Checkbox.Root className="case-a-cocher" checked={valeur} disabled={desactive} onCheckedChange={(coche) => onChange(coche)}>
+            <Checkbox.Indicator className="case-a-cocher-indicateur"><Check className="icone" aria-hidden="true" /></Checkbox.Indicator>
         </Checkbox.Root>
     );
 }

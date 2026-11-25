@@ -22,15 +22,15 @@
 .ligne-cases { display: flex; flex-wrap: wrap; gap: var(--espace-sm) var(--espace-lg); }
 .case { display: inline-flex; align-items: center; gap: var(--espace-sm); font-weight: 500; cursor: pointer; min-height: 24px; }
 /* La case de Base UI (ui/Case.tsx) : un carre a filet, plein d'accent une fois cochee. */
-.coche {
+.case-a-cocher {
     width: 18px; height: 18px; flex: none; display: inline-grid; place-items: center; padding: 0; cursor: pointer;
     border: 1.5px solid var(--texte-3); border-radius: calc(var(--rayon-sm) / 2); background: var(--surface);
     transition: background var(--duree-courte) ease, border-color var(--duree-courte) ease;
 }
-.coche[data-checked] { background: var(--accent); border-color: var(--accent); }
-.coche[data-disabled] { opacity: 0.5; cursor: not-allowed; }
-.coche-indicateur { display: grid; place-items: center; color: var(--texte-sur-accent); }
-.coche-indicateur .icone { width: 13px; height: 13px; stroke-width: 3; }
+.case-a-cocher[data-checked] { background: var(--accent); border-color: var(--accent); }
+.case-a-cocher[data-disabled] { opacity: 0.5; cursor: not-allowed; }
+.case-a-cocher-indicateur { display: grid; place-items: center; color: var(--texte-sur-accent); }
+.case-a-cocher-indicateur .icone { width: 13px; height: 13px; stroke-width: 3; }
 /*
  * L'interrupteur (ui/Interrupteur.tsx), celui de l'application en plus petit : la piste en pilule porte
  * la valeur — grise eteinte, d'accent allumee —, la poignee est blanche dans les deux themes.
