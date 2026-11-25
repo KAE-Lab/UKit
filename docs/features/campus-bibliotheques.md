@@ -193,6 +193,9 @@ bibliothèque parce que son affluence n'a pas encore été chargée serait un fa
 
 ## Vérifier
 
+- **Sur place** ([lot 2 de la phase 8](../phase-8/2-signalements.md)) : la section se pose sous le
+  remplissage d'Affluences, qui reste le sien ; « Signaler » propose les types d'une bibliothèque, dont
+  les horaires du jour, une fois ceux-ci lus.
 - Ouvrir la liste : des BU d'au moins deux villes doivent apparaître, la plus proche en tête.
 - Vérifier les pastilles d'affluence en heure creuse puis en heure pleine : la couleur doit changer.
 - Activer le filtre « ouvertes » en soirée : les BU fermées doivent disparaître.

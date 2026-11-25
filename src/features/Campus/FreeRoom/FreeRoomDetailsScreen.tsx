@@ -17,6 +17,11 @@ import { BandeauDeCases, caseDHeure } from '../../../shared/ui/BandeauDeCases';
 import { maintenant } from '../../../shared/services/Temps';
 import { FonduDeBord } from '../../../shared/ui/FonduDeBord';
 import { SourceFailureNotice } from '../../../shared/ui/SourceFailureNotice';
+import { URL } from '../../../shared/constants/urls';
+import { cibleDuLieu } from '../../../shared/communaute/vocabulaire';
+import { getCodeEtablissementActif } from '../../../shared/etablissements/catalogue';
+import { SectionSurPlace } from '../communaute/SectionSurPlace';
+import { useSurPlace } from '../communaute/useSurPlace';
 
 export default function FreeRoomDetailsScreen({ route, navigation }: { route: { params: { building: BuildingInfo } }; navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>> }) {
     const { building } = route.params;
@@ -24,6 +29,11 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
     const theme = style.Theme[AppContextValues.themeName];
 
     const { loading, isClosed, hoursList, selectedIndex, setSelectedIndex, freeRooms, echec, relancer } = useFreeRoomsData(building);
+
+    // « Sur place » (phase 8, lot 2) : la cible d'un batiment porte son etablissement
+    // (docs/phase-8/1-base-communautaire.md). Un batiment n'a pas d'horaires de source a corriger.
+    const cible = cibleDuLieu('batiment', building.name, getCodeEtablissementActif());
+    const surPlace = useSurPlace({ domaine: 'batiment', cible, empreinteDesHoraires: null });
 
     // La fiche ouverte compte (7-D), par le code du batiment.
     useEffect(() => {
@@ -86,6 +96,17 @@ export default function FreeRoomDetailsScreen({ route, navigation }: { route: { 
                         <FreeRoomsList
                             freeRooms={freeRooms}
                             theme={theme}
+                            tete={cible === null ? null : (
+                                <SectionSurPlace
+                                    theme={theme}
+                                    surPlace={surPlace}
+                                    domaine="batiment"
+                                    horaires={null}
+                                    ouvrirLesRegles={() => navigation.navigate('WebBrowser', { href: URL.REGLES_DE_LA_COMMUNAUTE })}
+                                    retrait={0}
+                                    style={{ marginBottom: tokens.space.xl }}
+                                />
+                            )}
                             // En pied, comme les fiches de restaurant et de BU : le lieu ne depend pas
                             // du creneau selectionne.
                             pied={(

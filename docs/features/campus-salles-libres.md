@@ -234,6 +234,9 @@ nomme, il n'agit pas.
 
 ## Vérifier
 
+- **Sur place** ([lot 2 de la phase 8](../phase-8/2-signalements.md)) : la section se pose au-dessus
+  des salles libres d'un bâtiment ouvert ; un bâtiment fermé par son horaire garde son état plein écran,
+  sans elle.
 - Ouvrir la liste : le ou les bâtiments en accès libre doivent apparaître avec leur distance.
 - Ouvrir une fiche en journée : le sélecteur doit être positionné sur l'heure courante, et les salles
   libres correspondre à la réalité.

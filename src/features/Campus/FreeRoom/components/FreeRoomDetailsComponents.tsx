@@ -39,13 +39,16 @@ function LigneDeSalle({ slot, theme }: { slot: FreeRoomSlot; theme: AppThemeType
 interface FreeRoomsListProps {
     freeRooms: FreeRoomSlot[];
     theme: AppThemeType;
+    /** Ce qui precede les salles — « Sur place », monte par l'ecran. */
+    tete?: React.ReactNode;
     /** Ce qui suit les creneaux — la carte du batiment, montee par l'ecran. */
     pied?: React.ReactNode;
 }
 
-export function FreeRoomsList({ freeRooms, theme, pied }: FreeRoomsListProps) {
+export function FreeRoomsList({ freeRooms, theme, tete, pied }: FreeRoomsListProps) {
     return (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU, paddingHorizontal: tokens.space.md }}>
+            {tete}
             {/* L'intertitre d'une fiche (7-J, deuxieme passe), sans pastille de couleur. */}
             <SectionHeader
                 title={`${Translator.get('FREE_ROOMS')} (${freeRooms.length})`}

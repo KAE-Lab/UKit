@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +17,11 @@ import { LibraryLiveAttendance, LibraryOpeningHoursList } from './components/Lib
 import { BandeauDeCases, caseDeDate } from '../../../shared/ui/BandeauDeCases';
 import { FonduDeBord, HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
 import { maintenant } from '../../../shared/services/Temps';
+import { URL } from '../../../shared/constants/urls';
+import { empreinteDesHoraires } from '../../../shared/communaute/horaires';
+import { cibleDuLieu } from '../../../shared/communaute/vocabulaire';
+import { SectionSurPlace } from '../communaute/SectionSurPlace';
+import { useSurPlace } from '../communaute/useSurPlace';
 
 export default function LibraryDetailsScreen({ route }: { route: { params: { library: import('../services/LibraryService').LibraryInfo; affluence: import('../services/LibraryService').AffluencesData | null } } }) {
     const { library, affluence } = route.params;
@@ -33,6 +38,17 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
         setSelectedIndex,
         retry
     } = useLibraryTimetableData(library);
+
+    // « Sur place » (phase 8, lot 2). Une correction porte sur les horaires du jour que la source
+    // affiche : leur empreinte, une fois lus ; le remplissage, lui, reste celui d'Affluences.
+    const cible = cibleDuLieu('bibliotheque', String(library.id));
+    const aujourdHui = timetable.find((entree) => entree.isToday === true);
+    const empreinte = useMemo(
+        () => (loading || failure !== undefined || aujourdHui === undefined ? null
+            : empreinteDesHoraires(aujourdHui.openingHours.map((creneau) => `${creneau.openingHour}-${creneau.closingHour}`))),
+        [loading, failure, aujourdHui],
+    );
+    const surPlace = useSurPlace({ domaine: 'bibliotheque', cible, empreinteDesHoraires: empreinte });
 
     // La fiche ouverte compte (7-D), par l'identifiant Affluences de la bibliotheque.
     useEffect(() => {
@@ -60,6 +76,18 @@ export default function LibraryDetailsScreen({ route }: { route: { params: { lib
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: tokens.space.md, paddingTop: HAUTEUR_DU_FONDU }}>
                 
                 <LibraryLiveAttendance affluence={affluence} theme={theme} />
+
+                {cible !== null ? (
+                    <SectionSurPlace
+                        theme={theme}
+                        surPlace={surPlace}
+                        domaine="bibliotheque"
+                        horaires={empreinte === null ? null : { empreinte, services: ['jour'] }}
+                        ouvrirLesRegles={() => navigation.navigate('WebBrowser', { href: URL.REGLES_DE_LA_COMMUNAUTE })}
+                        retrait={0}
+                        style={{ marginBottom: tokens.space.xl }}
+                    />
+                ) : null}
 
                 {/* L'affluence vient de la liste et reste affichee : seuls les horaires ont echoue.
                     Remplacer toute la fiche par un message effacerait une donnee qu'on a. */}

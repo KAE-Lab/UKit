@@ -226,6 +226,10 @@ de parité ([tools/parity/README.md](../../tools/parity/README.md)).
 
 ## Vérifier
 
+- **Sur place** ([lot 2 de la phase 8](../phase-8/2-signalements.md)) : la section se pose en tête de
+  la fiche, au-dessus du menu, et au-dessus de l'état « aucun menu publié » ; aux heures du service lues
+  dans la source, « Ça attend ? » en tête, ses trois niveaux ; « Signaler » ouvre la feuille des types du
+  restaurant, dont les horaires (midi, soir) et le plat, pris au menu du jour.
 - Ouvrir la liste : les restaurants proches doivent apparaître en premier, avec une distance
   plausible.
 - Appliquer le filtre « Resto U » puis « Crous Market » : la liste doit se réduire cohéremment.

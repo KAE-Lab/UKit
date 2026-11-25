@@ -56,6 +56,7 @@ import Dot from 'lucide-react-native/icons/dot';
 import Drumstick from 'lucide-react-native/icons/drumstick';
 import Egg from 'lucide-react-native/icons/egg';
 import Feather from 'lucide-react-native/icons/feather';
+import Flag from 'lucide-react-native/icons/flag';
 import FileImage from 'lucide-react-native/icons/file-image';
 import FileSearch from 'lucide-react-native/icons/file-search';
 import FileText from 'lucide-react-native/icons/file-text';
@@ -186,6 +187,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'email-outline': entree(Mail),
     'export-variant': entree(Share),
     'feather': entree(Feather),
+    'flag-outline': entree(Flag),
     'file-document-outline': entree(FileText),
     'file-eye-outline': entree(FileSearch),
     'file-image-outline': entree(FileImage),

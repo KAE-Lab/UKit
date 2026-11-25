@@ -21,6 +21,12 @@ import { FonduDeBord, HAUTEUR_DU_FONDU } from '../../../shared/ui/FonduDeBord';
 import { SectionHeader } from '../../../shared/ui/SectionHeader';
 import { maintenant } from '../../../shared/services/Temps';
 import { Icon } from '../../../shared/ui/Icon';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../../../shared/navigation/StackNavigator';
+import { URL } from '../../../shared/constants/urls';
+import { SectionSurPlace } from '../communaute/SectionSurPlace';
+import { useSurPlaceDuRestaurant } from '../communaute/useSurPlaceDuRestaurant';
 
 /**
  * Un ecran de menu qui n'a rien a lister : un etat, centre comme partout ailleurs.
@@ -29,10 +35,12 @@ import { Icon } from '../../../shared/ui/Icon';
  * pile, donc sans barre d'onglets, mais son en-tete est transparent comme les autres — c'est le cas
  * par defaut de l'hote (shared/ui/ScreenState).
  */
-function MenuPleinePage({ theme, children }: { theme: import('../../../shared/theme/Theme').AppThemeType; children: React.ReactNode }) {
+function MenuPleinePage({ theme, children, tete }: { theme: import('../../../shared/theme/Theme').AppThemeType; children: React.ReactNode; tete?: React.ReactNode }) {
     return (
         <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: theme.courseBackground }}>
             <ScreenState theme={theme} background={theme.courseBackground}>
+                {/* « Sur place » reste au-dessus d'un menu absent : c'est souvent la qu'un « ferme » sert. */}
+                {tete}
                 {children}
             </ScreenState>
         </SafeAreaView>
@@ -202,6 +210,25 @@ function PlatsDuJour({ menu, theme }: { menu: CrousDayMenu; theme: AppThemeType 
     );
 }
 
+/** « Sur place » en tete de la fiche, au-dessus du menu, ou d'un menu absent. */
+function SurPlaceDuRestaurant({ theme, lieu, retrait }: { theme: AppThemeType; lieu: ReturnType<typeof useSurPlaceDuRestaurant>; retrait: number }) {
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    if (lieu.cible === null) return null;
+    return (
+        <SectionSurPlace
+            theme={theme}
+            surPlace={lieu.surPlace}
+            domaine="restaurant"
+            questionDAttente={lieu.questionDAttente}
+            horaires={lieu.horaires}
+            plats={lieu.plats}
+            ouvrirLesRegles={() => navigation.navigate('WebBrowser', { href: URL.REGLES_DE_LA_COMMUNAUTE })}
+            retrait={retrait}
+            style={{ alignSelf: 'stretch', marginBottom: tokens.space.xl }}
+        />
+    );
+}
+
 export default function CrousMenuScreen({ route }: { route: { params: { restaurantId: string; restaurantName: string; location?: { lat: number; lng: number }; openingLines?: string[] } } }) {
     const { restaurantId, restaurantName, location, openingLines } = route.params;
     const AppContextValues = useContext(AppContext) as { themeName: 'light' | 'dark' };
@@ -212,6 +239,8 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const mountedRef = useRef(true);
+    // « Sur place » (phase 8, lot 2) : ce que les etudiants et l'equipe disent du restaurant aujourd'hui.
+    const lieu = useSurPlaceDuRestaurant({ restaurantId, openingLines, location, menus });
 
     useEffect(() => {
         return () => {
@@ -244,6 +273,8 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
         setLoading(false);
     };
 
+    const sectionSurPlace = (retrait: number) => <SurPlaceDuRestaurant theme={theme} lieu={lieu} retrait={retrait} />;
+
     if (loading) {
         return (
             <ChargementPleinePage
@@ -259,7 +290,7 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
     // n'est pas une erreur : le Blueprint accepte explicitement ce statut.
     if (failure !== undefined && failure.silent !== true) {
         return (
-            <MenuPleinePage theme={theme}>
+            <MenuPleinePage theme={theme} tete={sectionSurPlace(0)}>
                 <CampusFailureNotice failure={failure} theme={theme} onRetry={loadMenu} variant="plain" />
             </MenuPleinePage>
         );
@@ -267,7 +298,7 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
 
     if (menus.length === 0) {
         return (
-            <MenuPleinePage theme={theme}>
+            <MenuPleinePage theme={theme} tete={sectionSurPlace(0)}>
                 <EmptyState
                     variant="plain"
                     icon="food-off"
@@ -294,6 +325,7 @@ export default function CrousMenuScreen({ route }: { route: { params: { restaura
 
             <View style={{ flex: 1 }}>
                 <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HAUTEUR_DU_FONDU }}>
+                    {sectionSurPlace(tokens.space.md)}
                     <PlatsDuJour menu={currentMenu} theme={theme} />
                     <HorairesDuRestaurant theme={theme} lignes={openingLines} />
 

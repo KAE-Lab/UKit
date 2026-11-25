@@ -5,6 +5,10 @@ export const URL = {
     KAELAB_WEBSITE: 'https://kaelab.dev',
     LEGAL_NOTICE: 'https://github.com/KAE-Lab/UKit/blob/main/PRIVACY.md',
     CROUSTILLANT_WEBSITE: 'https://croustillant.menu',
+    // Les regles de la communaute, rappelees a la premiere contribution (docs/phase-8/2-signalements.md).
+    // Une seule page pour tous les campus, publiee sur le site au lot 7 de la 7.0 : une constante, et
+    // non une adresse du catalogue, qui varie d'un etablissement a l'autre.
+    REGLES_DE_LA_COMMUNAUTE: 'https://ukit-bordeaux.fr/communaute',
 };
 
 // `VERSION_STORE`, `APPLE_APP` et `GOOGLE_APP` vivaient ici : le controle de mise a jour lisait le
