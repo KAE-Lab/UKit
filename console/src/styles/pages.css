@@ -23,11 +23,10 @@ details pre { margin: var(--espace-sm) 0 0; padding: var(--espace-sm); border-ra
 .contact-du-retour .valeur a { display: inline-flex; align-items: center; gap: var(--espace-xs); }
 .contact-du-retour .erreur-en-ligne { color: var(--danger); font-size: var(--taille-xs); }
 
-/* Le tableau de bord : le parc sur toute la largeur, puis les sources a gauche, les retours et les annonces a droite. */
+/* Le bas du tableau de bord : les sondes a gauche, les retours et les annonces a droite. */
 .bord { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espace-md); align-items: start; }
 .bord .carte + .carte { margin-top: 0; }
 .bord .carte { display: flex; flex-direction: column; min-width: 0; }
-.bord > .carte:first-child { grid-column: 1 / -1; }
 .bord .carte h2 { display: flex; align-items: center; justify-content: space-between; gap: var(--espace-sm); margin-bottom: var(--espace-md); }
 .bord .carte h2 > span { display: inline-flex; align-items: center; gap: var(--espace-sm); }
 .bord .carte h2 a { font-size: var(--taille-sm); font-weight: 500; }

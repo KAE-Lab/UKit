@@ -94,16 +94,35 @@ Chaque écriture est enregistrée au nom de son compte, dans le **Journal** : qu
 
 ## Lire ses chiffres
 
-Le **Tableau de bord** donne, à l'arrivée :
+Le **Tableau de bord** donne, à l'arrivée, quatre chiffres et leur évolution sur la semaine d'avant :
+le **parc actif** (les téléphones qui reçoivent les notifications ; un minimum, puisqu'un téléphone
+qui les a coupées n'y est pas), les **sessions**, les **ouvertures d'annonces** et les **échecs de
+source**. Puis les sessions jour par jour, le parc par campus, version et plateforme, l'état des
+sondes, les retours ouverts et les annonces visibles.
 
-- **le parc actif** : les téléphones qui reçoivent les notifications, par campus, par version et par
-  plateforme. C'est un minimum : un téléphone qui a coupé les notifications n'y est pas ;
-- **les annonces** visibles et programmées ;
-- **les retours** ouverts, ce que les utilisateurs ont écrit dans le formulaire.
+La page **Statistiques** va plus loin, en cinq onglets : la vue d'ensemble, les annonces, les sources,
+les réglages et le rapport partenaire.
 
-Une case qui compterait moins de cinq téléphones n'est jamais affichée : à cette taille, un chiffre
-peut désigner quelqu'un. Les chiffres de chaque annonce (combien l'ont vue, combien l'ont ouverte) et
-le rapport pour un partenaire arrivent avec la page Statistiques.
+- **La période** se choisit une fois, en haut, et vaut pour tous les onglets : les 7, 28 ou 90 derniers
+  jours, les flèches pour reculer ou avancer d'autant, ou **Dates** pour une plage précise. Chaque
+  chiffre se compare à la période d'avant, de même durée. Le filtre de campus, en haut à droite,
+  s'applique aussi.
+- **Les téléphones des testeurs** sont exclus : **Avec testeurs** les remet, pour vérifier qu'un essai
+  a bien été compté.
+- **Une annonce** : dans l'onglet Annonces, clique sur son titre dans le classement. Les chiffres, la
+  courbe et le détail par campus ne parlent plus que d'elle. Le **taux d'ouverture** rapporte les
+  ouvertures aux fois où la carte a été vue ; grisé, il porte sur moins de vingt vues et ne se lit
+  pas seul.
+- **Le rapport partenaire** : choisis une annonce, ou un partenaire pour toutes ses annonces.
+  **Exporter en CSV** donne un fichier qui s'ouvre dans Excel ou LibreOffice ; **Imprimer** ouvre
+  l'impression du navigateur, où « Enregistrer en PDF » fait le document à envoyer. La définition de
+  chaque chiffre est écrite en bas.
+
+Une case qui compterait moins de cinq n'est jamais affichée, ni à l'écran ni dans l'export : elle se
+lit « moins de 5 ». À cette taille, un chiffre peut désigner quelqu'un. Quand le total permettrait de
+la retrouver par soustraction, une autre case se cache avec elle et se lit « masqué ». Les chiffres
+commencent avec la version 6.3 de l'application : les téléphones restés sur une version plus ancienne
+ne comptent rien.
 
 ## Ce qui ne se fait jamais
 

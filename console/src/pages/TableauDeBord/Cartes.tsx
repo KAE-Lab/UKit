@@ -1,21 +1,18 @@
 /**
- * Les cartes du tableau de bord : le parc actif, les retours ouverts, les annonces. Chacune lit sa
- * propre requete et porte son squelette et son erreur, a sa place.
+ * Les cartes du tableau de bord : les retours ouverts, les annonces. Chacune lit sa propre requete et
+ * porte son squelette et son erreur, a sa place. Le parc, lui, est passe aux listes a barres (lot 0).
  */
 
-import { Bell, Inbox, Megaphone } from 'lucide-react';
+import { Inbox, Megaphone } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { ErreurDeLecture } from '../../composants/ui/ErreurDeLecture';
 import { Pastille } from '../../composants/ui/Pastille';
 import { SqueletteBloc, SqueletteTexte } from '../../composants/ui/Squelette';
 import { formaterDate } from '../../lib/dates';
-import { useCampusChoisi } from '../../composants/campus';
 import { SANS_FILTRE, useTout } from '../../requetes/useListe';
 import { ETATS_OUVERTS } from '../../schema/tables/retours';
 import { etatDesAnnonces, type AnnonceLegere } from './annonces';
-import { libelleDeCase, type Case } from '../../stats/cases';
-import { parcActif, type Jeton } from '../../stats/parc';
 
 function Carte({ titre, icone, lien, requete, children }: {
     readonly titre: string;
@@ -33,37 +30,6 @@ function Carte({ titre, icone, lien, requete, children }: {
                 {!requete.isPending && !requete.isError ? children : null}
             </div>
         </section>
-    );
-}
-
-function Cases({ titre, cases }: { readonly titre: string; readonly cases: readonly Case[] }) {
-    return (
-        <div>
-            <h3>{titre}</h3>
-            <table className="tableau-compact"><tbody>
-                {cases.length === 0 ? <tr><td className="secondaire">—</td></tr> : cases.map((c) => <tr key={c.cle}><td>{c.cle}</td><td className="nombre">{libelleDeCase(c.n)}</td></tr>)}
-            </tbody></table>
-        </div>
-    );
-}
-
-const COLONNES_DE_JETON = 'etablissement,version,plateforme,testeur,maj_le';
-
-export function CarteDuParc() {
-    const campus = useCampusChoisi();
-    const requete = useTout('jetons_push', COLONNES_DE_JETON, SANS_FILTRE);
-    const jetons = (requete.data ?? []).filter((j) => campus === null || j.etablissement === campus) as unknown as readonly Jeton[];
-    const parc = parcActif(jetons, new Date());
-    return (
-        <Carte titre="Parc actif" icone={<Bell className="icone" aria-hidden="true" />} lien="/jetons" requete={requete}>
-            <div className="chiffre-cle">{parc.total}<small>appareils avec notifications, 14 jours{campus === null ? '' : `, ${campus}`}</small></div>
-            <div className="trois-colonnes">
-                <Cases titre="Par campus" cases={parc.parCampus} />
-                <Cases titre="Par version" cases={parc.parVersion} />
-                <Cases titre="Par plateforme" cases={parc.parPlateforme} />
-            </div>
-            <p className="petit secondaire">Un minorant : un appareil qui a coupé les notifications n’y est pas. Aucune case sous cinq n’est affichée (docs/mesure.md).</p>
-        </Carte>
     );
 }
 
