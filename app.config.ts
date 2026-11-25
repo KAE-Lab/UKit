@@ -97,6 +97,10 @@ export default {
 		// ignorer durablement la surcouche publiee, sans la detruire. Absent, la livraison est
 		// active — une application doit recevoir ses corrections sans qu'on ait pense a le demander.
 		blueprintsRemote: process.env.BLUEPRINTS_REMOTE !== 'false',
+		// Le numero du projet Google Cloud lie a la Play Console, pour Play Integrity (phase 8, lot 1,
+		// shared/communaute/appareil.ts). Un numero, pas un secret. Absent, Android contribue sans
+		// attestation : ses contributions s'affichent en retrait et ne comptent pas.
+		playIntegrityProjet: process.env.PLAY_INTEGRITY_PROJET,
 	},
 	plugins: [
 		// Les racines de certification des universites, pour les Android d'avant mi-2021 qui ne les

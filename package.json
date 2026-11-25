@@ -37,6 +37,7 @@
   "dependencies": {
     "@aetherius/engine": "^0.5.10",
     "@aetherius/react-native": "^0.5.10",
+    "@expo/app-integrity": "57.0.2",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",

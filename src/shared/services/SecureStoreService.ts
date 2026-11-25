@@ -101,6 +101,15 @@ const PROPOSITIONS_KEY = 'UKIT_PROPOSITIONS';
 const INSTALLATION_ID_KEY = 'UKIT_INSTALLATION_ID';
 
 /**
+ * Le secret de l'appareil aupres de la communaute (phase 8, lot 1) : 32 octets tires sur l'appareil,
+ * en base64, dont la base ne garde que l'empreinte — la cle serveur d'un Android, ou d'un iPhone sans
+ * App Attest (shared/communaute/appareil.ts). **Rien a voir avec l'identifiant d'installation**, qui
+ * ne quitte jamais l'appareil : ce secret-ci part avec chaque contribution, et seulement avec elle. La
+ * reinitialisation ne l'efface pas ; une desinstallation, si (Android), et la reputation repart de zero.
+ */
+const COMMUNAUTE_SECRET_KEY = 'UKIT_COMMUNAUTE_SECRET';
+
+/**
  * La conversion des cles d'avant le cloisonnement, jouee au plus une fois.
  *
  * Lue **paresseusement**, au premier acces plutot qu'au demarrage : la mettre sur le chemin de
@@ -398,6 +407,21 @@ export default class SecureStoreService {
             return true;
         } catch (error) {
             console.error('Error saving installation id to SecureStore', error);
+            return false;
+        }
+    }
+
+    /** Le secret de la communaute, ou `null` s'il n'a jamais ete tire. **Leve** si le trousseau est illisible. */
+    static async getSecretCommunaute(): Promise<string | null> {
+        return await SecureStore.getItemAsync(COMMUNAUTE_SECRET_KEY);
+    }
+
+    static async saveSecretCommunaute(secret: string): Promise<boolean> {
+        try {
+            await SecureStore.setItemAsync(COMMUNAUTE_SECRET_KEY, secret);
+            return true;
+        } catch (error) {
+            console.error('Error saving community secret to SecureStore', error);
             return false;
         }
     }

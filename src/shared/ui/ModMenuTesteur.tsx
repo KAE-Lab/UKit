@@ -23,6 +23,7 @@ import { dernierRapportMessages, messagesConnus, oublierVus, rafraichirMessages,
 import { estTesteur, lireIdentifiant, rafraichirStatutTesteur, type SourceDIdentifiant } from '../testeur';
 import { deposerLeJeton, etatDuPush, retirerLeJeton, type EtatDepot, type MemoireDeDepot } from '../push';
 import { tokens, type AppThemeType } from '../theme/Theme';
+import ModMenuCommunaute from './ModMenuCommunaute';
 import ModMenuMesure from './ModMenuMesure';
 
 export interface ModMenuTesteurProps {
@@ -171,6 +172,9 @@ export default function ModMenuTesteur({ theme }: ModMenuTesteurProps) {
 
             {/* La mesure (7-D) : l'autre chose que l'appareil ecrit vers la base. */}
             <ModMenuMesure theme={theme} />
+
+            {/* La communaute (7.0, lot 1) : l'ecriture attestee, jouee sans ecran. */}
+            <ModMenuCommunaute theme={theme} />
         </View>
     );
 }

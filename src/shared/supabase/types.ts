@@ -239,6 +239,24 @@ export interface BlueprintRow {
  * qu'elle doit etre — le script de publication et la console d'administration, avec la cle secrete.
  * Les inventer donnerait l'illusion d'une capacite que la base refuse de toute facon.
  */
+/**
+ * Un signalement de la communaute (phase 8, lot 1), tel que la cle publiable le lit : les colonnes
+ * accordees une a une, sans l'appareil qui l'a ecrit ni sa confirmation (supabase/policies.sql). Les
+ * instants sont des chaines ISO ; `shared/communaute/donnees.ts` les relit defensivement.
+ */
+export interface SignalementRow {
+    id: string;
+    sujet: string;
+    cible: string;
+    valeur: string;
+    fin: string | null;
+    poids: 0 | 1 | 2;
+    statut: 'active' | 'remplacee' | 'masquee';
+    cree_le: string;
+    expire_le: string;
+    maj_le: string;
+}
+
 interface TableEnLecture<Row> {
     Row: Row;
     Insert: never;
@@ -270,12 +288,15 @@ export interface Database {
             visuels: TableEnLecture<VisuelRow>;
             testeurs: TableEnLecture<TesteurRow>;
             sondes: TableEnLecture<SondeRow>;
+            signalements: TableEnLecture<SignalementRow>;
         };
         Views: Record<string, never>;
         /**
          * Les portes d'ecriture de l'application : le depot et le retrait d'un jeton push (6.1.x-E),
          * et les compteurs anonymes de la mesure (7-D). `mesures` n'est pas dans `Tables` : l'application
-         * ne la lit pas, et les politiques le lui refusent.
+         * ne la lit pas, et les politiques le lui refusent. `contribuer` et `enregistrer_appareil` n'y
+         * sont pas non plus : reservees au service_role, l'application les atteint par la fonction
+         * `communaute`, jamais en RPC (phase 8, lot 1).
          */
         Functions: {
             deposer_jeton: {
