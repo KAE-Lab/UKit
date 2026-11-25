@@ -870,8 +870,8 @@ téléphone**, et c'est littéral : [`shared/evenements`](../../src/shared/evene
 fait passer par `projeterEvenementsDuTelephone`, avec `source: 'telephone'`, et
 [`lireLeTelephoneEtLeCampus`](../../src/features/Planning/services/TelephoneSource.ts) les joint au
 téléphone, jour par jour. Tout ce que cette section dit du téléphone vaut donc pour eux — la fusion
-après la dérivation, ni rappel ni filtre ni appui long, la journée locale, minuit, les états vides — sans
-une ligne de plus dans `ScheduleList`.
+après la dérivation, ni rappel ni filtre ni appui long, la journée locale, minuit, les états vides — et
+`ScheduleList` n'en sait que la lecture jointe et la garde de l'invitation, plus bas.
 
 Ce qui diffère tient à leur origine, que `annonce` porte : la couleur est celle de UKit ; la lecture des
 annonces, légère, se fait au plus toutes les demi-heures depuis `DayView` et seulement s'il y a quelque

@@ -19,6 +19,15 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Un changement fait pendant une synchronisation attend le passage suivant — relevé par la relecture du lot 5 le 2026-11-25
+
+`differer` finit dans `jouerEntretien`, qui **rejoint** l'entretien en cours
+([`entretien.ts`](../src/shared/services/entretien.ts)) : un favori, un filtre ou, depuis le lot 5 de la
+phase 8, un événement du campus ajouté pendant qu'une synchronisation lit déjà ce qu'elle doit écrire
+n'arrive dans l'agenda qu'au passage suivant — au plus douze heures, ou à la prochaine ouverture. Hérité
+de `favoris` et `filtres` ; la piste est celle de `rejouerApres`, qui attend la fin du passage en cours
+au lieu de le rejoindre.
+
 ### « Ninguno » se coupe dans la rangée des calendriers du téléphone, en espagnol — relevé au banc le 2026-11-25
 
 Sur `ukit` (Android 15), en espagnol, la page Calendario des Réglages écrit « Ningu… » à droite de

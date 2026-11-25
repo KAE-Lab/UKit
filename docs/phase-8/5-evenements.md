@@ -61,8 +61,9 @@ sait ni qui a ajouté un événement, ni qui le suit, ni qui l'a masqué.
 - **Sa fiche** : ni « Ouvrir dans le calendrier » ni géocodage — « Amphi A22 » ne se devine pas — mais
   la carte du point de l'annonce s'il y en a un, « S'y rendre » sinon, et **« Retirer de mon
   planning »**.
-- **Le masquage, un par un** : depuis la fiche de l'annonce ou celle du Planning, le même geste retire un
-  événement ajouté et cache un événement de l'abonnement. Ajouter un événement masqué le rend visible.
+- **Le masquage, un par un** : « Retirer de mon planning », sur la fiche du Planning, retire un événement
+  ajouté et cache un événement de l'abonnement ; sur la fiche de l'annonce, il retire un événement
+  ajouté. Ajouter un événement masqué le rend visible.
 
 ### 4. Ce qui suit la console
 
@@ -140,8 +141,8 @@ les organisations étudiantes y ont le même droit ; UKit reste un outil, neutre
 
 ## Ce que la relecture et le banc ont corrigé
 
-Une relecture du diff avant la mise en production, et le banc : un bloquant, cinq importants ou visibles
-à l'écran, corrigés.
+Deux relectures du diff, avant la mise en production puis avant la publication de la console, et le
+banc : un bloquant, quatre défauts visibles à l'écran, et des mineurs, corrigés.
 
 - **Le magasin rejouait l'état du premier chargement** : la promesse de lecture gardait sa valeur, et
   chaque geste repartait d'elle — deux ajouts s'écrasaient, la proposition revenait (bloquant, avant la
@@ -155,7 +156,9 @@ Une relecture du diff avant la mise en production, et le banc : un bloquant, cin
   et se tait sur un jour qui n'a que des événements.
 - **Un événement de l'abonnement ne pouvait pas partir dans l'agenda** : le bouton de la fiche disait
   « Retirer » dès qu'il était visible. Il dit l'ajout.
-- Et des mineurs : la synchronisation déclenchée par une relecture passe le disjoncteur en automatique ;
+- Et des mineurs : deux gestes lancés ensemble s'effaçaient encore, l'un attendant la lecture de
+  l'autre ; l'invitation clignotait une image avant un événement, le temps de la lecture locale ; la
+  synchronisation déclenchée par une relecture passe le disjoncteur en automatique ;
   un ajout vieux d'un an s'oublie au chargement, sans attendre une lecture ; le lieu se compte en
   caractères, comme `char_length` ; l'aperçu de la console retire le bouton d'un événement fini ; le
   guide dit qu'un changement de type annule aussi l'événement.
