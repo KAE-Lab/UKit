@@ -1106,3 +1106,24 @@ create table if not exists public.idees (
 -- « Moi aussi, et j'ajoute un detail » : le retour range sous l'idee, comme sous un probleme connu.
 alter table public.retours add column if not exists idee uuid references public.idees (id) on delete set null;
 create index if not exists retours_idee on public.retours (idee) where idee is not null;
+
+-- =============================================================================
+-- Les evenements des annonces (phase 8, lot 5 ; docs/phase-8/5-evenements.md)
+-- =============================================================================
+
+-- Une annonce d'evenement gagne un debut, une fin et un lieu, que l'application ajoute au Planning. Les
+-- trois ensemble ou aucun ; une fin apres le debut, au plus vingt-quatre heures plus tard ; un lieu de 2
+-- a 120 caracteres. La garde porte la forme, pas le type : comme le partenaire, l'evenement survit a un
+-- changement de type, et l'application ne le lit que sur une annonce `evenement`. Les droits sont ceux de
+-- la table ; rien de ce que l'etudiant ajoute ou masque n'arrive ici.
+alter table public.annonces add column if not exists evenement_debut timestamptz;
+alter table public.annonces add column if not exists evenement_fin timestamptz;
+alter table public.annonces add column if not exists evenement_lieu text;
+alter table public.annonces drop constraint if exists annonces_evenement_check;
+alter table public.annonces add constraint annonces_evenement_check check (
+    (evenement_debut is null and evenement_fin is null and evenement_lieu is null)
+    or (evenement_debut is not null and evenement_fin is not null and evenement_lieu is not null
+        and evenement_fin > evenement_debut
+        and evenement_fin <= evenement_debut + interval '24 hours'
+        and char_length(btrim(evenement_lieu)) between 2 and 120)
+);
