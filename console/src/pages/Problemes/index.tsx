@@ -15,7 +15,7 @@ import { lienVers } from '../../routeur';
 import { PROBLEMES } from '../../schema/tables/problemes';
 import { ETATS_DE_RETOUR } from '../../schema/tables/retours';
 import { supabase, type Ligne } from '../../supabase';
-import { Ressource } from '../Ressource';
+import { NOUVEAU, Ressource } from '../Ressource';
 import { compterLesVoix } from './voix';
 
 async function lireCeQuEnDisentLesEtudiants(id: string) {
@@ -66,7 +66,8 @@ export function Problemes({ reste }: { readonly reste: string | null }) {
         <Ressource
             descripteur={PROBLEMES}
             reste={reste}
-            apercu={(valeurs) => (typeof valeurs.id === 'string' ? <CeQuEnDisentLesEtudiants id={valeurs.id} /> : null)}
+            // Une ligne neuve n'a encore ni « moi aussi » ni details : le formulaire seul, sur toute la largeur.
+            apercu={reste === NOUVEAU ? undefined : (valeurs) => (typeof valeurs.id === 'string' ? <CeQuEnDisentLesEtudiants id={valeurs.id} /> : null)}
         />
     );
 }
