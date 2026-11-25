@@ -529,3 +529,82 @@ create policy "etats_officiels supprimable par les admins"
     on public.etats_officiels for delete
     to authenticated
     using ((select private.est_admin()));
+
+-- =============================================================================
+-- Les retours natifs (phase 8, lot 3 ; migration 20261125040000_retours_natifs.sql)
+-- =============================================================================
+--
+-- L'espace des captures lu par un admin seul ; les colonnes neuves de `retours` ; les problemes connus,
+-- les reponses et le compteur du jour par appareil.
+
+drop policy if exists "captures lisibles par les admins" on storage.objects;
+create policy "captures lisibles par les admins"
+    on storage.objects for select
+    to authenticated
+    using (bucket_id = 'retours' and (select private.est_admin()));
+
+grant select (source, contexte, captures, probleme, atteste, reponse_possible, clos_le, captures_purgees_le)
+    on public.retours to authenticated;
+
+alter table public.problemes_connus enable row level security;
+alter table public.retours_reponses enable row level security;
+alter table private.retours_par_appareil enable row level security;
+
+revoke all on public.problemes_connus, public.retours_reponses from anon, authenticated;
+revoke all on private.retours_par_appareil from anon, authenticated;
+
+grant select on public.problemes_connus to anon, authenticated;
+grant insert, update, delete on public.problemes_connus to authenticated;
+
+drop policy if exists "problemes publies lisibles" on public.problemes_connus;
+create policy "problemes publies lisibles"
+    on public.problemes_connus for select
+    to anon, authenticated
+    using (statut in ('publie', 'corrige'));
+
+drop policy if exists "problemes lisibles par les editeurs" on public.problemes_connus;
+create policy "problemes lisibles par les editeurs"
+    on public.problemes_connus for select
+    to authenticated
+    using ((select private.est_editeur()));
+
+drop policy if exists "problemes creables par les admins" on public.problemes_connus;
+create policy "problemes creables par les admins"
+    on public.problemes_connus for insert
+    to authenticated
+    with check ((select private.est_admin()));
+
+drop policy if exists "problemes modifiables par les admins" on public.problemes_connus;
+create policy "problemes modifiables par les admins"
+    on public.problemes_connus for update
+    to authenticated
+    using ((select private.est_admin()))
+    with check ((select private.est_admin()));
+
+drop policy if exists "problemes supprimables par les admins" on public.problemes_connus;
+create policy "problemes supprimables par les admins"
+    on public.problemes_connus for delete
+    to authenticated
+    using ((select private.est_admin()));
+
+grant select, delete on public.retours_reponses to authenticated;
+grant insert (retour, texte) on public.retours_reponses to authenticated;
+
+drop policy if exists "reponses lisibles par les editeurs" on public.retours_reponses;
+create policy "reponses lisibles par les editeurs"
+    on public.retours_reponses for select
+    to authenticated
+    using ((select private.est_editeur()));
+
+drop policy if exists "reponses ecrites par les admins" on public.retours_reponses;
+create policy "reponses ecrites par les admins"
+    on public.retours_reponses for insert
+    to authenticated
+    with check ((select private.est_admin())
+                and exists (select 1 from public.retours r where r.id = retour and r.reponse_possible));
+
+drop policy if exists "reponses retirees par les admins" on public.retours_reponses;
+create policy "reponses retirees par les admins"
+    on public.retours_reponses for delete
+    to authenticated
+    using ((select private.est_admin()));

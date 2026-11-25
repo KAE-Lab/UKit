@@ -1021,3 +1021,311 @@ revoke execute on function public.bloquer_auteur(uuid, boolean) from public, ano
 grant execute on function public.signalements_a_moderer(timestamptz) to authenticated;
 grant execute on function public.moderer_signalement(uuid, text) to authenticated;
 grant execute on function public.bloquer_auteur(uuid, boolean) to authenticated;
+
+-- =============================================================================
+-- Les retours natifs (phase 8, lot 3 ; migration 20261125040000_retours_natifs.sql)
+-- =============================================================================
+--
+-- Les declencheurs des problemes connus et des reponses, la cloture d'un retour, les portes du depot, de
+-- la lecture par cle et de la purge, et la tache horaire (docs/phase-8/3-formulaire.md).
+
+drop trigger if exists maj_le on public.problemes_connus;
+create trigger maj_le before update on public.problemes_connus
+    for each row execute function private.tenir_maj_le();
+drop trigger if exists journal on public.problemes_connus;
+create trigger journal after insert or update or delete on public.problemes_connus
+    for each row execute function private.journaliser('id');
+
+-- `clos_le` suit l'etat : pose au passage a un etat clos, retire si le retour se rouvre.
+create or replace function private.tenir_clos_le()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+    if new.etat in ('traite', 'refuse') then
+        if old.etat not in ('traite', 'refuse') or new.clos_le is null then
+            new.clos_le := now();
+        end if;
+    else
+        new.clos_le := null;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists clos_le on public.retours;
+create trigger clos_le before update of etat on public.retours
+    for each row execute function private.tenir_clos_le();
+
+revoke execute on function private.tenir_clos_le() from public, anon, authenticated;
+
+drop trigger if exists journal on public.retours_reponses;
+create trigger journal after insert or update or delete on public.retours_reponses
+    for each row execute function private.journaliser('id');
+
+-- -----------------------------------------------------------------------------
+-- 5. Les portes
+-- -----------------------------------------------------------------------------
+--
+-- `deposer_retour`, apres `admettre` et la preuve de l'appareil. `p` : `{ appareil: { cle, nature,
+-- plateforme, atteste, compteur? }, empreinte_ip, jeton, retour: { nature, texte, campus?, volontaire?,
+-- contact?, probleme?, contexte?, captures, cle_reponse? } }`, les octets en hexadecimal. Les refus
+-- attendus rendent `{"statut": "refusee", "raison": ...}` et la transaction se valide, comme
+-- `contribuer` : les comptes avancent meme quand le retour est refuse. Une forme fausse leve (22023).
+-- La fonction `communaute` a deja borne chaque champ et masque les adresses et les numeros du texte.
+-- Les reglages : plafond_retours_appareil, plafond_retours_non_atteste, plafond_retours_non_attestes_jour.
+create or replace function public.deposer_retour(p jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_jour        date        := (now() at time zone 'Europe/Paris')::date;
+    v_debut       timestamptz := (now() at time zone 'Europe/Paris')::date::timestamp at time zone 'Europe/Paris';
+    v_dispositif  jsonb       := p -> 'appareil';
+    v_r           jsonb       := p -> 'retour';
+    v_cle         bytea;
+    v_nature      text;
+    v_atteste     boolean;
+    v_compteur    bigint;
+    v_empreinte   bytea;
+    v_jeton       bytea;
+    v_appareil    public.appareils%rowtype;
+    v_n           integer;
+    v_type        text;
+    v_texte       text;
+    v_campus      text;
+    v_contact     text;
+    v_volontaire  boolean;
+    v_probleme    uuid;
+    v_contexte    jsonb;
+    v_captures    integer;
+    v_cle_reponse bytea;
+    v_id          text;
+begin
+    if p is null or jsonb_typeof(p) <> 'object' or jsonb_typeof(v_dispositif) is distinct from 'object'
+       or jsonb_typeof(v_r) is distinct from 'object' then
+        raise exception 'deposer_retour : forme inattendue' using errcode = '22023';
+    end if;
+    v_cle       := decode(v_dispositif ->> 'cle', 'hex');
+    v_nature    := v_dispositif ->> 'nature';
+    v_atteste   := (v_dispositif ->> 'atteste')::boolean;
+    v_compteur  := (v_dispositif ->> 'compteur')::bigint;
+    v_empreinte := decode(p ->> 'empreinte_ip', 'hex');
+    v_jeton     := decode(p ->> 'jeton', 'hex');
+    if octet_length(v_cle) is distinct from 32 or octet_length(v_empreinte) is distinct from 32
+       or octet_length(v_jeton) is distinct from 32
+       or v_nature is null or v_nature not in ('app_attest', 'secret')
+       or v_atteste is null or (v_nature = 'app_attest' and (not v_atteste or v_compteur is null)) then
+        raise exception 'deposer_retour : appareil inattendu' using errcode = '22023';
+    end if;
+
+    -- 1. Le non atteste, borne avant tout : par adresse (le compteur des contributions, partage), puis
+    --    pour tout le parc.
+    if not v_atteste then
+        insert into public.empreintes_ip (jour, empreinte, non_attestes) values (v_jour, v_empreinte, 1)
+        on conflict (jour, empreinte) do update set non_attestes = public.empreintes_ip.non_attestes + 1
+        returning non_attestes into v_n;
+        if v_n > private.reglage_communaute('plafond_ip_non_attestes_jour') then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_ip');
+        end if;
+        v_n := (select count(*) from public.retours where source = 'app' and not atteste and recu_le >= v_debut);
+        if v_n >= private.reglage_communaute('plafond_retours_non_attestes_jour') then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_non_attestes');
+        end if;
+    end if;
+
+    -- 2. L'appareil : une cle App Attest connue, son compteur qui monte sous verrou ; le blocage de la
+    --    moderation, quelle que soit sa nature. Aucun appareil ne se cree ici.
+    if v_nature = 'app_attest' then
+        select * into v_appareil from public.appareils where cle = v_cle for update;
+        if not found or v_appareil.nature <> 'app_attest' then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'appareil_inconnu');
+        end if;
+        if v_compteur <= v_appareil.compteur then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'compteur_rejoue');
+        end if;
+        update public.appareils
+           set compteur = v_compteur, vu_le = date_trunc('day', now()), atteste_le = date_trunc('day', now())
+         where cle = v_cle;
+    else
+        select * into v_appareil from public.appareils where cle = v_cle;
+    end if;
+    if v_appareil.bloque_le is not null then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'appareil_bloque');
+    end if;
+
+    -- 3. Le plafond du jour de l'appareil, par son jeton du jour.
+    insert into private.retours_par_appareil (jour, jeton, n) values (v_jour, v_jeton, 1)
+    on conflict (jour, jeton) do update set n = private.retours_par_appareil.n + 1
+    returning n into v_n;
+    if v_n > private.reglage_communaute(case when v_atteste then 'plafond_retours_appareil' else 'plafond_retours_non_atteste' end) then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_appareil');
+    end if;
+
+    -- 4. Le retour lui-meme : sa nature, ses longueurs, la branche du campus et du volontariat.
+    v_type        := v_r ->> 'nature';
+    v_texte       := coalesce(v_r ->> 'texte', '');
+    v_campus      := nullif(btrim(coalesce(v_r ->> 'campus', '')), '');
+    v_contact     := nullif(btrim(coalesce(v_r ->> 'contact', '')), '');
+    v_volontaire  := coalesce((v_r ->> 'volontaire')::boolean, false);
+    v_contexte    := v_r -> 'contexte';
+    v_captures    := coalesce((v_r ->> 'captures')::integer, 0);
+    v_cle_reponse := decode(v_r ->> 'cle_reponse', 'hex');
+    if jsonb_typeof(v_contexte) = 'null' then
+        v_contexte := null;
+    end if;
+    if v_type is null or v_type not in ('bug', 'fonctionnalite', 'campus')
+       or char_length(v_texte) > 2000
+       or (v_type <> 'campus' and char_length(btrim(v_texte)) < 3)
+       or (v_type = 'campus' and (v_campus is null or char_length(v_campus) > 120))
+       or (v_type <> 'campus' and (v_campus is not null or v_volontaire))
+       or (v_volontaire and v_contact is null)
+       or (v_contact is not null and (not v_volontaire or char_length(v_contact) > 254
+           or v_contact !~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$'))
+       or v_captures not between 0 and 3
+       or (v_cle_reponse is not null and octet_length(v_cle_reponse) <> 32)
+       or (v_contexte is not null and (jsonb_typeof(v_contexte) <> 'object' or octet_length(v_contexte::text) > 8192
+           or exists (select 1 from jsonb_object_keys(v_contexte) k
+                       where k not in ('version', 'appareil', 'systeme', 'etablissement', 'langue', 'theme',
+                                       'onglet', 'reseau', 'echecs', 'parcours', 'erreur')))) then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'retour_invalide');
+    end if;
+    -- Un probleme inconnu ou retire depuis : le detail arrive quand meme, sans lien.
+    if (v_r ->> 'probleme') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+        select id into v_probleme from public.problemes_connus
+         where id = (v_r ->> 'probleme')::uuid and statut in ('publie', 'corrige');
+    end if;
+
+    -- 5. La ligne. Sa cle, comme celle d'un retour importe, est une empreinte SHA-256 : celle de son
+    --    texte, de son instant et d'un sel tire au hasard (7-L).
+    v_id := encode(extensions.digest(
+        convert_to(v_texte || '|' || coalesce(v_campus, '') || '|' || clock_timestamp()::text, 'UTF8') || extensions.gen_random_bytes(16),
+        'sha256'), 'hex');
+    insert into public.retours (
+        id, recu_le, nature, campus, section, appareil, systeme, version_app, texte, contact, volontaire,
+        reponses, source, contexte, captures, probleme, atteste, reponse_possible, cle_reponse)
+    values (
+        v_id, now(), v_type, v_campus, left(v_contexte ->> 'onglet', 40), left(v_contexte ->> 'appareil', 120),
+        left(v_contexte ->> 'systeme', 60), left(v_contexte ->> 'version', 20), v_texte, v_contact, v_volontaire,
+        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_atteste, v_cle_reponse is not null, v_cle_reponse);
+    return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'probleme', v_probleme);
+end;
+$$;
+
+-- Ce que l'appareil lit de ses retours : pour chaque cle, dans l'ordre, l'etat, la cloture et les
+-- reponses, ou `null` pour une cle inconnue. Ni l'identifiant du retour, ni son texte, ni rien qu'une
+-- autre cle ouvrirait. `volatile` : PostgREST ne l'appelle qu'en POST, une cle ne s'ecrit jamais dans une
+-- adresse ni dans un journal d'acces.
+create or replace function public.lire_mes_retours(p_cles text[])
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    v_sortie jsonb := '[]'::jsonb;
+    v_cle    text;
+    v_octets bytea;
+    v_ligne  jsonb;
+begin
+    if p_cles is null or cardinality(p_cles) > 20 then
+        raise exception 'lire_mes_retours : vingt cles au plus' using errcode = '22023';
+    end if;
+    foreach v_cle in array p_cles loop
+        v_ligne := null;
+        begin
+            v_octets := decode(v_cle, 'base64');
+        exception when others then
+            v_octets := null;
+        end;
+        if octet_length(v_octets) = 32 then
+            select jsonb_build_object(
+                       'etat', r.etat,
+                       'clos_le', r.clos_le,
+                       'reponses', coalesce((select jsonb_agg(jsonb_build_object('texte', x.texte, 'le', x.cree_le) order by x.cree_le, x.id)
+                                               from public.retours_reponses x where x.retour = r.id), '[]'::jsonb))
+              into v_ligne
+              from public.retours r
+             where r.cle_reponse = extensions.digest(v_octets, 'sha256');
+        end if;
+        v_sortie := v_sortie || jsonb_build_array(v_ligne);
+    end loop;
+    return v_sortie;
+end;
+$$;
+
+-- La purge des captures : la fonction `communaute` efface les fichiers par l'API de stockage — une
+-- suppression directe dans `storage.objects` est refusee et laisserait les fichiers —, puis marque les
+-- retours. Trente jours apres la cloture, et au plus tard un an apres l'envoi pour un retour jamais clos.
+create or replace function public.captures_a_purger()
+returns text[]
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+    select coalesce(array_agg(id), '{}')
+      from (select id from public.retours
+             where source = 'app' and captures > 0 and captures_purgees_le is null
+               and ((clos_le is not null and clos_le < now() - interval '30 days') or recu_le < now() - interval '12 months')
+             order by recu_le
+             limit 100) a_purger;
+$$;
+
+create or replace function public.captures_purgees(p_ids text[])
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_n integer;
+begin
+    update public.retours set captures_purgees_le = now()
+     where id = any (p_ids) and captures > 0 and captures_purgees_le is null;
+    get diagnostics v_n = row_count;
+    return v_n;
+end;
+$$;
+
+revoke execute on function public.deposer_retour(jsonb) from public, anon, authenticated;
+revoke execute on function public.captures_a_purger() from public, anon, authenticated;
+revoke execute on function public.captures_purgees(text[]) from public, anon, authenticated;
+grant execute on function public.deposer_retour(jsonb) to service_role;
+grant execute on function public.captures_a_purger() to service_role;
+grant execute on function public.captures_purgees(text[]) to service_role;
+revoke execute on function public.lire_mes_retours(text[]) from public;
+grant execute on function public.lire_mes_retours(text[]) to anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 6. La tache horaire
+-- -----------------------------------------------------------------------------
+--
+-- Les jetons des jours passes, effaces dans l'heure qui suit minuit ; et, quand des captures sont dues,
+-- l'appel de la fonction `communaute` qui les efface (pg_net : une requete sortante, sans attendre sa
+-- reponse). L'action `purger` n'efface que ce que la base designe : l'appeler plus souvent n'avance rien.
+create extension if not exists pg_net with schema extensions;
+
+create or replace function private.purger_retours()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+    delete from private.retours_par_appareil where jour < (now() at time zone 'Europe/Paris')::date;
+    if cardinality(public.captures_a_purger()) > 0 then
+        perform net.http_post(
+            url := 'https://owiksddeqcyyifnmpyqm.supabase.co/functions/v1/communaute',
+            body := jsonb_build_object('action', 'purger'),
+            headers := jsonb_build_object('Content-Type', 'application/json'));
+    end if;
+end;
+$$;
+
+revoke execute on function private.purger_retours() from public, anon, authenticated;
+select cron.schedule('retours-purge', '17 * * * *', 'select private.purger_retours()');

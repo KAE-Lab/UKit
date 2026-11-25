@@ -902,3 +902,126 @@ create table if not exists public.etats_officiels (
 );
 
 create index if not exists etats_officiels_expire_le on public.etats_officiels (expire_le);
+
+-- =============================================================================
+-- Les retours natifs (phase 8, lot 3 ; migration 20261125040000_retours_natifs.sql)
+-- =============================================================================
+--
+-- Le formulaire de retour de l'application : les problemes connus, les colonnes neuves de `retours`,
+-- les reponses, le compteur du jour par appareil et l'espace prive des captures. Les declencheurs, les
+-- portes et la tache horaire sont dans fonctions.sql, les politiques dans policies.sql
+-- (docs/phase-8/3-formulaire.md).
+
+-- -----------------------------------------------------------------------------
+-- 1. Les problemes connus
+-- -----------------------------------------------------------------------------
+--
+-- Ce que l'equipe sait deja casse, reformule pour etre lu par tous : l'application les montre avant
+-- d'envoyer un bug, avec « moi aussi » (un vote par appareil, sujet `probleme.moi_aussi`) et « moi aussi,
+-- et j'ajoute un detail » (un retour relie, `retours.probleme`). `brouillon` ne se lit que par l'equipe ;
+-- `corrige` se lit encore, avec la version qui corrige ; `clos` disparait de l'application.
+-- `plateformes` : null = les deux, comme pour les messages de service.
+create table if not exists public.problemes_connus (
+    id               uuid        primary key default gen_random_uuid(),
+    titre            text        not null check (char_length(btrim(titre)) between 4 and 140),
+    detail           text        check (char_length(detail) <= 600),
+    statut           text        not null default 'brouillon'
+                                 check (statut in ('brouillon', 'publie', 'corrige', 'clos')),
+    plateformes      text[]      check (cardinality(plateformes) between 1 and 2 and plateformes <@ array['ios', 'android']),
+    version_corrigee text        check (version_corrigee ~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'),
+    cree_le          timestamptz not null default now(),
+    maj_le           timestamptz not null default now()
+);
+
+
+
+-- « Moi aussi » : un bulletin par appareil et par probleme (`votes`, lot 1), qui dit quels appareils sont
+-- touches — la plateforme, le modele, le systeme et la version, rien d'autre, et aucun identifiant.
+insert into public.sujets (sujet, nature, domaine, famille, valeurs, forme, description) values
+    ('probleme.moi_aussi', 'vote', 'probleme', null, null,
+     '^(ios|android)[|][^|[:cntrl:]]{1,48}[|][^|[:cntrl:]]{1,24}[|][0-9]{1,3}([.][0-9]{1,3}){1,3}$',
+     'moi aussi sur un probleme connu : plateforme|appareil|systeme|version')
+on conflict (sujet) do update
+    set nature = excluded.nature, domaine = excluded.domaine, famille = excluded.famille, valeurs = excluded.valeurs,
+        forme = excluded.forme, description = excluded.description, actif = true;
+
+-- -----------------------------------------------------------------------------
+-- 2. Les retours natifs
+-- -----------------------------------------------------------------------------
+--
+--   source              `formulaire` pour l'import du formulaire Google, `app` pour l'ecran natif
+--   contexte            les blocs que l'etudiant a laisses joints : version, appareil, systeme,
+--                       etablissement, langue, theme, onglet de depart, reseau, derniers echecs de
+--                       source (hote et famille), parcours recent (des noms d'ecran), l'erreur de la
+--                       carte d'ou il vient. Les colonnes `appareil`, `systeme`, `version_app` et
+--                       `section` en recopient la valeur, pour lire et trier comme avant
+--   captures            le nombre de captures annoncees, rangees dans l'espace `retours` sous `<id>/`
+--   probleme            le probleme connu auquel l'etudiant ajoute un detail
+--   atteste             l'appareil a-t-il ete atteste ; un retour non atteste se lit en retrait
+--   reponse_possible    l'etudiant a accepte la reponse dans l'application
+--   cle_reponse         l'empreinte SHA-256 de la cle secrete de l'appareil ; aucun compte ne la lit
+--   clos_le             le passage a `traite` ou `refuse`, tenu par un declencheur : il fixe la duree
+--                       des captures
+--   captures_purgees_le leurs fichiers effaces
+-- Les contraintes vivent sur leur colonne : `add column if not exists` les saute avec elle, et la vue
+-- lisible (schema.sql) se rejoue sans erreur.
+alter table public.retours add column if not exists source text not null default 'formulaire'
+    check (source in ('formulaire', 'app'));
+alter table public.retours add column if not exists contexte jsonb
+    check (contexte is null or (jsonb_typeof(contexte) = 'object' and octet_length(contexte::text) <= 8192));
+alter table public.retours add column if not exists captures smallint not null default 0 check (captures between 0 and 3);
+alter table public.retours add column if not exists probleme uuid references public.problemes_connus (id) on delete set null;
+alter table public.retours add column if not exists atteste boolean
+    constraint retours_atteste_check check ((source = 'app') = (atteste is not null));
+alter table public.retours add column if not exists cle_reponse bytea unique check (octet_length(cle_reponse) = 32);
+alter table public.retours add column if not exists reponse_possible boolean not null default false
+    constraint retours_reponse_possible_check check (reponse_possible = (cle_reponse is not null));
+alter table public.retours add column if not exists clos_le timestamptz;
+alter table public.retours add column if not exists captures_purgees_le timestamptz;
+
+-- Le plafond du parc non atteste compte les retours natifs non attestes du jour.
+create index if not exists retours_non_attestes on public.retours (recu_le) where source = 'app' and not atteste;
+-- La purge des captures.
+create index if not exists retours_captures on public.retours (clos_le) where captures > 0 and captures_purgees_le is null;
+
+-- -----------------------------------------------------------------------------
+-- 3. Les reponses
+-- -----------------------------------------------------------------------------
+--
+-- Ce qu'un admin repond, depuis la console, a un retour dont l'etudiant a accepte la reponse dans
+-- l'application. L'appareil la lit par sa cle (`lire_mes_retours`) ; l'equipe la lit dans la console.
+create table if not exists public.retours_reponses (
+    id      uuid        primary key default gen_random_uuid(),
+    retour  text        not null references public.retours (id) on delete cascade,
+    texte   text        not null check (char_length(btrim(texte)) between 1 and 2000),
+    cree_le timestamptz not null default now()
+);
+
+create index if not exists retours_reponses_retour on public.retours_reponses (retour, cree_le);
+
+
+-- -----------------------------------------------------------------------------
+-- 4. Le plafond par appareil
+-- -----------------------------------------------------------------------------
+--
+-- Un jeton par appareil et par jour de Paris — un HMAC de sa cle, calcule par la fonction `communaute`
+-- sous une cle qui n'est qu'a elle — et le nombre de retours deposes. Rien ne le relie a un retour ; la
+-- tache horaire efface les jours passes. Dans `private`, que l'API n'expose pas.
+create table if not exists private.retours_par_appareil (
+    jour  date    not null,
+    jeton bytea   not null check (octet_length(jeton) = 32),
+    n     integer not null default 0 check (n >= 0),
+    primary key (jour, jeton)
+);
+
+-- -----------------------------------------------------------------------------
+-- 7. Les captures
+-- -----------------------------------------------------------------------------
+--
+-- Un espace prive : aucune lecture publique, aucune ecriture par un compte. L'appareil televerse par
+-- une URL signee que la fonction `communaute` cree pour chaque capture annoncee, `<id>/<n>.jpg` ; un admin
+-- les lit, par une URL signee de la console. Un JPEG d'un mega au plus : l'application les compresse.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('retours', 'retours', false, 1048576, array['image/jpeg'])
+on conflict (id) do update
+    set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
