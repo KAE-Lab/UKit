@@ -30,7 +30,7 @@ export default function Statistiques({ reste }: { readonly reste: string | null 
                 <div>
                     <h1>Statistiques</h1>
                     {page.chemin === ''
-                        ? <p className="sous-titre">Les chiffres commencent avec la 6.3 : une courbe monte d’abord parce que le parc se met à jour. Le parc actif ne compte que les téléphones qui gardent les notifications ; c’est un minimum.</p>
+                        ? <p className="sous-titre">Les chiffres commencent avec la 6.3, et le parc actif ne compte que les téléphones qui gardent les notifications : c’est un minimum.</p>
                         : null}
                 </div>
             </div>

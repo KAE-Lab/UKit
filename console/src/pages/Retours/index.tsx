@@ -39,7 +39,7 @@ export function Retours({ reste }: { readonly reste: string | null }) {
     return (
         <>
             <div className="entete-page">
-                <div><h1>Retours</h1><p className="sous-titre">{RETOURS.description}</p><p className="sous-titre">{RETOURS.avertissement}</p></div>
+                <div><h1>Retours</h1><p className="sous-titre">{reste === null ? RETOURS.description : RETOURS.avertissement}</p></div>
             </div>
             <BandeauDeDroits table="retours" />
             {reste !== null ? <FicheDeRetour id={reste} retour={() => naviguer('/retours', params)} /> : (

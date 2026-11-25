@@ -79,7 +79,7 @@ export const ANNONCES: Descripteur = {
     chemin: 'annonces',
     table: 'annonces',
     titre: 'Annonces',
-    description: 'La vie étudiante : une carte dans Campus, une fiche au toucher — composées ici en voyant ce qu’elles donneront sur un téléphone.',
+    description: 'Les cartes de l’onglet Campus et leur fiche, composées en voyant ce qu’elles donneront sur un téléphone.',
     nouvelle: 'Nouvelle annonce',
     cle: ['id'],
     verrou: 'maj_le',

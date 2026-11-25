@@ -13,6 +13,7 @@ export const MESSAGES: Descripteur = {
     table: 'service_messages',
     titre: 'Messages de service',
     description: 'Parler aux utilisateurs : une information en bandeau, un avertissement ou un incident en feuille.',
+    nouvelle: 'Nouveau message',
     cle: ['id'],
     verrou: 'maj_le',
     tri: { colonne: 'publie_le', desc: true },
@@ -57,7 +58,7 @@ export const JETONS: Descripteur = {
     chemin: 'jetons',
     table: 'jetons_push',
     titre: 'Jetons push',
-    description: 'Les appareils qui recevront les messages en notification, et ce qu’il faut pour les cibler. Déposés par l’application, retirés par son interrupteur ou par un envoi qui les trouve morts. Le jeton lui-même ne se lit pas ici : il suffirait à notifier l’appareil.',
+    description: 'Les appareils que les notifications atteignent. Le jeton lui-même ne se lit pas ici : il suffirait à notifier l’appareil.',
     section: 'suivre',
     // Aucune cle lisible : le jeton lui-meme ne se lit par aucun compte de la console depuis 7-H — qui le
     // lit peut notifier l'appareil sans passer par elle. La liste se lit, et ne s'ouvre pas.

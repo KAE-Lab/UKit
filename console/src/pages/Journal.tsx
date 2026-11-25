@@ -87,7 +87,7 @@ export function Journal({ reste }: { readonly reste: string | null }) {
     return (
         <>
             <div className="entete-page">
-                <div><h1>Journal</h1><p className="sous-titre">{JOURNAL.description}</p>{reste === null ? <p className="sous-titre">L’export relit tout ce que les filtres retiennent, par pages de mille : c’est le fichier à remettre quand quelque chose a mal tourné.</p> : null}</div>
+                <div><h1>Journal</h1><p className="sous-titre">{JOURNAL.description}</p></div>
                 {reste === null ? <Bouton variante="tonal" onClick={() => { void exporter(); }} enAttente={exportEnCours} icone={<Download className="icone" aria-hidden="true" />}>Exporter en JSON</Bouton> : null}
             </div>
             <PlaceDEncart retour={retour} />

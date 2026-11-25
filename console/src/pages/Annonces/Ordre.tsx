@@ -55,7 +55,7 @@ export function Ordre() {
             <div className="entete-page">
                 <div>
                     <h1>Ordre du carrousel</h1>
-                    <p className="sous-titre">Ce qu’un téléphone montre à cet instant, dans cet ordre : les épinglées, puis les créneaux actifs, puis la priorité, puis une rotation par heure pour les annonces à égalité (heure de Paris, à partir de la 6.3).</p>
+                    <p className="sous-titre">Ce qu’un téléphone montre à cet instant : les épinglées, les créneaux actifs, la priorité, puis une rotation par heure à égalité (heure de Paris).</p>
                 </div>
                 <a className="bouton discret" href={lienVers('/annonces')}><span className="contenu-bouton"><Undo2 className="icone" aria-hidden="true" />Retour aux annonces</span></a>
             </div>

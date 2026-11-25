@@ -92,7 +92,6 @@ export function Ressource({ descripteur, reste, boutons, apercu, etatDeLigne }: 
                     <div>
                         <h1>{descripteur.titre}</h1>
                         <p className="sous-titre">{descripteur.description}</p>
-                        {descripteur.avertissement !== undefined ? <p className="sous-titre">{descripteur.avertissement}</p> : null}
                     </div>
                     <div className="boutons">
                         {boutons}
