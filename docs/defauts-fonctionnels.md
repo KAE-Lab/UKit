@@ -19,6 +19,25 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Treize paquets Expo ont des correctifs de retard sur le SDK 57 — relevé par `expo install --check` le 2026-11-25
+
+Relevé au lot 1 de la 7.0, en ajoutant `@expo/app-integrity` : `npx expo install --check` attend
+`expo` ~57.0.34 (le dépôt porte 57.0.23), et douze modules avec lui — `expo-asset`,
+`expo-background-task`, `expo-calendar`, `expo-constants`, `expo-crypto`, `expo-dev-client`,
+`expo-document-picker`, `expo-location`, `expo-notifications`, `expo-sharing`, `expo-splash-screen`,
+`expo-task-manager`. Des correctifs de la même version majeure, rien de cassé à ce jour. Remède
+attendu : `npx expo install --fix`, les portes, `expo export` des deux plateformes, puis un build de
+développement et le banc, dans un lot à lui — c'est du natif. `@expo/app-integrity` n'est pas dans
+la liste d'Expo pour le SDK 57 : il reste épinglé à 57.0.2, la dernière de cette version.
+
+### vitest annonce que sa configuration ne se chargera plus telle quelle — relevé le 2026-11-25
+
+Chaque `npm test` écrit « Your Vite config uses features that are unsupported by
+`configLoader: 'native'` … ESM syntax in a file loaded as CommonJS (vitest.config.ts) » : le défaut de
+Vite changera dans une version majeure à venir. Sans effet aujourd'hui. Remède attendu : renommer
+`vitest.config.ts` en `vitest.config.mts`, ou le dire à la montée de Vite, et vérifier que l'alias
+d'Aetherius tient toujours.
+
 ### Les dépendances de la console portent trois failles élevées — relevé par `npm audit` le 2026-11-25
 
 `npm --prefix console audit` en compte trois, toutes corrigées en amont : **vite** 8.3.0 à 8.3.2, par
