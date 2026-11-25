@@ -120,6 +120,9 @@ export default {
 		// Le reglage Android « Texte en gras » ignore : React Native ne le mesure pas, et le texte
 		// dessine en gras perdait ses dernieres lettres (tools/expo/graisse-du-systeme.js).
 		"./tools/expo/graisse-du-systeme",
+		// Le portrait et le Wi-Fi, que Google Play deduisait exiges, declares facultatifs : sans eux,
+		// UKit sortait des tablettes et des ordinateurs (tools/expo/fonctionnalites-facultatives.js).
+		"./tools/expo/fonctionnalites-facultatives",
 		"expo-background-task",
 		"expo-secure-store",
 		// Le selecteur d'image du formulaire de retour (lot 3) : PHPicker sur iOS, le selecteur photo
