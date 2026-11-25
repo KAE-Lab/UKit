@@ -122,12 +122,13 @@ export async function hmac(cle: Uint8Array<ArrayBuffer>, donnees: Uint8Array<Arr
 export interface ClesDeLaFonction {
     readonly defi: Uint8Array<ArrayBuffer>;
     readonly ip: Uint8Array<ArrayBuffer>;
+    readonly vote: Uint8Array<ArrayBuffer>;
 }
 
 /**
- * Deux cles tirees d'un seul secret de la fonction (`COMMUNAUTE_SECRET`, au moins 32 octets en
- * base64), une par usage : celle qui signe les defis ne sert jamais a une empreinte. `null` sans secret
- * lisible — la fonction refuse alors d'ecrire.
+ * Trois cles tirees d'un seul secret de la fonction (`COMMUNAUTE_SECRET`, au moins 32 octets en
+ * base64), une par usage : celle qui signe les defis ne sert jamais a une empreinte ni a un vote.
+ * `null` sans secret lisible — la fonction refuse alors d'ecrire.
  */
 export async function clesDeLaFonction(secret: string | undefined): Promise<ClesDeLaFonction | null> {
     const graine = depuisBase64(secret);
@@ -135,6 +136,7 @@ export async function clesDeLaFonction(secret: string | undefined): Promise<Cles
     return {
         defi: await hmac(graine, utf8('ukit.communaute.defi')),
         ip: await hmac(graine, utf8('ukit.communaute.ip')),
+        vote: await hmac(graine, utf8('ukit.communaute.vote')),
     };
 }
 
@@ -181,9 +183,24 @@ export function adresseDuClient(entetes: { get(nom: string): string | null }): s
     return /^[0-9A-Fa-f:.]{2,45}$/.test(premiere) ? premiere : 'inconnue';
 }
 
-/** L'empreinte d'une adresse pour un jour : la base ne voit qu'elle, et elle change chaque jour. */
+/**
+ * L'empreinte d'une adresse pour un jour, sous la cle de ce jour (un HMAC du jour par la cle des
+ * adresses) : la base ne voit qu'elle, et deux jours ne se relient pas.
+ */
 export async function empreinteDAdresse(cle: Uint8Array<ArrayBuffer>, adresse: string, jour: string): Promise<Uint8Array<ArrayBuffer>> {
-    return hmac(cle, utf8(`${jour}|${adresse}`));
+    return hmac(await hmac(cle, utf8(jour)), utf8(adresse));
+}
+
+/**
+ * Ce qui tient lieu d'appareil dans un vote : un HMAC de sa cle, du sujet et de la cible. Il refuse un
+ * second bulletin sur la meme cible, et ne relie ni deux votes ni un vote a un appareil.
+ */
+export async function jetonDeVote(cle: Uint8Array<ArrayBuffer>, appareil: Uint8Array, sujet: string, cible: string): Promise<Uint8Array<ArrayBuffer>> {
+    const suffixe = utf8(`|${sujet}|${cible}`);
+    const message = new Uint8Array(appareil.length + suffixe.length);
+    message.set(appareil, 0);
+    message.set(suffixe, appareil.length);
+    return hmac(cle, message);
 }
 
 /** Le `requestHash` d'une demande Play Integrity : l'empreinte du texte exact des donnees. */

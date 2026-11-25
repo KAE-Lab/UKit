@@ -28,7 +28,7 @@ import { RefusAppAttest, verifierAssertion, verifierAttestation } from './appatt
 import { dechiffrerLeJeton, jetonDAcces, lireCompteDeService, type Transport } from './google.ts';
 import {
     adresseDuClient, clesDeLaFonction, depuisHexPostgres, egaux, empreinteDAdresse, empreinteDeDemande, evaluerVerdict,
-    jourDeParis, LIMITES, lireDefi, lireDemande, lireDonnees, nouveauDefi, sha256, statutDuRefus, utf8, versHex,
+    jetonDeVote, jourDeParis, LIMITES, lireDefi, lireDemande, lireDonnees, nouveauDefi, sha256, statutDuRefus, utf8, versHex,
     type Demande, type Plateforme,
 } from './regles.ts';
 
@@ -64,16 +64,36 @@ async function empreinteDeLaDemande(cleIp: Uint8Array<ArrayBuffer>, req: Request
     return versHex(await empreinteDAdresse(cleIp, adresseDuClient(req.headers), jourDeParis(new Date(maintenant))));
 }
 
-async function appelerLaBase(fonction: 'enregistrer_appareil' | 'contribuer', p: Record<string, unknown>): Promise<ResultatSql> {
-    const { data, error } = await service().rpc(fonction, { p });
-    if (error !== null) throw new Error(`${fonction} : ${error.message}`);
-    return data as ResultatSql;
+interface Admission {
+    readonly admis: boolean;
+    /** Un jeton Play Integrity peut partir chez Google : le plafond des verdicts de l'adresse le permet. */
+    readonly verdict: boolean;
+}
+
+/**
+ * L'appel d'une porte de la base. Un interblocage (40P01) se rejoue une fois : deux contributions
+ * simultanees qui se confirment l'une l'autre verrouillent les deux appareils dans l'ordre inverse, et
+ * Postgres en annule une — entierement, compteur compris, donc la rejouer telle quelle est sur.
+ */
+async function appelerLaBase(fonction: 'admettre' | 'enregistrer_appareil' | 'contribuer', p: Record<string, unknown>): Promise<ResultatSql> {
+    for (let essai = 0; ; essai++) {
+        const { data, error } = await service().rpc(fonction, { p });
+        if (error === null) return data as ResultatSql;
+        if (error.code !== '40P01' || essai > 0) throw new Error(`${fonction} : ${error.message}`);
+    }
+}
+
+/** L'adresse comptee, avant tout le reste et avant Google (`public.admettre`). */
+async function admettre(empreinte: string, verdict: boolean): Promise<Admission> {
+    const r = await appelerLaBase('admettre', { empreinte_ip: empreinte, verdict });
+    return { admis: r.admis === true, verdict: r.verdict === true };
 }
 
 async function enregistrer(d: Enregistrer, req: Request, maintenant: number): Promise<Response> {
     if (CLES === null) return indisponible('non_configuree');
     if (APPLICATIONS.length === 0) return indisponible('app_attest_non_configure');
     if (await lireDefi(CLES.defi, d.defi, maintenant) !== 'valide') return refuser('defi');
+    if (!(await admettre(await empreinteDeLaDemande(CLES.ip, req, maintenant), false)).admis) return refuser('plafond_ip');
     let verifiee: Awaited<ReturnType<typeof verifierAttestation>>;
     try {
         verifiee = await verifierAttestation({ attestation: d.attestation, clientData: utf8(d.defi), cle: d.cle, applications: APPLICATIONS, maintenant: new Date(maintenant) });
@@ -86,7 +106,6 @@ async function enregistrer(d: Enregistrer, req: Request, maintenant: number): Pr
         cle: versHex(d.cle),
         cle_publique: versHex(verifiee.clePublique),
         environnement: verifiee.environnement,
-        empreinte_ip: await empreinteDeLaDemande(CLES.ip, req, maintenant),
     });
     if (r.statut === 'refusee') return refuser(r.raison ?? 'refusee');
     return reponse(200, { statut: r.statut, environnement: verifiee.environnement });
@@ -119,6 +138,14 @@ async function contribuer(d: Contribuer, req: Request, maintenant: number): Prom
     const cle = d.appareil.nature === 'app_attest' ? d.appareil.cle : await sha256(d.appareil.secret);
     if (!egaux(cle, donnees.cle)) return refuser('cle');
 
+    // L'adresse, comptee avant toute verification couteuse : un jeton Play Integrity ne part chez
+    // Google que si le plafond des verdicts de l'adresse le permet — le quota est celui du parc.
+    const empreinte = await empreinteDeLaDemande(CLES.ip, req, maintenant);
+    const jeton = d.appareil.nature === 'secret' && d.appareil.plateforme === 'android' && d.preuve !== null && 'jeton' in d.preuve
+        ? d.preuve.jeton : null;
+    const admission = await admettre(empreinte, jeton !== null && COMPTE_GOOGLE !== null);
+    if (!admission.admis) return refuser('plafond_ip');
+
     let atteste = false;
     let compteur: number | null = null;
     let plateforme: Plateforme;
@@ -143,14 +170,13 @@ async function contribuer(d: Contribuer, req: Request, maintenant: number): Prom
         }
     } else {
         plateforme = d.appareil.plateforme;
-        if (plateforme === 'android' && d.preuve !== null && 'jeton' in d.preuve) {
-            atteste = await verdictAndroid(d.preuve.jeton, d.donnees, maintenant);
-        }
+        if (jeton !== null && admission.verdict) atteste = await verdictAndroid(jeton, d.donnees, maintenant);
     }
 
     const r = await appelerLaBase('contribuer', {
         appareil: { cle: versHex(cle), nature: d.appareil.nature, plateforme, atteste, compteur },
-        empreinte_ip: await empreinteDeLaDemande(CLES.ip, req, maintenant),
+        empreinte_ip: empreinte,
+        jeton_de_vote: versHex(await jetonDeVote(CLES.vote, cle, donnees.contribution.sujet, donnees.contribution.cible)),
         contribution: donnees.contribution,
         essai: donnees.essai,
     });

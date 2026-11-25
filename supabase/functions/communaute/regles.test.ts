@@ -12,7 +12,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
     adresseDuClient, clesDeLaFonction, depuisBase64, depuisHexPostgres, DUREE_DU_DEFI_MS, egaux, empreinteDAdresse, empreinteDeDemande,
-    evaluerVerdict, jourDeParis, lireDefi, lireDemande, lireDonnees, nouveauDefi, sha256, statutDuRefus, utf8, versBase64Url,
+    evaluerVerdict, jetonDeVote, jourDeParis, lireDefi, lireDemande, lireDonnees, nouveauDefi, sha256, statutDuRefus, utf8, versBase64Url,
 } from './regles';
 
 const MAINTENANT = Date.parse('2026-11-25T12:00:00Z');
@@ -49,6 +49,7 @@ describe('les cles de la fonction et le defi', () => {
         const cles = await clesDeLaFonction(SECRET);
         expect(cles).not.toBeNull();
         expect(egaux(cles!.defi, cles!.ip)).toBe(false);
+        expect(egaux(cles!.ip, cles!.vote)).toBe(false);
     });
 
     test('un defi vaut cinq minutes, pas une de plus, et ne se forge pas', async () => {
@@ -88,6 +89,17 @@ describe('l adresse et son empreinte', () => {
         expect(await empreinteDAdresse(ip, '203.0.113.7', '2026-11-23')).toEqual(lundi);
         expect(egaux(await empreinteDAdresse(ip, '203.0.113.7', '2026-11-24'), lundi)).toBe(false);
         expect(lundi.length).toBe(32);
+    });
+
+    test('le jeton de vote est le meme pour un appareil et une cible, et ne relie pas deux cibles', async () => {
+        const { vote } = (await clesDeLaFonction(SECRET))!;
+        const appareil = new Uint8Array(32).fill(3);
+        const un = await jetonDeVote(vote, appareil, 'annonce.sondage', 'a1');
+        expect(await jetonDeVote(vote, appareil, 'annonce.sondage', 'a1')).toEqual(un);
+        expect(egaux(await jetonDeVote(vote, appareil, 'annonce.sondage', 'a2'), un)).toBe(false);
+        expect(egaux(await jetonDeVote(vote, new Uint8Array(32).fill(4), 'annonce.sondage', 'a1'), un)).toBe(false);
+        const { vote: autre } = (await clesDeLaFonction(Buffer.alloc(32, 8).toString('base64')))!;
+        expect(egaux(await jetonDeVote(autre, appareil, 'annonce.sondage', 'a1'), un)).toBe(false);
     });
 
     test('le requestHash est le SHA-256 du texte exact, en base64 URL', async () => {
