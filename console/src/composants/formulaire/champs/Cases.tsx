@@ -7,6 +7,7 @@
  */
 
 import type { Option } from '../../../schema/descripteurs';
+import { Case } from '../../ui/Case';
 import type { ChampProps } from './types';
 
 function Coches({ options, coches, inconnues, desactive, horsBorne, onChange }: {
@@ -26,14 +27,14 @@ function Coches({ options, coches, inconnues, desactive, horsBorne, onChange }: 
                 const bornee = horsBorne?.(option.valeur) === true && !coches.includes(option.valeur);
                 return (
                     <label key={option.valeur} className={`case ${bornee ? 'hors-borne' : ''}`} title={bornee ? 'Pas un de tes campus.' : undefined}>
-                        <input type="checkbox" checked={coches.includes(option.valeur)} disabled={desactive || bornee} onChange={() => basculer(option.valeur)} />
+                        <Case valeur={coches.includes(option.valeur)} desactive={desactive || bornee} onChange={() => basculer(option.valeur)} />
                         {option.libelle}
                     </label>
                 );
             })}
             {inconnues.map((valeur) => (
                 <label key={valeur} className="case inconnue" title="Valeur hors liste : décoche-la pour pouvoir enregistrer.">
-                    <input type="checkbox" checked disabled={desactive} onChange={() => basculer(valeur)} />
+                    <Case valeur desactive={desactive} onChange={() => basculer(valeur)} />
                     {valeur} (inconnue)
                 </label>
             ))}

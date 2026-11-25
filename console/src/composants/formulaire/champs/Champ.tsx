@@ -6,6 +6,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useId, type ComponentType } from 'react';
 
 import { InfoBulle } from '../../ui/InfoBulle';
+import { Interrupteur } from '../../ui/Interrupteur';
 import { Selecteur } from '../../ui/Selecteur';
 import { ChampCases, ChampEtablissements } from './Cases';
 import { ChampCreneaux } from './Creneaux';
@@ -60,7 +61,7 @@ function Saisisseur(props: Omit<ChampProps, 'id'> & { readonly id: string }) {
     if (Widget !== undefined) return <Widget {...props} />;
     switch (champ.type.type) {
         case 'booleen':
-            return <label className="case"><input id={id} type="checkbox" checked={saisie === true} disabled={desactive} onChange={(e) => onChange(e.target.checked)} /> {champ.libelle}</label>;
+            return <label className="case"><Interrupteur id={id} valeur={saisie === true} desactive={desactive} onChange={onChange} />{champ.libelle}</label>;
         case 'zone':
             return <textarea id={id} className={champ.type.code === true ? 'code' : undefined} value={texte} disabled={desactive} onChange={(e) => onChange(e.target.value)} />;
         case 'json':
