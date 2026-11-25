@@ -53,7 +53,7 @@ Chaque écran se refait, dans les deux thèmes, et se coche à la livraison.
 - [x] Connexion, première connexion
 - [x] Tableau de bord
 - [x] Statistiques : vue d'ensemble, annonces, sources, réglages, rapport partenaire (nouveaux)
-- [ ] Sources (la carte réservée aux échecs de `source.echec` se remplit)
+- [x] Sources (la carte réservée aux échecs de `source.echec` se remplit)
 - [x] Retours, fiche d'un retour, compteurs
 - [x] Jetons push
 - [x] Journal
