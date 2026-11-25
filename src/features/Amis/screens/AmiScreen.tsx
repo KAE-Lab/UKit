@@ -65,27 +65,32 @@ function plage(debut: number, fin: number): string {
     return `${formaterHeure(debut)}–${formaterHeure(fin)}`;
 }
 
-/** Un jour de « Libres ensemble » : son nom, puis chaque creneau, l'heure a gauche, la duree a droite. */
-function JourEnCommun({ jour, theme, premier }: { jour: JourCommun; theme: AppThemeType; premier: boolean }) {
+/**
+ * Un jour de « Libres ensemble » : son nom, puis chaque creneau, l'heure a gauche, la duree a droite.
+ * Sous le creneau du midi d'aujourd'hui, ses restaurants (`midi`), sans en repeter la fenetre.
+ */
+function JourEnCommun({ jour, theme, premier, restaurants }: { jour: JourCommun; theme: AppThemeType; premier: boolean; restaurants?: { fin: number; rendu: React.ReactNode } }) {
     const titre = upperCaseFirstLetter(moment(jour.date).format('dddd D MMMM'));
     return (
         <View style={[styles.jour, !premier && { borderTopColor: theme.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[styles.titreDuJour, { color: theme.font }]}>{titre}</Text>
             {jour.creneaux.map((creneau) => {
-                const midi = partDeMidi(creneau) !== null;
+                const deMidi = partDeMidi(creneau) !== null;
                 return (
+                    <React.Fragment key={creneau.debut}>
                     <View
-                        key={creneau.debut}
                         style={styles.creneau}
                         accessible
                         accessibilityLabel={`${titre}, ${plage(creneau.debut, creneau.fin)}, ${formaterDuree(creneau.fin - creneau.debut)}`}
                     >
                         <View style={styles.heures}>
-                            <Icon icon={{ name: midi ? 'silverware-fork-knife' : 'clock-outline' }} size={ICONE} color={theme.fontSecondary} />
+                            <Icon icon={{ name: deMidi ? 'silverware-fork-knife' : 'clock-outline' }} size={ICONE} color={theme.fontSecondary} />
                             <Text style={[styles.plage, tokens.texte.chiffres, { color: theme.font }]}>{plage(creneau.debut, creneau.fin)}</Text>
                         </View>
                         <Text style={[styles.petit, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{formaterDuree(creneau.fin - creneau.debut)}</Text>
                     </View>
+                    {restaurants !== undefined && creneau.debut < restaurants.fin && restaurants.fin <= creneau.fin ? restaurants.rendu : null}
+                    </React.Fragment>
                 );
             })}
         </View>
@@ -97,7 +102,6 @@ function messageSansCreneau(semaine: SemaineDeLAmi): string | null {
     if (semaine.mon === 'sans-emploi-du-temps') return Translator.get('AMI_SANS_MON_EDT');
     if (semaine.mon === 'echec') return Translator.get('AMI_MON_EDT_ECHEC');
     if (semaine.mon === 'lecture' || semaine.son === 'lecture') return null;
-    if (semaine.son === 'echec') return Translator.get('AMI_SON_EDT_ECHEC');
     return Translator.get('AMI_AUCUN_COMMUN');
 }
 
@@ -112,12 +116,15 @@ function LibresEnsemble({ semaine, theme, navigation }: { semaine: SemaineDeLAmi
             <Text style={[tokens.texte.intertitre, styles.intertitre, { color: theme.fontSecondary }]}>{Translator.get('AMI_EN_COMMUN')}</Text>
             <View style={[styles.carte, { backgroundColor: theme.eventBackground, borderColor: theme.contourDeCarte }]}>
                 {semaine.communs.map((jour, rang) => (
-                    <View key={jour.date}>
-                        <JourEnCommun jour={jour} theme={theme} premier={rang === 0} />
-                        {jour.date === aujourdhui && midiAVenir && semaine.midi !== null ? (
-                            <Midi fenetre={semaine.midi.fenetre} etat={ouManger} theme={theme} navigation={navigation} />
-                        ) : null}
-                    </View>
+                    <JourEnCommun
+                        key={jour.date}
+                        jour={jour}
+                        theme={theme}
+                        premier={rang === 0}
+                        restaurants={jour.date === aujourdhui && midiAVenir && semaine.midi !== null
+                            ? { fin: semaine.midi.fenetre.fin, rendu: <Midi fenetre={semaine.midi.fenetre} etat={ouManger} theme={theme} navigation={navigation} enTete={false} /> }
+                            : undefined}
+                    />
                 ))}
                 {message !== null ? <Text style={[styles.message, { color: theme.fontSecondary }]}>{message}</Text> : null}
                 {semaine.communs.length === 0 && message === null ? <ActivityIndicator color={theme.fontSecondary} /> : null}
@@ -162,7 +169,8 @@ export default function AmiScreen({ navigation, route, headerPadding, onAnimated
                 ) : (
                     <>
                         <Semaines theme={theme} choisie={rang} choisir={setRang} />
-                        <LibresEnsemble semaine={semaine} theme={theme} navigation={navigation} />
+                        {/* Son emploi du temps illisible se dit une fois, dessous, avec « Reessayer ». */}
+                        {semaine.son !== 'echec' ? <LibresEnsemble semaine={semaine} theme={theme} navigation={navigation} /> : null}
                         <Text style={[tokens.texte.intertitre, styles.intertitre, { color: theme.fontSecondary }]}>
                             {Translator.get(ami.contenu.genre === 'groupes' ? 'AMI_SON_EDT' : 'AMI_SES_CRENEAUX')}
                         </Text>
@@ -171,7 +179,7 @@ export default function AmiScreen({ navigation, route, headerPadding, onAnimated
                                 <EmptyState theme={theme} icon="cloud-off" title={Translator.get('PARTAGE_ECHEC_TITRE')} message={Translator.get('AMI_SON_EDT_ECHEC')} action={{ label: Translator.get('RETRY'), onPress: semaine.relire }} />
                             </View>
                         ) : (
-                            <AgendaDeLaSemaine jours={semaine.jours} repli={(r) => moment(semaine.jours[r]?.date)} theme={theme} navigation={undefined} />
+                            <AgendaDeLaSemaine jours={semaine.jours} repli={(r) => moment(semaine.jours[r]?.date)} theme={theme} navigation={undefined} compter={ami.contenu.genre === 'groupes'} />
                         )}
                     </>
                 )}
@@ -204,7 +212,7 @@ const styles = StyleSheet.create({
         paddingBottom: tokens.space.xxl,
     },
     etat: {
-        marginHorizontal: tokens.space.md,
+        marginHorizontal: tokens.space.sm,
         marginTop: tokens.space.md,
     },
     semaines: {

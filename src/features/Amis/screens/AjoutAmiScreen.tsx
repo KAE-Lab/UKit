@@ -44,7 +44,7 @@ function ContenuDuLien({ theme, partage }: { theme: AppThemeType; partage: Parta
             {etablissement !== null ? <RangeeDeReglage theme={theme} icone="school-outline" libelle={Translator.get('INSTITUTION')} valeur={etablissement.nomCourt ?? etablissement.nom} /> : null}
             {contenu.genre === 'groupes'
                 ? <RangeeDeReglage theme={theme} icone="account-group-outline" libelle={Translator.get('AJOUT_GROUPES')} valeur={contenu.groupes.join(', ')} />
-                : <RangeeDeReglage theme={theme} icone="clock-outline" libelle={Translator.get('AJOUT_CRENEAUX')} valeur={Translator.get('AMI_JUSQUAU', moment(dernierJour(contenu.premierJour)).format('D MMMM'))} />}
+                : <RangeeDeReglage theme={theme} icone="clock-outline" libelle={Translator.get('AJOUT_CRENEAUX')} valeur={Translator.get('AMI_JUSQUAU', moment(dernierJour(contenu.premierJour)).format('D MMM'))} />}
         </GroupeDeReglages>
     );
 }
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
         marginTop: tokens.space.md,
     },
     etat: {
-        marginHorizontal: tokens.space.md,
+        marginHorizontal: tokens.space.sm,
         marginTop: tokens.space.lg,
     },
     bouton: {

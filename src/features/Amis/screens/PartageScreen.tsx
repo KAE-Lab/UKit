@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
         marginTop: tokens.space.xxl,
     },
     etat: {
-        marginHorizontal: tokens.space.md,
+        marginHorizontal: tokens.space.sm,
         marginTop: tokens.space.lg,
     },
     code: {

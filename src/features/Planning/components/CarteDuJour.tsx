@@ -135,23 +135,27 @@ function Proposition({ suggestion, theme, navigation }: { suggestion: Suggestion
     );
 }
 
-/** Midi et ses restaurants ; repris tel quel par les creneaux communs avec un ami (docs/phase-8/8-amis.md). */
-export function Midi({ fenetre, etat, theme, navigation }: {
+/**
+ * Midi et ses restaurants. Repris par les creneaux communs avec un ami (docs/phase-8/8-amis.md), sous
+ * la rangee de leur creneau : `enTete` a faux, la fenetre ne s'y repete pas.
+ */
+export function Midi({ fenetre, etat, theme, navigation, enTete = true }: {
     fenetre: { debut: number; fin: number };
     etat: ReturnType<typeof useOuManger>;
     theme: AppThemeType;
     navigation: Navigation;
+    enTete?: boolean;
 }) {
     return (
-        <View style={[styles.section, { borderTopColor: theme.border }]}>
-            <View style={styles.rangee} accessible accessibilityLabel={`${Translator.get('CARTE_MIDI')}, ${plage(fenetre.debut, fenetre.fin)}`}>
+        <View style={enTete ? [styles.section, { borderTopColor: theme.border }] : styles.sansEnTete}>
+            {enTete ? <View style={styles.rangee} accessible accessibilityLabel={`${Translator.get('CARTE_MIDI')}, ${plage(fenetre.debut, fenetre.fin)}`}>
                 <View style={styles.titreDeSection}>
                     <Icon icon={{ name: 'silverware-fork-knife' }} size={ICONE} color={theme.fontSecondary} />
                     <Text style={[styles.libelle, { color: theme.font }]}>{Translator.get('CARTE_MIDI')}</Text>
                     <Text style={[styles.libelle, tokens.texte.chiffres, { color: theme.font }]}>{plage(fenetre.debut, fenetre.fin)}</Text>
                 </View>
                 <Text style={[styles.petit, tokens.texte.chiffres, { color: theme.fontSecondary }]}>{formaterDuree(fenetre.fin - fenetre.debut)}</Text>
-            </View>
+            </View> : null}
             {etat.etat === 'pret' && etat.suggestions.map((suggestion) => (
                 <Proposition key={suggestion.restaurant.id} suggestion={suggestion} theme={theme} navigation={navigation} />
             ))}
@@ -284,6 +288,9 @@ const styles = StyleSheet.create({
     section: {
         borderTopWidth: StyleSheet.hairlineWidth,
         paddingTop: tokens.space.sm,
+        gap: tokens.space.sm,
+    },
+    sansEnTete: {
         gap: tokens.space.sm,
     },
     rangee: {

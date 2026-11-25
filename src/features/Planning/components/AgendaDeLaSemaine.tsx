@@ -81,13 +81,14 @@ function RangeeDeCours({ cours, theme, navigation, largeurDesHeures }: {
     );
 }
 
-function JourDeLAgenda({ date, etat, cours, theme, navigation, largeurDesHeures }: {
+function JourDeLAgenda({ date, etat, cours, theme, navigation, largeurDesHeures, compter }: {
     date: moment.Moment;
     etat: EtatDuJour;
     cours: PlanningEvent[] | undefined;
     theme: AppThemeType;
     navigation: Navigation;
     largeurDesHeures: number;
+    compter: boolean;
 }) {
     const { bandeaux, horaires } = coursDuJour(cours);
     // Le jour s'affiche s'il porte quoi que ce soit — un bandeau compris —, mais le compte ne dit que
@@ -96,7 +97,8 @@ function JourDeLAgenda({ date, etat, cours, theme, navigation, largeurDesHeures 
     const titre = date.isValid() ? upperCaseFirstLetter(date.format('dddd D MMMM')) : '';
     // Un evenement du telephone ou du campus n'est pas un cours, et son jour n'est pas « libre » (lot 5).
     const nombre = nombreDeCours(horaires);
-    const compte = nombre === null ? null : nombre === 0
+    // Des plages « Occupe » (l'instantane d'un ami, docs/phase-8/8-amis.md) ne sont pas des cours : seul « Libre » se dit.
+    const compte = nombre === null || (!compter && nombre > 0) ? null : nombre === 0
         ? Translator.get('AGENDA_LIBRE')
         : nombre === 1 ? Translator.get('AGENDA_UN_COURS') : Translator.get('AGENDA_N_COURS', nombre);
 
@@ -134,9 +136,11 @@ export interface AgendaDeLaSemaineProps {
     repli: (rang: number) => moment.Moment;
     theme: AppThemeType;
     navigation: Navigation;
+    /** Faux pour des plages qui ne sont pas des cours : le jour ne dit pas « 2 cours ». */
+    compter?: boolean;
 }
 
-export function AgendaDeLaSemaine({ jours, repli, theme, navigation }: AgendaDeLaSemaineProps) {
+export function AgendaDeLaSemaine({ jours, repli, theme, navigation, compter = true }: AgendaDeLaSemaineProps) {
     const { fontScale } = useWindowDimensions();
     const largeurDesHeures = Math.ceil(TEXTE_DES_HEURES * Math.max(1, fontScale));
     const instant = maintenant();
@@ -153,6 +157,7 @@ export function AgendaDeLaSemaine({ jours, repli, theme, navigation }: AgendaDeL
                         theme={theme}
                         navigation={navigation}
                         largeurDesHeures={largeurDesHeures}
+                        compter={compter}
                     />
                 );
             })}

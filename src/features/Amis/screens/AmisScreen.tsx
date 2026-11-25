@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
         paddingBottom: tokens.space.xxl,
     },
     vide: {
-        marginHorizontal: tokens.space.md,
+        marginHorizontal: tokens.space.sm,
         marginTop: tokens.space.lg,
     },
 });
