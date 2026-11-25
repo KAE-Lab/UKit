@@ -68,6 +68,8 @@ export interface AnnonceRow {
     readonly blurhash: string | null;
     /** `{ nom, logo_url, lien }` pour une carte partenaire ou bon plan ; nul sinon. */
     readonly partenaire: unknown;
+    /** Le sondage de la fiche (phase 8, lot 4) : `{ question, choix, clos_le }`, lu par `shared/annonces/sondage.ts` ; nul sans sondage. */
+    readonly sondage: unknown;
 }
 
 /**
@@ -307,6 +309,8 @@ export interface Database {
             compter: { Args: { p_lots: readonly LigneDeMesure[] }; Returns: { comptes: number; rejetes: number } };
             /** La lecture d'un retour par sa cle secrete (lot 3) : une ligne par cle, ou `null`. */
             lire_mes_retours: { Args: { p_cles: readonly string[] }; Returns: unknown[] };
+            /** Les parts d'un sondage, voix attestees seules, les petites cases masquees (lot 4). */
+            resultats_sondage: { Args: { p_annonce: string }; Returns: unknown };
         };
         Enums: Record<string, never>;
         CompositeTypes: Record<string, never>;

@@ -45,6 +45,7 @@ const LIGNE: AnnonceRow = {
     statut: 'publiee',
     blurhash: null,
     partenaire: null,
+    sondage: null,
 };
 
 function annonce(patch: Partial<BdeAnnonce>): BdeAnnonce {
@@ -224,4 +225,11 @@ test('le blurhash ne suit que l image sur laquelle il a ete calcule', () => {
     expect(remplacee.image_url).toBe('https://exemple.test/autre.jpg');
     expect(remplacee.blurhash).toBeUndefined();
     expect(avecImage(avecPlaceholder, undefined).blurhash).toBeUndefined();
+});
+
+test('le sondage se lit de sa colonne, et un sondage hors forme est omis plutot que rendu a moitie', () => {
+    const sondage = { question: 'Quel creneau ?', choix: [{ id: 'a', libelle: 'Midi' }, { id: 'b', libelle: 'Soir' }], clos_le: '2026-12-01T18:00:00Z' };
+    expect(projeterAnnonce({ ...LIGNE, sondage }).sondage?.choix.map((c) => c.id)).toEqual(['a', 'b']);
+    expect(projeterAnnonce({ ...LIGNE, sondage: { ...sondage, choix: [] } }).sondage).toBeUndefined();
+    expect(projeterAnnonce(LIGNE).sondage).toBeUndefined();
 });

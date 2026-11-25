@@ -36,6 +36,7 @@ import {
     type TypeDAnnonce,
 } from '../../../shared/annonces/carte';
 import { projeterOrdre, type ParametresDOrdre } from '../../../shared/annonces/ordre';
+import { lireSondage, type Sondage } from '../../../shared/annonces/sondage';
 
 /**
  * Ce qu'un ecran manipule.
@@ -77,6 +78,8 @@ export interface BdeAnnonce {
     partenaire?: Partenaire;
     /** Ce que l'ordre lit de la ligne (shared/annonces/ordre.ts). Le service ordonne ; l'ecran n'en sait rien. */
     ordre: ParametresDOrdre;
+    /** Le sondage de la fiche (lot 4), omis sans sondage ou hors forme. */
+    sondage?: Sondage;
 }
 
 /** Une colonne nullable rend `null` ; le contrat applicatif, lui, omet ce qu'il n'a pas. */
@@ -138,6 +141,7 @@ export function projeterAnnonce(row: AnnonceRow): BdeAnnonce {
         blurhash: texte(row.blurhash),
         partenaire: partenaireDeCarte(type, row.partenaire) ?? undefined,
         ordre: projeterOrdre(row),
+        sondage: lireSondage(row.sondage) ?? undefined,
     };
 }
 

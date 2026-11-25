@@ -39,7 +39,7 @@ const TABLE = 'annonces';
  * publie et deja date (supabase/policies.sql), l'application n'a rien a en decider — et l'ordre du
  * carrousel a remplace celui de la date de publication.
  */
-const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,expire_le,active,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire';
+const COLONNES = 'id,titre,emetteur,accroche,description,image_url,images,lat,lng,couleur,cta_texte,cta_lien,expire_le,active,audience,etablissements,version_min,version_max,plateformes,type,emplacements,ajustement,focale,priorite,epinglee,creneaux,blurhash,partenaire,sondage';
 
 /**
  * Ce qu'un ecran recoit : une liste, ou un echec deja traduit.

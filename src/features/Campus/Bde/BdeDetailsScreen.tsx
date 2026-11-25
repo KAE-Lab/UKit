@@ -30,6 +30,7 @@ import { DUREE_FONDU_MS } from '../../../shared/ui/ApparitionEnFondu';
 import { useSourceRendue } from '../../../shared/ui/useSourceRendue';
 import { CampusMapSection } from '../components/CampusMapSection';
 import { DescriptionAnnonce } from './DescriptionAnnonce';
+import { SondageDAnnonce } from './SondageDAnnonce';
 import { BdeAnnonce } from '../services/BdeService';
 import { compter } from '../../../shared/mesure';
 
@@ -193,6 +194,9 @@ const BdeDetailsScreen = ({ route, navigation, onAnimatedScroll }: BdeDetailsScr
                             {annonce.long_desc ? (
                                 <DescriptionAnnonce texte={annonce.long_desc} couleurDepart={annonce.couleur} theme={theme} />
                             ) : null}
+
+                            {/* Le sondage suit le recit qui le pose (lot 4), avant la galerie et le lieu. */}
+                            {annonce.sondage !== undefined ? <SondageDAnnonce theme={theme} annonce={annonce.id} sondage={annonce.sondage} /> : null}
 
                             {/* La galerie suit le recit : chaque image dans le meme cadre adaptatif
                                 que le visuel principal. */}
