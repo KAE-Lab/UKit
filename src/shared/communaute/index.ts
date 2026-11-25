@@ -49,9 +49,12 @@ async function corpsDeLaDemande(identite: Identite, donnees: string): Promise<Re
 }
 
 async function unEnvoi(contribution: Contribution, essai: boolean): Promise<ResultatDeContribution> {
-    const defi = await demanderUnDefi();
-    if (defi === null) return getSupabase() === null ? { etat: 'sans-base' } : { etat: 'echec', raison: 'defi' };
+    if (getSupabase() === null) return { etat: 'sans-base' };
+    // L'identite d'abord : enregistrer une cle App Attest passe par Apple, et le defi ne vaut que
+    // cinq minutes.
     const identite = await identiteDeLAppareil();
+    const defi = await demanderUnDefi();
+    if (defi === null) return { etat: 'echec', raison: 'defi' };
     const donnees = serialiserDonnees(defi, identite.cle, contribution, essai);
     const corps = await corpsDeLaDemande(identite, donnees);
     // Une cle App Attest devenue inutilisable a ete oubliee : l'envoi suivant partira par le secret.
@@ -100,22 +103,27 @@ async function lire(maintenant: Date): Promise<LectureDuJour> {
     const supabase = getSupabase();
     if (supabase === null) return { etat: 'sans-base', signalements: cache.signalements };
 
-    const aPartirDe = depuis(cache);
+    // Les pages se suivent par le curseur, pas par un decalage : une ligne qui change de `maj_le`
+    // pendant la lecture passe plus loin, au lieu de decaler les suivantes et d'en faire sauter une.
+    let aPartirDe = depuis(cache);
     const lues: Signalement[] = [];
-    for (let debut = 0; ; debut += TAILLE_DE_PAGE) {
-        let requete = supabase.from('signalements').select(COLONNES).order('maj_le').order('id').range(debut, debut + TAILLE_DE_PAGE - 1);
+    for (;;) {
+        let requete = supabase.from('signalements').select(COLONNES).order('maj_le').order('id').limit(TAILLE_DE_PAGE);
         if (aPartirDe !== null) requete = requete.gte('maj_le', aPartirDe);
         const { data, error } = await requete;
         if (error !== null) {
             reportSupabaseFailure('signalements', describeSupabaseFailure(error));
             return { etat: 'cache', signalements: cache.signalements };
         }
-        const page = (data ?? []) as unknown[];
+        const page = (data ?? []) as Array<{ maj_le?: unknown }>;
         for (const ligne of page) {
             const lue = lireSignalement(ligne);
             if (lue !== null) lues.push(lue);
         }
-        if (page.length < TAILLE_DE_PAGE) break;
+        const suivant = page[page.length - 1]?.maj_le;
+        // Une page pleine sur un seul instant ne ferait plus avancer le curseur : on s'arrete la.
+        if (page.length < TAILLE_DE_PAGE || typeof suivant !== 'string' || suivant === aPartirDe) break;
+        aPartirDe = suivant;
     }
     const neuf = fusionner(cache, lues);
     await AsyncStorage.setItem(CLE_CACHE, ecrireCache(neuf)).catch(() => undefined);

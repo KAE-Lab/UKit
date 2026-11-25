@@ -232,14 +232,6 @@ export interface BlueprintRow {
 }
 
 /**
- * Une table, vue par une application qui ne fait que lire.
- *
- * `Insert` et `Update` a `never` n'est pas un raccourci : c'est la meme frontiere que les politiques,
- * exprimee au compilateur. `supabase.from(...).insert(...)` ne compile pas, et l'ecriture reste ce
- * qu'elle doit etre — le script de publication et la console d'administration, avec la cle secrete.
- * Les inventer donnerait l'illusion d'une capacite que la base refuse de toute facon.
- */
-/**
  * Un signalement de la communaute (phase 8, lot 1), tel que la cle publiable le lit : les colonnes
  * accordees une a une, sans l'appareil qui l'a ecrit ni sa confirmation (supabase/policies.sql). Les
  * instants sont des chaines ISO ; `shared/communaute/donnees.ts` les relit defensivement.
@@ -257,6 +249,14 @@ export interface SignalementRow {
     maj_le: string;
 }
 
+/**
+ * Une table, vue par une application qui ne fait que lire.
+ *
+ * `Insert` et `Update` a `never` n'est pas un raccourci : c'est la meme frontiere que les politiques,
+ * exprimee au compilateur. `supabase.from(...).insert(...)` ne compile pas, et l'ecriture reste ce
+ * qu'elle doit etre — le script de publication et la console d'administration, avec la cle secrete.
+ * Les inventer donnerait l'illusion d'une capacite que la base refuse de toute facon.
+ */
 interface TableEnLecture<Row> {
     Row: Row;
     Insert: never;

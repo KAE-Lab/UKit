@@ -30,6 +30,12 @@ export type Identite =
 
 /** `{ cle, enregistree }` : l'identifiant de la cle App Attest, et si la fonction l'a enregistree. */
 const CLE_APP_ATTEST = 'communaute-appattest@1';
+/**
+ * La marque de cette installation. Le trousseau d'iOS survit a une desinstallation, AsyncStorage non :
+ * un secret trouve sans elle est celui d'une installation passee, et se remplace — une reinstallation
+ * fait une autre cle partout, comme la specification le promet.
+ */
+const CLE_INSTALLATION = 'communaute-installation@1';
 
 let moduleDIntegrite: Promise<ModuleDIntegrite | null> | null = null;
 let appAttestRefuse = false;
@@ -62,10 +68,14 @@ function projetPlayIntegrity(): string | null {
  */
 async function secretDeLAppareil(): Promise<string> {
     try {
-        const lu = await SecureStoreService.getSecretCommunaute();
+        const installee = (await AsyncStorage.getItem(CLE_INSTALLATION)) !== null;
+        const lu = installee ? await SecureStoreService.getSecretCommunaute() : null;
         if (lu !== null && depuisBase64(lu)?.length === 32) return lu;
         const neuf = versBase64(getRandomBytes(32));
-        if (await SecureStoreService.saveSecretCommunaute(neuf)) return neuf;
+        if (await SecureStoreService.saveSecretCommunaute(neuf)) {
+            await AsyncStorage.setItem(CLE_INSTALLATION, '1');
+            return neuf;
+        }
     } catch {
         // Le trousseau ne repond pas : un secret de session, et rien n'est ecrit.
     }
