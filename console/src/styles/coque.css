@@ -12,18 +12,23 @@
 .coque[data-domaine="publier"] { --teinte-a: var(--teinte-publier-a); --teinte-b: var(--teinte-publier-b); }
 .coque[data-domaine="compte"] { --teinte-a: var(--teinte-compte-a); --teinte-b: var(--teinte-compte-b); }
 
+/*
+ * La barre laterale tient sans defiler a 900 px de haut ; plus bas, elle defile, avec une barre fine
+ * aux couleurs du theme plutot que celle du systeme.
+ */
 .laterale {
-    position: sticky; top: 0; height: 100vh; overflow: auto;
+    position: sticky; top: 0; height: 100vh; overflow: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: var(--bordure) transparent;
     padding: var(--espace-lg) var(--espace-sm) var(--espace-md); border-right: 1px solid var(--bordure);
     display: flex; flex-direction: column; gap: 2px;
 }
 .marque { display: flex; align-items: center; gap: var(--espace-sm); padding: 0 var(--espace-md) var(--espace-md); }
 .marque img { height: 20px; width: auto; display: block; }
 .marque span { color: var(--texte-3); font-size: var(--taille-sm); font-weight: 500; }
-.laterale .section { padding: var(--espace-lg) var(--espace-md) var(--espace-xs); font-size: var(--taille-sm); font-weight: 600; color: var(--texte-3); }
+.laterale .section { padding: var(--espace-md) var(--espace-md) var(--espace-xs); font-size: var(--taille-sm); font-weight: 600; color: var(--texte-3); }
 .lien-nav {
     display: flex; align-items: center; gap: 10px; padding: 7px var(--espace-md);
-    border-radius: var(--rayon-md); color: var(--texte); font-weight: 500; min-height: 36px;
+    border-radius: var(--rayon-md); color: var(--texte); font-weight: 500; min-height: 34px;
     transition: background var(--duree-courte) ease;
 }
 .lien-nav:hover { background: var(--surface); }
