@@ -41,26 +41,38 @@ function officialisable(sujet: SujetDeLieu): boolean {
     return sujet.famille !== 'direct' && sujet.sujet !== 'restaurant.plat';
 }
 
-/** Ce que l'application dit d'un sujet, en clair ; `null` quand elle n'en dit rien. */
-function EtatDUnSujet({ etat, lieu, instant, admin, gestes, enCours }: { readonly etat: EtatDuSujet } & Props) {
+/** Ce que l'application dit d'un sujet, en clair : une pastille et sa ligne ; `null` quand elle n'en dit rien. */
+function enClair(etat: EtatDuSujet, lieu: Lieu, instant: number): { readonly pastille: ReactNode; readonly detail: string } | null {
     const { officiel, communaute, enRetrait } = etat.etat;
     const valeur = (v: string) => libelleDeValeur(etat.sujet, v);
-    let pastille: ReactNode = null;
-    let detail = '';
-    if (officiel !== null) {
-        pastille = <Pastille ton="accent">officiel : {valeur(officiel.valeur)}</Pastille>;
-        detail = `jusqu’au ${new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(`${officiel.fin ?? ''}T12:00:00`))}`;
-    } else if (communaute.nature === 'etabli') {
-        pastille = <Pastille ton={communaute.voix > 1 ? 'ok' : 'neutre'}>établi : {valeur(communaute.valeur)}</Pastille>;
-        detail = `${communaute.voix} voix, confirmé il y a ${depuis(iso(communaute.confirmeLe), new Date(instant))}`;
-    } else if (communaute.nature === 'incertain') {
-        pastille = <Pastille ton="avert">incertain : {valeur(communaute.valeur)}</Pastille>;
-        detail = `contredit : ${valeur(communaute.contraire ?? '')}`;
-    } else if (enRetrait.length > 0) {
-        pastille = <Pastille>non vérifié : {valeur(enRetrait[0]!.valeur)}</Pastille>;
-        detail = `${enRetrait.length} contribution${enRetrait.length > 1 ? 's' : ''} sans attestation`;
+    if (etat.sujet.sujet === 'restaurant.plat') {
+        // Le plat se classe : le premier, et ceux qui le suivent.
+        const [premier, ...suivants] = lieu.plats;
+        if (premier === undefined) return null;
+        const detail = [`${premier.voix} voix`, ...suivants.slice(0, 2).map((p) => `${p.valeur}, ${p.voix} voix`)].join(' ; ');
+        return { pastille: <Pastille>en tête : {premier.valeur}</Pastille>, detail };
     }
-    if (pastille === null) return null;
+    if (officiel !== null) {
+        const jour = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(`${officiel.fin ?? ''}T12:00:00`));
+        return { pastille: <Pastille ton="accent">officiel : {valeur(officiel.valeur)}</Pastille>, detail: `jusqu’au ${jour}` };
+    }
+    if (communaute.nature === 'etabli') {
+        // Neutre : un vert dirait « tout va bien » sur « Izly en panne ». Le nombre de voix dit la solidite.
+        return { pastille: <Pastille>établi : {valeur(communaute.valeur)}</Pastille>, detail: `${communaute.voix} voix, confirmé il y a ${depuis(iso(communaute.confirmeLe), new Date(instant))}` };
+    }
+    if (communaute.nature === 'incertain') {
+        return { pastille: <Pastille ton="avert">incertain : {valeur(communaute.valeur)}</Pastille>, detail: `contredit : ${valeur(communaute.contraire ?? '')}` };
+    }
+    const premier = enRetrait[0];
+    if (premier === undefined) return null;
+    return { pastille: <Pastille>non vérifié : {valeur(premier.valeur)}</Pastille>, detail: `${enRetrait.length} contribution${enRetrait.length > 1 ? 's' : ''} sans attestation` };
+}
+
+function EtatDUnSujet({ etat, lieu, instant, admin, gestes, enCours }: { readonly etat: EtatDuSujet } & Props) {
+    const { officiel, communaute } = etat.etat;
+    const clair = enClair(etat, lieu, instant);
+    if (clair === null) return null;
+    const { pastille, detail } = clair;
     const cle = `${etat.sujet.sujet}|${lieu.cible}`;
     // La valeur que la communaute etablit, a rendre officielle. Le plat se classe, il ne s'officialise
     // pas ; un direct ne vaut que quelques minutes, et un officiel le figerait jusqu'au soir.
@@ -148,7 +160,8 @@ function LigneDeSignalement({ s, admin, gestes, enCours, instant }: { readonly s
                     ) : (
                         <Bouton variante="tonal" compact disabled={!admin} enAttente={enCours === s.id} onClick={() => { void gestes.masquer(s.id); }}>Masquer</Bouton>
                     )}
-                    <Bouton variante={s.auteurBloque ? 'discret' : 'destructif'} compact disabled={!admin} onClick={() => { void gestes.bloquer(s.id, !s.auteurBloque); }}>
+                    {/* Discret dans la rangee : seize boutons rouges noieraient la liste ; la confirmation, elle, est destructive. */}
+                    <Bouton variante="discret" compact disabled={!admin} onClick={() => { void gestes.bloquer(s.id, !s.auteurBloque); }}>
                         {s.auteurBloque ? 'Débloquer' : 'Bloquer l’appareil'}
                     </Bouton>
                 </div>
@@ -170,7 +183,12 @@ export function CarteDeLieu(props: Props) {
                 <div className="defilable">
                     <table className="tableau">
                         <thead>
-                            <tr><th>Quand</th><th>Type</th><th>Valeur</th><th>Voix</th><th>État</th><th>Auteur</th><th><span className="visuellement-cache">Gestes</span></th></tr>
+                            <tr>
+                                <th>Quand</th><th>Type</th><th>Valeur</th><th>Voix</th><th>État</th><th>Auteur</th>
+                                {/* Un nom pour le lecteur d'ecran, sans texte cache : positionne hors de la carte
+                                    qui defile, il elargissait la page a 390 pixels. */}
+                                <th aria-label="Gestes" />
+                            </tr>
                         </thead>
                         <tbody>
                             {lieu.signalements.map((s) => <LigneDeSignalement key={s.id} s={s} {...props} />)}

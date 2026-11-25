@@ -6,7 +6,7 @@
  */
 
 import { lireSignalement, type Signalement } from '../../../../src/shared/communaute/donnees';
-import { lireLeLieu, type EtatDuSujet, type EtatOfficiel } from '../../../../src/shared/communaute/lieu';
+import { classement, lireLeLieu, type EtatDuSujet, type EtatOfficiel, type PlatClasse } from '../../../../src/shared/communaute/lieu';
 import { sujetDeLieu, type DomaineDeLieu } from '../../../../src/shared/communaute/vocabulaire';
 
 /** Un signalement tel que la console le lit : ni la cle de son auteur, seulement s'il est bloque et combien il en a ecrit ce jour-la. */
@@ -30,8 +30,12 @@ export interface Lieu {
     readonly officiels: readonly EtatOfficiel[];
     /** L'etat de chaque sujet du domaine, a l'instant de la lecture. */
     readonly etats: readonly EtatDuSujet[];
+    /** Le plat recommande se classe, il ne s'etablit pas : le classement du jour, sans borne de menu. */
+    readonly plats: readonly PlatClasse[];
     readonly dernier: number;
 }
+
+const SUJET_DU_PLAT = sujetDeLieu('restaurant.plat');
 
 export type StatutFiltre = 'tous' | 'active' | 'masquee' | 'non_verifie';
 
@@ -86,6 +90,7 @@ export function lieux(signalements: readonly SignalementModere[], officiels: rea
             signalements: retenus,
             officiels: officielsDuLieu,
             etats: lireLeLieu(tous, officielsDuLieu, domaine, cible, maintenant),
+            plats: domaine === 'restaurant' && SUJET_DU_PLAT !== undefined ? classement(tous, SUJET_DU_PLAT, cible, maintenant) : [],
             dernier: Math.max(...retenus.map((s) => s.creeLe), ...officielsDuLieu.map((o) => o.creeLe)),
         });
     }
