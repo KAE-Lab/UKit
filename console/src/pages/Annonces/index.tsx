@@ -16,15 +16,22 @@ import { ANNONCES } from '../../schema/tables/annonces';
 import type { Ligne } from '../../supabase';
 import { Ressource } from '../Ressource';
 import { etatDAnnonce } from '../../schema/tables/etatDAnnonce';
+import { lireSondageSaisi } from '../../schema/schemas';
 import { Ordre } from './Ordre';
+import { ResultatsDuSondage } from './ResultatsDuSondage';
 
 const ApercuDiffere = lazy(() => import('./apercu/Apercu').then((module) => ({ default: module.Apercu })));
 
 function apercu(valeurs: Ligne, activite: Activite) {
+    // Les resultats suivent la ligne enregistree : une saisie en cours n'a pas encore de voix.
+    const choix = lireSondageSaisi(valeurs.sondage).choix.filter((c) => c.libelle.trim() !== '');
     return (
-        <Suspense fallback={<div aria-busy="true"><SqueletteBloc hauteur={480} /></div>}>
-            <ApercuDiffere valeurs={valeurs} activite={activite} />
-        </Suspense>
+        <div className="pile">
+            <Suspense fallback={<div aria-busy="true"><SqueletteBloc hauteur={480} /></div>}>
+                <ApercuDiffere valeurs={valeurs} activite={activite} />
+            </Suspense>
+            {typeof valeurs.id === 'string' && choix.length > 0 ? <ResultatsDuSondage annonce={valeurs.id} choix={choix} /> : null}
+        </div>
     );
 }
 

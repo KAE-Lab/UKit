@@ -6,7 +6,7 @@
  */
 
 import { lireFocale } from '../../../src/shared/annonces/carte';
-import { lireCreneauxSaisis, lirePartenaire } from './schemas';
+import { lireCreneauxSaisis, lirePartenaire, lireSondageSaisi } from './schemas';
 
 /** Les jours ISO, en abrege, 1 = lundi. */
 export const JOURS: readonly { readonly numero: number; readonly court: string; readonly long: string }[] = [
@@ -49,6 +49,12 @@ export function resumeDePartenaire(valeur: unknown): string {
     return partenaire.nom === '' ? '—' : partenaire.nom;
 }
 
+/** Un sondage se resume par sa question, en liste ; aucun, un tiret. */
+export function resumeDeSondage(valeur: unknown): string {
+    const sondage = lireSondageSaisi(valeur);
+    return sondage.question.trim() === '' ? '—' : sondage.question.trim();
+}
+
 /** Le resume d'une saisie structuree par le type de son champ ; `null` pour les autres types. */
 export function resumeStructure(type: string, valeur: unknown): string | null {
     switch (type) {
@@ -56,6 +62,7 @@ export function resumeStructure(type: string, valeur: unknown): string | null {
         case 'creneaux': return resumeDeCreneaux(valeur);
         case 'galerie': return resumeDeGalerie(valeur);
         case 'partenaire': return resumeDePartenaire(valeur);
+        case 'sondage': return resumeDeSondage(valeur);
         default: return null;
     }
 }
