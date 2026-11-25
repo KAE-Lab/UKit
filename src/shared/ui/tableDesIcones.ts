@@ -49,6 +49,7 @@ import Clock from 'lucide-react-native/icons/clock';
 import CloudOff from 'lucide-react-native/icons/cloud-off';
 import Compass from 'lucide-react-native/icons/compass';
 import CookingPot from 'lucide-react-native/icons/cooking-pot';
+import Copy from 'lucide-react-native/icons/copy';
 import Croissant from 'lucide-react-native/icons/croissant';
 import CupSoda from 'lucide-react-native/icons/cup-soda';
 import DoorClosed from 'lucide-react-native/icons/door-closed';
@@ -97,6 +98,7 @@ import PartyPopper from 'lucide-react-native/icons/party-popper';
 import Pizza from 'lucide-react-native/icons/pizza';
 import Plus from 'lucide-react-native/icons/plus';
 import Popcorn from 'lucide-react-native/icons/popcorn';
+import QrCode from 'lucide-react-native/icons/qr-code';
 import RectangleEllipsis from 'lucide-react-native/icons/rectangle-ellipsis';
 import RefreshCw from 'lucide-react-native/icons/refresh-cw';
 import Repeat from 'lucide-react-native/icons/repeat';
@@ -117,7 +119,9 @@ import Trash2 from 'lucide-react-native/icons/trash';
 import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import Unlink from 'lucide-react-native/icons/unlink';
 import User from 'lucide-react-native/icons/user';
+import UserPlus from 'lucide-react-native/icons/user-plus';
 import UserSearch from 'lucide-react-native/icons/user-search';
+import UserX from 'lucide-react-native/icons/user-x';
 import Users from 'lucide-react-native/icons/users';
 import Utensils from 'lucide-react-native/icons/utensils';
 import UtensilsCrossed from 'lucide-react-native/icons/utensils-crossed';
@@ -136,7 +140,11 @@ function entree(composant: ComponentType<LucideProps>, plein = false): EntreeDIc
 export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcons.glyphMap, EntreeDIcone>> = {
     'account-circle': entree(CircleUser),
     'account-circle-outline': entree(CircleUser),
+    'account-group-outline': entree(Users),
     'account-key-outline': entree(KeyRound),
+    'account-multiple-outline': entree(Users),
+    'account-plus-outline': entree(UserPlus),
+    'account-remove-outline': entree(UserX),
     'account-search-outline': entree(UserSearch),
     'alert-circle-outline': entree(CircleAlert),
     'alert-outline': entree(TriangleAlert),
@@ -185,6 +193,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'cloud-off': entree(CloudOff),
     'cog-outline': entree(Settings),
     'compass-outline': entree(Compass),
+    'content-copy': entree(Copy),
     'cupcake': entree(CakeSlice),
     'domain': entree(Building),
     'door-closed': entree(DoorClosed),
@@ -238,6 +247,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'pasta': entree(CookingPot),
     'pizza': entree(Pizza),
     'plus': entree(Plus),
+    'qrcode': entree(QrCode),
     'refresh': entree(RefreshCw),
     'school': entree(School),
     'school-outline': entree(School),

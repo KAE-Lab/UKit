@@ -15,6 +15,13 @@ export default {
 	name: DEVELOPPEMENT ? 'UKit Dev' : 'UKit',
 	description: 'UKit, a companion app for student of University of Bordeaux',
 	slug: 'Ukit',
+	/*
+	 * Le schema de l'application, que la page `/ami` du site ouvre avec le lien d'un ami
+	 * (docs/phase-8/8-amis.md). Le nom du domaine plutot que « ukit », trop court pour etre propre a
+	 * cette application. Le build de developpement a le sien, pour ne pas se disputer le lien avec
+	 * l'application du store sur le meme telephone.
+	 */
+	scheme: DEVELOPPEMENT ? 'ukit-bordeaux-dev' : 'ukit-bordeaux',
 	privacy: 'public',
 	githubUrl: 'https://github.com/KAE-Lab/UKit',
 	platforms: ['ios', 'android'],

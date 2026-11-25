@@ -130,6 +130,12 @@ export const tokens = {
          */
         ressort: { damping: 100, mass: 4, stiffness: 900 },
     },
+    /**
+     * Le code QR d'un lien d'ami (docs/phase-8/8-amis.md) : noir sur blanc dans les deux themes. Un
+     * code inverse, clair sur le fond sombre, n'est pas lu par tous les appareils photo ; le site garde
+     * le sien sur blanc pour la meme raison. Pas une couleur de l'interface : une encre et un papier.
+     */
+    codeQr: { encre: '#000000', papier: '#FFFFFF' },
 };
 
 export default tokens;

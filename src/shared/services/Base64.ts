@@ -50,3 +50,22 @@ export function decoderBase64(base64: string): Uint8Array {
     }
     return position === octets.length ? octets : octets.slice(0, position);
 }
+
+/**
+ * La chaine base64 standard d'octets, avec son bourrage `=` : l'inverse de `decoderBase64`, pour le
+ * meme motif (`btoa` n'est pas garanti par Hermes et ne prend que du texte). Le lien d'un ami en fait
+ * sa forme pour URL (features/Amis/services/lienAmi.ts).
+ */
+export function encoderBase64(octets: Uint8Array): string {
+    let sortie = '';
+    for (let index = 0; index < octets.length; index += 3) {
+        const a = octets[index];
+        const b = index + 1 < octets.length ? octets[index + 1] : 0;
+        const c = index + 2 < octets.length ? octets[index + 2] : 0;
+        const bloc = (a << 16) | (b << 8) | c;
+        sortie += ALPHABET.charAt((bloc >> 18) & 63) + ALPHABET.charAt((bloc >> 12) & 63);
+        sortie += index + 1 < octets.length ? ALPHABET.charAt((bloc >> 6) & 63) : '=';
+        sortie += index + 2 < octets.length ? ALPHABET.charAt(bloc & 63) : '=';
+    }
+    return sortie;
+}

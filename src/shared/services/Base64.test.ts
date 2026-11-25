@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decoderBase64 } from './Base64';
+import { decoderBase64, encoderBase64 } from './Base64';
 
 /**
  * Ce decodeur existe parce que celui de la plateforme a ecrit du texte a la place d'octets — un
@@ -53,5 +53,15 @@ describe('decoderBase64', () => {
         const base64 = Buffer.from(source).toString('base64');
 
         expect(decoderBase64(base64)).toEqual(source);
+    });
+});
+
+describe('encoderBase64', () => {
+    it('suit l’implementation de reference et revient par le decodeur', () => {
+        for (const texte of ['', 'a', 'ab', 'abc', 'abcd', 'été — noël']) {
+            const octets = new Uint8Array(Buffer.from(texte, 'utf8'));
+            expect(encoderBase64(octets)).toBe(Buffer.from(texte, 'utf8').toString('base64'));
+            expect(decoderBase64(encoderBase64(octets))).toEqual(octets);
+        }
     });
 });

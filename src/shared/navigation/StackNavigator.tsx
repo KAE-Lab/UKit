@@ -29,6 +29,11 @@ import RetourScreen from '../../features/Retours/RetourScreen';
 import MesRetoursScreen from '../../features/Retours/MesRetoursScreen';
 import IdeesScreen from '../../features/Retours/IdeesScreen';
 import type { ParametresDuFormulaire } from '../../features/Retours/useFormulaireDeRetour';
+import AmisScreen from '../../features/Amis/screens/AmisScreen';
+import AmiScreen from '../../features/Amis/screens/AmiScreen';
+import AjoutAmiScreen from '../../features/Amis/screens/AjoutAmiScreen';
+import PartageScreen from '../../features/Amis/screens/PartageScreen';
+import { EcouteDesLiensDAmis } from '../../features/Amis/components/EcouteDesLiensDAmis';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
@@ -71,6 +76,11 @@ export type RootStackParamList = {
     MesRetours: undefined;
     /** La boite a idees (phase 8, lot 4). */
     Idees: undefined;
+    /** Les amis (7.1, docs/phase-8/8-amis.md) : la liste, le partage, un ami, un lien recu. */
+    Amis: undefined;
+    PartageAmi: undefined;
+    Ami: { id: string; nom: string };
+    AjoutAmi: { lien: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -81,6 +91,10 @@ const EcranDuJeuAvecEnTete = withStaticHeader(EcranDuJeu);
 const RetourEcran = withHeaderAnimation(RetourScreen);
 const MesRetoursEcran = withHeaderAnimation(MesRetoursScreen);
 const IdeesEcran = withHeaderAnimation(IdeesScreen);
+const AmisEcran = withHeaderAnimation(AmisScreen);
+const PartageEcran = withHeaderAnimation(PartageScreen);
+const AmiEcran = withHeaderAnimation(AmiScreen);
+const AjoutAmiEcran = withStaticHeader(AjoutAmiScreen);
 
 /** Le titre d'une fiche : le nom de ce qu'elle montre, « Details » s'il manque. */
 function nomOuDetails(nom: unknown): string {
@@ -98,7 +112,10 @@ export default function StackNavigator() {
                     // d'accueil propose la connexion au compte, et il est rendu **a la place** de ce
                     // navigateur. Le provider devait donc envelopper les deux branches, sans quoi
                     // l'accueil aurait eu besoin de son propre formulaire — c'est-a-dire d'un second
-                    // chemin de connexion a maintenir.
+                    // chemin de connexion a maintenir. Le lien d'un ami s'ecoute a cote, dans le
+                    // conteneur, une fois l'accueil passe (7.1).
+                    <>
+                    <EcouteDesLiensDAmis />
                     <Stack.Navigator
                             id="RootStack"
                             initialRouteName="MainTabs"
@@ -145,6 +162,12 @@ export default function StackNavigator() {
                             <Stack.Screen name="Retour" component={RetourEcran} options={({ route }) => NavBarHelper({ title: Translator.get('RETOUR_TITRE'), themeName, route, gestureEnabled: true })} />
                             <Stack.Screen name="MesRetours" component={MesRetoursEcran} options={({ route }) => NavBarHelper({ title: Translator.get('MES_RETOURS'), themeName, route, gestureEnabled: true })} />
                             <Stack.Screen name="Idees" component={IdeesEcran} options={({ route }) => NavBarHelper({ title: Translator.get('IDEES_TITRE'), themeName, route, gestureEnabled: true })} />
+
+                            {/* Les amis (7.1) : le Planning les ouvre, un lien d'ami ouvre l'ajout. */}
+                            <Stack.Screen name="Amis" component={AmisEcran} options={({ route }) => NavBarHelper({ title: Translator.get('AMIS_TITRE'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="PartageAmi" component={PartageEcran} options={({ route }) => NavBarHelper({ title: Translator.get('PARTAGE_TITRE'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="Ami" component={AmiEcran} options={({ route }) => NavBarHelper({ title: nomOuDetails(route.params?.nom), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="AjoutAmi" component={AjoutAmiEcran} options={({ route }) => NavBarHelper({ title: Translator.get('AJOUT_TITRE'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Filters" component={FiltersScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FILTERS'), themeName, route, gestureEnabled: true })} />
 
@@ -200,6 +223,7 @@ export default function StackNavigator() {
                             {/* Pas de bouton de filtre sur un evenement du telephone : il n'a pas d'UE (6.1.x-D). */}
                             <Stack.Screen name="Course" component={CourseScreen} options={({ navigation, route }) => NavBarHelper({ headerRight: () => route.params?.data?.source === 'telephone' ? null : <View style={{ paddingRight: tokens.space.md }}><FilterRemoveButton UE={route.params?.data?.UE} themeName={themeName} backAction={navigation.goBack} /></View>, title: route.params?.title ?? Translator.get('DETAILS'), themeName, route })} />
                         </Stack.Navigator>
+                    </>
                 );
             }}
         </AppContext.Consumer>

@@ -437,6 +437,7 @@ class DayView extends React.Component<DayViewProps, DayViewState> {
                             onTodayPress={this.onTodayPress}
                             onRightPress={onRightPress}
                             onAjouterEvenement={this.state.calendrierPourAjout !== null ? this.ajouterEvenement : undefined}
+                            onOuvrirAmis={() => this.props.navigation?.navigate('Amis')}
                             days={this.state.days}
                             extractCalendarDayKey={this.extractCalendarDayKey}
                             viewability={this.viewability}

@@ -29,6 +29,8 @@ export interface DayViewHeaderProps {
     onRightPress: () => void;
     /** Le « + » vers l'editeur du systeme ; absent tant qu'aucun calendrier du telephone n'est affiche (6.1.x-D). */
     onAjouterEvenement?: () => void;
+    /** Les amis et leurs creneaux communs (7.1, docs/phase-8/8-amis.md), depuis le planning des favoris. */
+    onOuvrirAmis?: () => void;
 
     // Day slider
     days: moment.Moment[];
@@ -54,7 +56,7 @@ export interface DayViewHeaderProps {
     extraData: unknown;
 }
 
-const renderTitle = (groupName: string | string[], theme: import('../../../shared/theme/Theme').AppThemeType, onAjouterEvenement?: () => void) => {
+const renderTitle = (groupName: string | string[], theme: import('../../../shared/theme/Theme').AppThemeType, onAjouterEvenement?: () => void, onOuvrirAmis?: () => void) => {
     // Vue d'un groupe cherche : pas de grand titre, mais tout son ESPACE — le degagement standard
     // des sous-pages (HEADER_OFFSET), la ou le titre en opacite nulle ne reservait que sa propre
     // hauteur : les boutons flottants retour et favori frolaient la ligne Aujourd'hui/Semaine
@@ -74,6 +76,11 @@ const renderTitle = (groupName: string | string[], theme: import('../../../share
                 {onAjouterEvenement !== undefined && (
                     <HeaderButton theme={theme} onPress={onAjouterEvenement} accessibilityLabel={Translator.get('ADD_EVENT')} style={{ marginRight: tokens.space.sm }}>
                         <Icon icon={{ name: 'plus' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
+                    </HeaderButton>
+                )}
+                {onOuvrirAmis !== undefined && (
+                    <HeaderButton theme={theme} onPress={onOuvrirAmis} accessibilityLabel={Translator.get('AMIS_TITRE')} style={{ marginRight: tokens.space.sm }}>
+                        <Icon icon={{ name: 'account-multiple-outline' }} size={HEADER_BUTTON_ICON} color={theme.primary} />
                     </HeaderButton>
                 )}
                 <PastilleService theme={theme} onglet="Planning" />
@@ -230,7 +237,7 @@ export const DayViewHeader: React.FC<DayViewHeaderProps> = (props) => {
             }]}
         >
             {hauteur !== null ? <FondDOnglet theme={props.theme} onglet="planning" hauteur={hauteur} /> : null}
-            {renderTitle(props.groupName, props.theme, props.onAjouterEvenement)}
+            {renderTitle(props.groupName, props.theme, props.onAjouterEvenement, props.onOuvrirAmis)}
             {renderNavigation(
                 props.theme, props.mode, props.leftLabel, props.centerLabel, 
                 props.rightLabel, props.rightIcon, props.onTodayPress, props.onRightPress

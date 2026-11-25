@@ -633,7 +633,8 @@ class SettingsManagerService {
         // Les calendriers du telephone survivent a une bascule d'etablissement, pas a un effacement.
         this.setCalendriersAffiches([]);
         // Les evenements du campus ajoutes, masques, l'abonnement : repartir comme apres une reinstallation (lot 5).
-        await (await import('../evenements')).oublierLesEvenements();
+        // Et les amis, ce qu'ils ont partage, le prenom montre au partage : rien n'en reste (7.1).
+        await Promise.all([import('../evenements').then((m) => m.oublierLesEvenements()), import('../../features/Amis/services/AmisStore').then((m) => m.oublierLesAmis())]);
         // Le parcours d'accueil redemande l'etablissement : le laisser sur le precedent afficherait un
         // choix deja fait a quelqu'un qui vient de tout effacer.
         this.setEtablissement(ETABLISSEMENT_DEFAUT);

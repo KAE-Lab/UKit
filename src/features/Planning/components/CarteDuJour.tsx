@@ -135,7 +135,8 @@ function Proposition({ suggestion, theme, navigation }: { suggestion: Suggestion
     );
 }
 
-function Midi({ fenetre, etat, theme, navigation }: {
+/** Midi et ses restaurants ; repris tel quel par les creneaux communs avec un ami (docs/phase-8/8-amis.md). */
+export function Midi({ fenetre, etat, theme, navigation }: {
     fenetre: { debut: number; fin: number };
     etat: ReturnType<typeof useOuManger>;
     theme: AppThemeType;
