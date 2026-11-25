@@ -903,6 +903,19 @@ renumérote. L'empreinte se prend sur la lecture brute, dans `ScheduleList.avecC
 ([purge.ts](../../src/shared/etablissements/purge.ts)) et s'oublie à chaque lien d'abonnement rangé.
 Un cours changé porte `avant`, posé à l'affichage, jamais en cache.
 
+## Les amis et les créneaux communs
+
+Depuis la 7.1 ([spécification](../phase-8/8-amis.md)), le bouton de l'en-tête du planning des favoris
+ouvre les amis : partager son emploi du temps par un lien ou un code QR, et voir celui d'un ami avec
+« Libres ensemble », les créneaux communs. Ce qui part dépend de la source : des **codes de groupe**
+pour Celcat et le référentiel iCalendar, que l'ami relit à la source de l'établissement du lien
+([`sourcePubliqueDe`](../../src/shared/etablissements/edt.ts), `fetchSemainePublique`), et un
+**instantané** des créneaux occupés pour un abonnement ou le groupe personnel de l'INP, que seule
+`sourceEdt()` connaît et qu'aucun lien ne porte. Les créneaux communs généralisent les trous de la
+journée du lot 6 : sans ami, ce sont exactement eux
+([`creneauxCommuns.ts`](../../src/features/Amis/services/creneauxCommuns.ts)). Ses heures à soi sont
+celles de la vue semaine des favoris, son cache en repli ; ni le téléphone ni les événements du campus.
+
 ## Limites connues
 
 - **Un `modules: []` retomberait sur la catégorie.** L'extraction rend `null` aussi bien pour un champ

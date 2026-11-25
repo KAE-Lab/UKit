@@ -8,7 +8,22 @@ Ce fichier a été ouvert avec le socle de documentation : les versions antérie
 pas détaillées rétrospectivement. Leur contenu reste consultable dans les
 [Releases GitHub](https://github.com/KAE-Lab/UKit/releases) et dans l'historique Git.
 
-## [Non publié]
+## [Non publié] — 7.1
+
+La 7.1, sur la branche `v7.1` : elle sort après la 7.0, dont la section suit. Ses lots ont chacun leur
+spécification dans `docs/phase-8/`.
+
+### Ajouté
+
+- **Les amis** ([spécification](docs/phase-8/8-amis.md)) : partager son emploi du temps par un lien ou
+  un code QR, sans compte, et voir « Libres ensemble », les créneaux où les deux sont libres, avec le
+  trou de midi commun et ses restaurants aujourd'hui. Un emploi du temps public part par ses codes de
+  groupe ; un emploi du temps personnel, en instantané de ses créneaux occupés sur deux semaines, sans
+  intitulés. Rien ne passe par un serveur : le contenu voyage dans le fragment du lien. Retirer un ami
+  l'efface du téléphone. Le bouton est dans l'en-tête du Planning.
+- **Le schéma `ukit-bordeaux://`**, que la page `/ami` du site ouvre (une nouveauté native).
+
+## [Non publié] — 7.0
 
 La 7.0, la première publication de la [phase 8](docs/phase-8/README.md) : la communauté. Les
 étudiants disent ce qu'ils voient sur place, votent, écrivent depuis l'application et lisent la
