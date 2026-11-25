@@ -19,6 +19,13 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### « Ninguno » se coupe dans la rangée des calendriers du téléphone, en espagnol — relevé au banc le 2026-11-25
+
+Sur `ukit` (Android 15), en espagnol, la page Calendario des Réglages écrit « Ningu… » à droite de
+« Calendarios del teléfono » : le libellé de gauche ne se comprime pas (6.1.x-D), et la valeur n'a plus
+la place de « Ninguno ». Vu en passant au lot 5 de la phase 8, hors de son périmètre ; la piste est
+celle de 6.1.x-D, un libellé plus court en espagnol, ou « 0 » pour la valeur.
+
 ### La recherche des restaurants laisse une liste blanche — relevé au banc le 2026-11-25
 
 Sur `ukit` (Android 15), la recherche de l'écran Restaurants tapée par `adb shell input text` —
