@@ -207,8 +207,10 @@ export class ScheduleList extends React.Component<ScheduleListProps, ScheduleLis
             // Rien a demander a la source — mais le telephone, lui, peut avoir de quoi remplir la
             // journee (6.1.x-D). Sans cette lecture, cocher un calendrier sans suivre un groupe ne
             // montrait jamais rien : l'etat « aucun favori » passait devant (mesure du 2026-09-08).
+            // L'affichage reste en place le temps de cette lecture locale : vide, il faisait passer
+            // l'invitation devant un evenement du campus, le temps d'une image (lot 5).
             const vide: ScheduleData = this.props.mode === 'day' ? [] : assemblerSemaine([], this.joursAffiches()[0]);
-            this.setState({ schedule: vide, loading: false, controller: null, failure: null }, async () => {
+            this.setState({ loading: false, controller: null, failure: null }, async () => {
                 const telephone = await this.lireTelephone();
                 if (this.demonte) return;
                 this.applySchedule({ data: vide, cacheDate: null, manquants: [], failure: null }, telephone, false);
