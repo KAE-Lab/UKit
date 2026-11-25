@@ -20,8 +20,9 @@ export function estVide(valeur: unknown): boolean {
 
 const Tiret = () => <span className="secondaire">—</span>;
 
+/** « oui » seulement : une colonne pleine de « non » ne se lit plus, le vide dit la meme chose sans bruit. */
 function celluleBooleen(valeur: unknown) {
-    return valeur === true ? <>oui</> : <span className="secondaire">non</span>;
+    return valeur === true ? <>oui</> : <span className="visuellement-cache">non</span>;
 }
 
 /** Un logo se montre entier sur un fond clair ; une affiche ou une photo remplit sa vignette. */
