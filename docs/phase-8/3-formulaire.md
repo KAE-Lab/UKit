@@ -123,8 +123,9 @@ proposer », qui se rouvre dans Réglages, Confidentialité.
 Un retour entre d'abord dans la boîte (`retours-a-envoyer@1`), ses captures recopiées dans le
 répertoire privé, puis part. Sans réseau ou base injoignable, il attend et repart au retour du réseau
 (NetInfo) ou au prochain entretien, un dépôt à la fois, sous le même identifiant de dépôt. Un plafond
-du jour le garde aussi, et le toast dit qu'il partira plus tard ; tout autre refus est définitif et
-se dit. Une capture se téléverse sous son rang (`<id>/<n>.jpg`), qu'une URL manquante ne décale pas,
+du jour le garde aussi, jusqu'au lendemain — chaque essai compte à l'adresse —, et le toast dit qu'il
+partira plus tard ; tout autre refus est définitif et se dit. Un dépôt rejoué après la clôture ne
+redemande pas ses captures. Une capture se téléverse sous son rang (`<id>/<n>.jpg`), qu'une URL manquante ne décale pas,
 et se remplace si elle est rejouée.
 
 ### 8. Les portes

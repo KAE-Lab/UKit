@@ -73,7 +73,10 @@ export async function capturerLEcran(): Promise<string | null> {
     if (c === null) return null;
     try {
         const uri = await c.captureScreen({ format: 'jpg', quality: 0.6, result: 'tmpfile' });
-        return (new File(uri).size ?? Number.POSITIVE_INFINITY) <= POIDS_MAX ? uri : await compresser(uri, Number.POSITIVE_INFINITY);
+        if ((new File(uri).size ?? Number.POSITIVE_INFINITY) <= POIDS_MAX) return uri;
+        const compressee = await compresser(uri, Number.POSITIVE_INFINITY);
+        oublierLeFichier(uri);
+        return compressee;
     } catch (erreur) {
         console.warn(`[retours] ecran non capture : ${erreur instanceof Error ? erreur.message : String(erreur)}`);
         return null;

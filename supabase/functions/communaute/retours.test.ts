@@ -91,6 +91,10 @@ describe('le masquage du texte libre', () => {
         expect(masquer('Depuis la 7.0.0, id1394708917')).toBe('Depuis la 7.0.0, id1394708917');
         // Un texte deja a la borne qui grossit au masque reste a la borne, au lieu d'etre refuse.
         expect(masquer(`${'x'.repeat(1990)} 0612345678`)).toHaveLength(2000);
+        // Coupe par points de code : un emoji a la borne reste entier ou part entier.
+        const coupe = masquer(`0612345678 ${'x'.repeat(1983)}😀😀`);
+        expect(Array.from(coupe)).toHaveLength(2000);
+        expect(coupe.endsWith('\ud83d')).toBe(false);
     });
 });
 

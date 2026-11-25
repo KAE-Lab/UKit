@@ -220,6 +220,17 @@ do $$ begin
     end if;
     raise notice 'ok 2x';
 end $$;
+-- Rejoue apres la cloture : plus de capture a deposer, la purge ne la reprendrait pas.
+update public.retours set etat = 'traite' where texte = 'Rejoue apres une reponse perdue';
+set local role service_role;
+do $$ begin
+    if (pg_temp.d('lot3-rejeu', jsonb_build_object('depot', '7d1f2e3a-4b5c-4d6e-8f70-112233445566', 'nature', 'bug',
+            'texte', 'Rejoue apres une reponse perdue', 'captures', 1)) ->> 'captures')::integer <> 0 then
+        raise exception 'ECHEC 2y : un depot rejoue apres la cloture rouvre ses captures';
+    end if;
+    raise notice 'ok 2y';
+end $$;
+reset role;
 
 -- ---------------------------------------------------------------------------
 -- 3. Les problemes connus, et le detail qui s'y range.

@@ -57,6 +57,16 @@ export interface RetourEnAttente {
     readonly fichiers: readonly string[];
     /** La cle de reponse en base64, gardee sur l'appareil ; `null` sans accord. */
     readonly cle: string | null;
+    /**
+     * Le jour de Paris ou un plafond l'a differe : il ne se redepose pas avant le lendemain, chaque essai
+     * comptant a l'adresse et, sans attestation, au plafond qu'elle partage avec les contributions.
+     */
+    readonly differe?: string;
+}
+
+/** Ce qui se redepose maintenant : tout, sauf ce qu'un plafond a differe aujourd'hui. */
+export function aRedeposer(boite: readonly RetourEnAttente[], jour: string): RetourEnAttente[] {
+    return boite.filter((attente) => attente.differe !== jour);
 }
 
 export type StatutDuRetour = 'nouveau' | 'en_attente' | 'traite' | 'refuse';

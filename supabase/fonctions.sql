@@ -1127,7 +1127,9 @@ begin
     --    s'est perdue ; sans cela, il ecrirait un doublon, ou buterait pour toujours sur sa cle de reponse.
     if (v_r ->> 'depot') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
         v_depot := (v_r ->> 'depot')::uuid;
-        select id, captures into v_id, v_captures from public.retours where depot = v_depot;
+        -- Plus de capture a deposer pour un retour clos ou deja purge : la purge ne la reprendrait pas.
+        select id, case when clos_le is null and captures_purgees_le is null then captures else 0 end
+          into v_id, v_captures from public.retours where depot = v_depot;
         if v_id is not null then
             return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'deja', true);
         end if;

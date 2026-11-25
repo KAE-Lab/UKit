@@ -74,6 +74,14 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
     const insets = useSafeAreaInsets();
     const [capture, setCapture] = useState<string | null>(null);
     const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // La capture proposee, hors du rendu : une seconde capture ou le demontage effacent la precedente.
+    const proposee = useRef<string | null>(null);
+    const proposer = useCallback((uri: string | null) => {
+        if (minuteur.current !== null) clearTimeout(minuteur.current);
+        if (proposee.current !== null) oublierLeFichier(proposee.current);
+        proposee.current = uri;
+        setCapture(uri);
+    }, []);
 
     useEffect(() => {
         let desabonner: () => void = () => undefined;
@@ -85,12 +93,8 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
                 const uri = await capturerLEcran();
                 if (uri === null || !actif) return;
                 await ecrireProposition({ jour, jamais: false });
-                setCapture(uri);
-                if (minuteur.current !== null) clearTimeout(minuteur.current);
-                minuteur.current = setTimeout(() => {
-                    oublierLeFichier(uri);
-                    setCapture(null);
-                }, DUREE_DE_LA_PROPOSITION_MS);
+                proposer(uri);
+                minuteur.current = setTimeout(() => proposer(null), DUREE_DE_LA_PROPOSITION_MS);
             })();
         }).then((d) => {
             if (actif) desabonner = d; else d();
@@ -98,21 +102,18 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
         return () => {
             actif = false;
             desabonner();
-            if (minuteur.current !== null) clearTimeout(minuteur.current);
+            proposer(null);
         };
-    }, []);
+    }, [proposer]);
 
     if (capture === null) return null;
     // Une capture qu'on ne signale pas s'efface ; celle qu'on signale passe au formulaire, qui l'efface
     // en se fermant.
-    const fermer = () => {
-        if (minuteur.current !== null) clearTimeout(minuteur.current);
-        oublierLeFichier(capture);
-        setCapture(null);
-    };
+    const fermer = () => proposer(null);
     const signaler = () => {
-        if (minuteur.current !== null) clearTimeout(minuteur.current);
-        setCapture(null);
+        // Le formulaire la prend : il l'effacera en se fermant, pas l'hote.
+        proposee.current = null;
+        proposer(null);
         allerA('Retour', { nature: 'bug', capture });
     };
     const nePlusProposer = () => {

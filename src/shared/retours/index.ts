@@ -15,14 +15,14 @@ import { CryptoDigestAlgorithm, digest, getRandomBytes, randomUUID } from 'expo-
 import { AppState } from 'react-native';
 
 import { envoyerSigne } from '../communaute';
-import { versBase64 } from '../communaute/donnees';
+import { jourDeParis, versBase64 } from '../communaute/donnees';
 import Translator from '../i18n/Translator';
 import { notificationsNatives } from '../services/notificationsNatives';
 import { describeSupabaseFailure, getSupabase, reportSupabaseFailure } from '../supabase';
 import { appeler } from '../supabase/rpc';
 import { garderLesCaptures, octetsDe, oublierLesCaptures } from './captures';
 import {
-    aNotifier, clesALire, fusionnerLecture, lireEnvois, marquer, nouveauRetourConnu, serialiserRetour,
+    aNotifier, aRedeposer, clesALire, fusionnerLecture, lireEnvois, marquer, nouveauRetourConnu, serialiserRetour,
     type NatureDeRetour, type RetourEnAttente,
 } from './donnees';
 import { brancherLeJournal } from './journalDeSession';
@@ -101,6 +101,10 @@ async function deposer(attente: RetourEnAttente): Promise<IssueDuDepot> {
     if (resultat.etat === 'echec' || resultat.etat === 'sans-base' || resultat.etat === 'a-refaire'
         || (resultat.etat === 'refusee' && resultat.raison.startsWith('plafond_'))) {
         const attend: IssueDuDepot = resultat.etat === 'refusee' ? { etat: 'differe' } : { etat: 'en-attente' };
+        if (attend.etat === 'differe') {
+            const jour = jourDeParis(new Date());
+            await modifierBoite((boite) => boite.map((a) => (a.local === attente.local ? { ...a, differe: jour } : a)));
+        }
         issues.set(attente.local, attend);
         return attend;
     }
@@ -124,9 +128,10 @@ let vidageEnCours: Promise<void> | null = null;
  */
 export function viderLaBoite(): Promise<void> {
     vidageEnCours ??= (async () => {
-        for (const attente of await lireBoite()) {
-            const issue = await deposer(attente);
-            if (issue.etat === 'en-attente' || issue.etat === 'differe') break;
+        // Un retour differe aujourd'hui attend le lendemain ; un retour sans reponse arrete le vidage, le
+        // reseau manque encore pour les suivants.
+        for (const attente of aRedeposer(await lireBoite(), jourDeParis(new Date()))) {
+            if ((await deposer(attente)).etat === 'en-attente') break;
         }
     })().catch((erreur: unknown) => {
         console.warn(`[retours] boite non videe : ${erreur instanceof Error ? erreur.message : String(erreur)}`);

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-    aAnnoncer, aNotifier, clesALire, contexteDuVote, fusionnerLecture, lireEnvois, lireLigne, lireProbleme, marquer, nonLues, nouveauRetourConnu,
+    aAnnoncer, aNotifier, aRedeposer, clesALire, contexteDuVote, fusionnerLecture, lireEnvois, lireLigne, lireProbleme, marquer, nonLues, nouveauRetourConnu,
     peutProposer, serialiserRetour, type RetourConnu, type RetourEnAttente,
 } from './donnees';
 
@@ -110,5 +110,13 @@ describe('les problemes connus', () => {
         expect(lireProbleme({ ...ligne, statut: 'brouillon' }, 'android', maintenant)).toBeNull();
         expect(lireProbleme({ ...ligne, statut: 'corrige', maj_le: '2026-10-01T00:00:00Z' }, 'android', maintenant)).toBeNull();
         expect(lireProbleme({ ...ligne, statut: 'corrige', version_corrigee: '7.0.1' }, 'android', maintenant)?.versionCorrigee).toBe('7.0.1');
+    });
+});
+
+describe('la boite d\'envoi', () => {
+    test('un retour differe par un plafond attend le lendemain', () => {
+        const boite = [{ ...ATTENTE, local: 'a', differe: '2026-11-25' }, { ...ATTENTE, local: 'b' }];
+        expect(aRedeposer(boite, '2026-11-25').map((a) => a.local)).toEqual(['b']);
+        expect(aRedeposer(boite, '2026-11-26').map((a) => a.local)).toEqual(['a', 'b']);
     });
 });

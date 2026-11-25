@@ -205,7 +205,9 @@ const NUMERO = /(?<!\d)(?:\+\d{1,3}[\s.-]?)?(?:\(?0\)?[\s.-]?)?[1-9](?:[\s.-]?\d
  * peut allonger le texte : il se borne de nouveau, plutot que de faire refuser un texte deja admis.
  */
 export function masquer(texte: string): string {
-    return texte.replace(ADRESSE, '[adresse retirée]').replace(NUMERO, '[numéro retiré]').slice(0, BORNES.texte);
+    // Par points de code, comme `char_length` dans la base : une coupe en unites UTF-16 laisserait une
+    // moitie d'emoji, que `jsonb` refuse.
+    return Array.from(texte.replace(ADRESSE, '[adresse retirée]').replace(NUMERO, '[numéro retiré]')).slice(0, BORNES.texte).join('');
 }
 
 /** Le chemin d'une capture dans l'espace `retours` : le dossier du retour, son rang. */
