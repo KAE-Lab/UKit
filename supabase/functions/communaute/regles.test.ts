@@ -212,5 +212,7 @@ test('le statut d un refus dit a l application quoi faire', () => {
     expect(statutDuRefus('appareil_bloque')).toBe(403);
     expect(statutDuRefus('assertion')).toBe(401);
     expect(statutDuRefus('sujet_inconnu')).toBe(422);
+    expect(statutDuRefus('sondage_clos')).toBe(422);
+    expect(statutDuRefus('cible_inconnue')).toBe(422);
     expect(statutDuRefus('forme')).toBe(400);
 });

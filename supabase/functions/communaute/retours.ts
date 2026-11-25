@@ -43,6 +43,8 @@ export interface Retour {
     readonly volontaire: boolean;
     readonly contact: string | null;
     readonly probleme: string | null;
+    /** L'idee publiee sous laquelle le detail se range (lot 4). */
+    readonly idee: string | null;
     readonly contexte: Contexte | null;
     readonly captures: number;
     /** L'empreinte SHA-256 de la cle secrete de l'appareil, en hexadecimal ; `null` sans accord. */
@@ -172,13 +174,14 @@ function lireRetour(valeur: unknown): Retour | null {
     const contact = facultatif(r.contact, (v) => champ(v, BORNES.contact));
     const depot = lireUuid(r.depot);
     const probleme = facultatif(r.probleme, lireUuid);
+    const idee = facultatif(r.idee, lireUuid);
     const cleReponse = facultatif(r.cle_reponse, lireEmpreinte);
     const captures = r.captures === undefined ? 0 : lireNombreDeCaptures(r.captures);
     const contexte = lireContexte(r.contexte);
-    if (depot === undefined || campus === false || contact === false || probleme === false || cleReponse === false
+    if (depot === undefined || campus === false || contact === false || probleme === false || idee === false || cleReponse === false
         || captures === undefined || contexte === undefined) return null;
     if (!brancheValide(nature, campus, volontaire, contact)) return null;
-    return { depot, nature, texte, campus, volontaire, contact, probleme, contexte, captures, cleReponse };
+    return { depot, nature, texte, campus, volontaire, contact, probleme, idee, contexte, captures, cleReponse };
 }
 
 /** Les donnees signees d'un depot, relues apres la preuve. */

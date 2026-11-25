@@ -228,7 +228,7 @@ async function deposer(d: Deposer, req: Request, maintenant: number): Promise<Re
         jeton: versHex(await jetonDeVote(CLES.vote, prouve.cle, 'retour', jourDeParis(new Date(maintenant)))),
         retour: {
             depot: retour.depot, nature: retour.nature, texte: masquer(retour.texte), campus: retour.campus, volontaire: retour.volontaire,
-            contact: retour.contact, probleme: retour.probleme, contexte: retour.contexte, captures: retour.captures,
+            contact: retour.contact, probleme: retour.probleme, idee: retour.idee, contexte: retour.contexte, captures: retour.captures,
             cle_reponse: retour.cleReponse,
         },
     });

@@ -35,6 +35,14 @@ describe('le texte signe d\'un retour', () => {
         expect(lu.valeur.retour.contexte?.parcours).toEqual(['CampusTab', 'CrousMenu']);
     });
 
+    test('un detail sur une idee porte son identifiant ; sans idee, null', () => {
+        const IDEE = '5d0b7a51-3f1e-4c2a-9b6e-1a2b3c4d5e6f';
+        const lu = lireDonneesDeRetour(signe({ nature: 'fonctionnalite', texte: 'Le mode hors ligne aussi', idee: IDEE }));
+        expect(lu.ok === true && lu.valeur.retour.idee).toBe(IDEE);
+        const sans = lireDonneesDeRetour(signe({ nature: 'fonctionnalite', texte: 'Une idee libre' }));
+        expect(sans.ok === true && sans.valeur.retour.idee).toBeNull();
+    });
+
     test('la demande de campus du volontaire porte son adresse ; sans volontariat, aucune', () => {
         const volontaire = lireDonneesDeRetour(signe({ nature: 'campus', campus: 'IUT de Périgueux', texte: '', volontaire: true, contact: 'a@exemple.fr' }));
         expect(volontaire.ok === true && volontaire.valeur.retour.contact).toBe('a@exemple.fr');
@@ -55,6 +63,7 @@ describe('le texte signe d\'un retour', () => {
             { nature: 'bug', texte: 'Captures decimales', captures: 1.5 },
             { nature: 'bug', texte: 'Cle courte', cle_reponse: 'abcd' },
             { nature: 'bug', texte: 'Probleme faux', probleme: '../retours' },
+            { nature: 'fonctionnalite', texte: 'Idee fausse', idee: 'une-idee' },
             { nature: 'bug', texte: 'Volontaire texte', volontaire: 'oui' },
             { nature: 'bug', texte: 'Sans depot', depot: undefined },
             { nature: 'bug', texte: 'Depot faux', depot: 'un-depot' },

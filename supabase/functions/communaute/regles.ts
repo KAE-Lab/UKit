@@ -377,7 +377,8 @@ function ecartDeDemande(demande: Record<string, unknown>, attendu: VerdictAttend
  */
 const A_REFAIRE = new Set(['appareil_inconnu', 'compteur_rejoue', 'deja_vote', 'cle_differente']);
 const PREUVES_FAUSSES = new Set(['defi', 'attestation', 'assertion', 'cle']);
-const HORS_VOCABULAIRE = new Set(['sujet_inconnu', 'valeur_invalide', 'cible_invalide', 'fin_invalide', 'retour_invalide']);
+// `cible_inconnue` et `sondage_clos` (lot 4) : un vote sur un sondage, une idee, qui ne s'ouvrent plus au vote.
+const HORS_VOCABULAIRE = new Set(['sujet_inconnu', 'valeur_invalide', 'cible_invalide', 'fin_invalide', 'retour_invalide', 'cible_inconnue', 'sondage_clos']);
 
 export function statutDuRefus(raison: string): number {
     if (raison.startsWith('plafond_')) return 429;
