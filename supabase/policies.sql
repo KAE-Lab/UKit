@@ -487,3 +487,45 @@ create policy "appareils comptes par les admins"
     on public.appareils for select
     to authenticated
     using (private.est_admin());
+
+-- =============================================================================
+-- Les signalements des lieux (phase 8, lot 2 ; migration 20261125030000_signalements.sql)
+-- =============================================================================
+--
+-- Les etats officiels : lus par tous tant qu'ils valent, par l'equipe en entier, ecrits par un admin.
+
+alter table public.etats_officiels enable row level security;
+revoke all on public.etats_officiels from anon, authenticated;
+-- Rien n'y est secret : l'application lit ce qui vaut encore, l'equipe lit tout, un admin ecrit.
+grant select on public.etats_officiels to anon, authenticated;
+grant insert, update, delete on public.etats_officiels to authenticated;
+
+drop policy if exists "etats officiels valables lisibles" on public.etats_officiels;
+create policy "etats officiels valables lisibles"
+    on public.etats_officiels for select
+    to anon, authenticated
+    using (expire_le > now());
+
+drop policy if exists "etats_officiels lisible par les editeurs" on public.etats_officiels;
+create policy "etats_officiels lisible par les editeurs"
+    on public.etats_officiels for select
+    to authenticated
+    using ((select private.est_editeur()));
+
+drop policy if exists "etats_officiels creable par les admins" on public.etats_officiels;
+create policy "etats_officiels creable par les admins"
+    on public.etats_officiels for insert
+    to authenticated
+    with check ((select private.est_admin()));
+
+drop policy if exists "etats_officiels modifiable par les admins" on public.etats_officiels;
+create policy "etats_officiels modifiable par les admins"
+    on public.etats_officiels for update
+    to authenticated
+    using ((select private.est_admin())) with check ((select private.est_admin()));
+
+drop policy if exists "etats_officiels supprimable par les admins" on public.etats_officiels;
+create policy "etats_officiels supprimable par les admins"
+    on public.etats_officiels for delete
+    to authenticated
+    using ((select private.est_admin()));

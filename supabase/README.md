@@ -428,6 +428,15 @@ l'inverse du journal et de la mesure, ce sont des données des étudiants, et la
 `select * from cron.job_run_details where jobid = (select jobid from cron.job where jobname = 'communaute-purge') order by start_time desc limit 5;`
 dit si elle tourne.
 
+**Les signalements des lieux et leur modération**, du [lot 2](../docs/phase-8/2-signalements.md),
+par la migration `20261125030000_signalements.sql` : vingt lignes de `sujets`, la table
+`etats_officiels` (un admin publie, un déclencheur juge le vocabulaire et tire la fin, l'application
+lit ce qui vaut encore), et trois portes de la console — `signalements_a_moderer` pour l'équipe,
+`moderer_signalement` et `bloquer_auteur` pour un admin —, qui ne rendent ni ne journalisent jamais la
+clé d'un appareil. La fonction `communaute` ne change pas. Sa recette,
+[`recettes/signalements.sql`](recettes/signalements.sql), se joue comme celle de la communauté, et
+suppose un admin dans `editeurs`.
+
 ## Ce qui n'a pas sa place ici
 
 Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se

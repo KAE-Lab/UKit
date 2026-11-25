@@ -836,3 +836,69 @@ create table if not exists public.empreintes_ip (
     non_attestes integer not null default 0 check (non_attestes >= 0),
     primary key (jour, empreinte)
 );
+
+-- =============================================================================
+-- Les signalements des lieux (phase 8, lot 2 ; migration 20261125030000_signalements.sql)
+-- =============================================================================
+--
+-- Le vocabulaire des restaurants, des bibliotheques et des batiments, et les etats officiels publies
+-- depuis la console. Le declencheur des etats officiels et les portes de la moderation sont dans
+-- fonctions.sql, les politiques dans policies.sql (docs/phase-8/2-signalements.md).
+
+-- -----------------------------------------------------------------------------
+-- 1. Le vocabulaire
+-- -----------------------------------------------------------------------------
+--
+-- Une copie de src/shared/communaute/vocabulaire.ts, que vocabulaire.test.ts compare a ce bloc. `oui` et
+-- `non` pour un fait (`non` est le lieu tel que sa source le dit, la reponse a « toujours vrai ? ») ;
+-- leur echelle pour l'attente et l'ambiance ; une forme pour un plat du menu et pour des horaires
+-- corriges, que l'application compare a ce qu'elle lit. Rejouable : un sujet republie remplace le
+-- precedent.
+insert into public.sujets (sujet, nature, domaine, famille, valeurs, forme, description) values
+    ('restaurant.ferme',                'signalement', 'restaurant',   'jour',       '{oui,non}', null, 'ferme aujourd''hui'),
+    ('restaurant.self_ferme',           'signalement', 'restaurant',   'jour',       '{oui,non}', null, 'le self ferme'),
+    ('restaurant.cafeteria_fermee',     'signalement', 'restaurant',   'jour',       '{oui,non}', null, 'la cafeteria fermee'),
+    ('restaurant.menu_faux',            'signalement', 'restaurant',   'jour',       '{oui,non}', null, 'le menu faux ou absent'),
+    ('restaurant.ferme_jusqu',          'signalement', 'restaurant',   'date',       '{oui,non}', null, 'ferme jusqu''a sa fin'),
+    ('restaurant.horaires',             'signalement', 'restaurant',   'correction', null, '^[0-9a-f]{8}[|](source|(midi|soir|jour)=(([01][0-9]|2[0-3])[0-5][0-9]-([01][0-9]|2[0-3])[0-5][0-9]|ferme)(,(midi|soir|jour)=(([01][0-9]|2[0-3])[0-5][0-9]-([01][0-9]|2[0-3])[0-5][0-9]|ferme)){0,2})$', 'les bons horaires, service par service'),
+    ('restaurant.attente',              'signalement', 'restaurant',   'direct',     '{fluide,attente,tres_long}', null, 'l''attente, a trois niveaux'),
+    ('restaurant.places',               'signalement', 'restaurant',   'direct',     '{oui,non}', null, 'plus de place assise'),
+    ('restaurant.izly',                 'signalement', 'restaurant',   'direct',     '{oui,non}', null, 'Izly en panne'),
+    ('restaurant.plat',                 'signalement', 'restaurant',   'jour',       null, '^[^[:cntrl:]]{1,120}$', 'le plat recommande, pris au menu du jour'),
+    ('bibliotheque.fermee',             'signalement', 'bibliotheque', 'jour',       '{oui,non}', null, 'fermee aujourd''hui'),
+    ('bibliotheque.fermeture_partielle','signalement', 'bibliotheque', 'jour',       '{oui,non}', null, 'un etage ou une salle ferme'),
+    ('bibliotheque.fermee_jusqu',       'signalement', 'bibliotheque', 'date',       '{oui,non}', null, 'fermee jusqu''a sa fin'),
+    ('bibliotheque.horaires',           'signalement', 'bibliotheque', 'correction', null, '^[0-9a-f]{8}[|](source|(midi|soir|jour)=(([01][0-9]|2[0-3])[0-5][0-9]-([01][0-9]|2[0-3])[0-5][0-9]|ferme)(,(midi|soir|jour)=(([01][0-9]|2[0-3])[0-5][0-9]-([01][0-9]|2[0-3])[0-5][0-9]|ferme)){0,2})$', 'les bons horaires du jour'),
+    ('bibliotheque.ambiance',           'signalement', 'bibliotheque', 'direct',     '{calme,papote}', null, 'calme, ou ca papote'),
+    ('batiment.acces_bloque',           'signalement', 'batiment',     'jour',       '{oui,non}', null, 'l''acces bloque'),
+    ('batiment.ferme',                  'signalement', 'batiment',     'jour',       '{oui,non}', null, 'ferme aujourd''hui'),
+    ('batiment.chauffage',              'signalement', 'batiment',     'jour',       '{oui,non}', null, 'le chauffage en panne'),
+    ('batiment.wifi',                   'signalement', 'batiment',     'jour',       '{oui,non}', null, 'le Wi-Fi en panne'),
+    ('batiment.ferme_jusqu',            'signalement', 'batiment',     'date',       '{oui,non}', null, 'ferme jusqu''a sa fin (travaux)')
+on conflict (sujet) do update
+    set nature = excluded.nature, domaine = excluded.domaine, famille = excluded.famille, valeurs = excluded.valeurs,
+        forme = excluded.forme, description = excluded.description, actif = true;
+
+-- -----------------------------------------------------------------------------
+-- 2. Les etats officiels
+-- -----------------------------------------------------------------------------
+--
+-- Ce que l'equipe publie sur un lieu depuis la console : un sujet du vocabulaire, une valeur, et le
+-- dernier jour ou il vaut (`fin`). Il passe devant l'etat de la communaute, qui reste calcule a cote
+-- (src/shared/communaute/etat.ts). C'est aussi la validation d'une correction d'horaires. `expire_le` se
+-- tire de `fin` — le soir de ce jour, a Paris — par le declencheur, qui juge aussi le vocabulaire :
+-- une valeur que l'application ne saurait pas dire ne s'ecrit pas. Retirer un etat officiel, c'est le
+-- supprimer : l'application relit tous les etats valables a chaque fois, une suppression lui parvient.
+create table if not exists public.etats_officiels (
+    id        uuid        primary key default gen_random_uuid(),
+    sujet     text        not null references public.sujets (sujet),
+    cible     text        not null check (cible ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$'),
+    valeur    text        not null check (char_length(valeur) between 1 and 120),
+    fin       date        not null,
+    cree_le   timestamptz not null default now(),
+    expire_le timestamptz not null,
+    maj_le    timestamptz not null default now(),
+    check (expire_le > cree_le)
+);
+
+create index if not exists etats_officiels_expire_le on public.etats_officiels (expire_le);
