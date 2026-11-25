@@ -81,6 +81,7 @@ export {
     planningDisponible,
     resoudreRessources,
     sourceEdt,
+    sourcePubliqueDe,
 } from './edt';
 export type { SourceEdt } from './edt';
 export { edtPersonnelActif } from './edtPersonnel';

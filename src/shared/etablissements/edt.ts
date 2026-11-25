@@ -22,8 +22,8 @@
 // L'import vise `../aetherius/failures` et non la porte d'entree `../aetherius` : celle-ci
 // re-exporte la facade, qui tire React Native. Meme frontiere que shared/supabase/failures.ts.
 import { serviceAbsent, type UkitFailure } from '../aetherius/failures';
-import { getEtablissementActif, type EdtAbonnement, type EdtIcal } from './catalogue';
-import { entreesCelcat, type EntreesCelcat } from './celcat';
+import { getEtablissementActif, type EdtAbonnement, type EdtIcal, type Etablissement } from './catalogue';
+import { entreesCelcat, entreesCelcatDe, type EntreesCelcat } from './celcat';
 import { edtPersonnelActif, fusionnerGroupePersonnel } from './edtPersonnel';
 import { lienEdtActif } from './lienEdt';
 
@@ -92,6 +92,22 @@ export function sourceEdt(): SourceEdt {
     }
 
     return { kind: 'aucun' };
+}
+
+/**
+ * La source **publique** d'un etablissement, celle qu'un ami peut relire avec des codes de groupe
+ * (docs/phase-8/8-amis.md) : Celcat, ou le referentiel iCalendar **sans** le groupe personnel, qui
+ * est propre a une personne et ne quitte pas son telephone. Un abonnement n'a pas de groupe : `null`,
+ * comme un etablissement sans emploi du temps.
+ *
+ * Elle prend l'etablissement en parametre et ne lit rien de l'etat courant : celui d'un ami peut etre
+ * une autre universite que la sienne.
+ */
+export function sourcePubliqueDe(etablissement: Etablissement): Extract<SourceEdt, { kind: 'celcat' } | { kind: 'ical' }> | null {
+    const celcat = entreesCelcatDe(etablissement, 'groupes');
+    if (celcat !== null) return { kind: 'celcat', entrees: celcat };
+    const edt = etablissement.edt ?? null;
+    return edt === null ? null : { kind: 'ical', config: edt };
 }
 
 /**

@@ -9,8 +9,8 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { groupesRequis, lienParLeCompte, planningDisponible, resoudreRessources, sourceEdt } from './edt';
-import { appliquerCatalogue, projeterEtablissement, setCodeEtablissementActif, ETABLISSEMENT_DEFAUT } from './catalogue';
+import { groupesRequis, lienParLeCompte, planningDisponible, resoudreRessources, sourceEdt, sourcePubliqueDe } from './edt';
+import { appliquerCatalogue, getEtablissement, projeterEtablissement, setCodeEtablissementActif, ETABLISSEMENT_DEFAUT } from './catalogue';
 import type { EdtIcal } from './catalogue';
 import { appliquerEdtsPersonnels } from './edtPersonnel';
 import { appliquerLiensEdt } from './lienEdt';
@@ -198,5 +198,30 @@ describe('resoudreRessources', () => {
             ressources: '',
             manquants: ['ENSC 3A', 'ENSEIRB E2'],
         });
+    });
+});
+
+/** L'emploi du temps public d'un ami, qui peut etre d'une autre universite (docs/phase-8/8-amis.md). */
+describe('sourcePubliqueDe', () => {
+    it('lit l etablissement donne et non le selectionne, Celcat d abord', () => {
+        appliquerCatalogue({
+            celcat: projeterEtablissement({ code: 'celcat', nom: 'C', celcat_domaine: 'https://celcat.exemple.fr/calendar' } as EtablissementRow),
+            ade: projeterEtablissement({ code: 'ade', nom: 'A', edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [{ nom: 'ENSC 1A', ressource: '2' }] } } as EtablissementRow),
+        });
+        setCodeEtablissementActif('ade');
+        expect(sourcePubliqueDe(getEtablissement('celcat'))).toEqual({ kind: 'celcat', entrees: { domaine: 'https://celcat.exemple.fr/calendar', res_type: expect.any(String) } });
+        expect(sourcePubliqueDe(getEtablissement('ade'))?.kind).toBe('ical');
+    });
+
+    it('ne porte jamais l emploi du temps personnel, et rien pour un abonnement', () => {
+        publier({ edt: { blueprint: 'a', blueprint_annee: 'b', groupes: [{ nom: 'ENSC 1A', ressource: '2' }] } });
+        appliquerEdtsPersonnels({ essai: { nom: 'Etudiant Essai', ressource: '4087' } });
+        const source = sourcePubliqueDe(getEtablissement('essai'));
+        if (source?.kind !== 'ical') throw new Error('source attendue iCalendar');
+        expect(source.config.groupes.map((g) => g.nom)).toEqual(['ENSC 1A']);
+
+        publier({ edt: { abonnement: {} } });
+        appliquerLiensEdt({ essai: 'https://exemple.fr/edt.ics' });
+        expect(sourcePubliqueDe(getEtablissement('essai'))).toBeNull();
     });
 });

@@ -23,7 +23,7 @@
  * Voir docs/features/planning.md, docs/phase-6/6-g-etablissements.md et 6-i-planning-universel.md.
  */
 
-import { getEtablissementActif } from './catalogue';
+import { getEtablissementActif, type Etablissement } from './catalogue';
 
 /** Les entrees communes aux six Blueprints Celcat, prêtes a etre passees a `runBlueprint`. */
 export interface EntreesCelcat {
@@ -38,7 +38,14 @@ export interface EntreesCelcat {
  * meme serveur, et c'est la seule chose qui distingue les deux familles de Blueprints.
  */
 export function entreesCelcat(role: 'groupes' | 'salles'): EntreesCelcat | null {
-    const etablissement = getEtablissementActif();
+    return entreesCelcatDe(getEtablissementActif(), role);
+}
+
+/**
+ * Les memes entrees, pour un etablissement donne et non le selectionne : l'emploi du temps d'un ami
+ * peut venir d'une autre universite que la sienne (docs/phase-8/8-amis.md).
+ */
+export function entreesCelcatDe(etablissement: Etablissement, role: 'groupes' | 'salles'): EntreesCelcat | null {
 
     // Un etablissement peut **emprunter** l'inventaire de salles d'un autre serveur, et c'est une
     // decision produit prise sur appareil le 2026-08-15 : les etudiants de Bordeaux INP sont sur le

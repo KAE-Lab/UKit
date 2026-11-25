@@ -28,7 +28,7 @@ import moment from 'moment';
 import type { AbortSignalLike } from '@aetherius/engine';
 
 import { BLUEPRINT, reportFailure, runBlueprint, type Origine, type UkitFailure } from '../../../shared/aetherius';
-import { lienEdtAttendu, planningAbsent, sourceEdt, type SourceEdt } from '../../../shared/etablissements';
+import { getEtablissement, lienEdtAttendu, planningAbsent, sourceEdt, sourcePubliqueDe, type SourceEdt } from '../../../shared/etablissements';
 import { decouperSemaineIcs, projeterAnneeIcs, projeterJourIcs } from './IcsMapping';
 import {
     decouperSemaine,
@@ -207,7 +207,32 @@ class PlanningApiServiceClass {
     ): Promise<PlanningWeekResult> => {
         const edt = source();
         if ('failure' in edt) return { ok: false, failure: edt.failure };
+        return this.semaineDe(edt, group, week, options);
+    };
 
+    /**
+     * La semaine de groupes **publics** d'un etablissement donne, qui peut ne pas etre le selectionne :
+     * l'emploi du temps qu'un ami a partage par ses codes de groupe (docs/phase-8/8-amis.md). Jamais un
+     * abonnement ni le groupe personnel, que `sourcePubliqueDe` ne porte pas.
+     */
+    fetchSemainePublique = async (
+        etablissement: string,
+        groupes: readonly string[],
+        week: { year: number; week: number },
+        options: PlanningRunOptions = {},
+    ): Promise<PlanningWeekResult> => {
+        const connu = getEtablissement(etablissement);
+        const edt = connu === null ? null : sourcePubliqueDe(connu);
+        if (edt === null) return { ok: false, failure: planningAbsent() };
+        return this.semaineDe(edt, [...groupes], week, options);
+    };
+
+    private semaineDe = async (
+        edt: SourceJouable,
+        group: CibleGroupe,
+        week: { year: number; week: number },
+        options: PlanningRunOptions,
+    ): Promise<PlanningWeekResult> => {
         // Le lundi de la semaine ISO, annee ISO comprise (PlanningAssembly.lundiDeSemaineIso) : il
         // partait de l'heure courante et de `startOf('week')`, qui suit la locale, et debordait d'une
         // annee sur une semaine 53.
