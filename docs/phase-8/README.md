@@ -186,7 +186,7 @@ la 7.0.
 |---|---|
 | 0. La console | **livré le 2026-11-25**, en ligne sur https://kae-lab.github.io/UKit/ ([spécification](0-console.md)) |
 | 7.0 | **ouverte le 2026-11-25**, en sept lots, ci-dessous |
-| 7.1 | à ouvrir, après la 7.0 |
+| 7.1 | **ouverte le 2026-11-25** sur la branche `v7.1`, créée depuis `prochaine-version` (`066350d5`) : la 7.0 sort telle quelle ; ci-dessous |
 | 7.2 | à ouvrir, après la 7.1 |
 
 La 7.0 se découpe en lots, chacun avec sa spécification, sur `prochaine-version` ; une page de la
@@ -233,3 +233,11 @@ ou non reproduits, et une limite du correctif de la barre d'Android 9 sous une f
   section « Non publié » du CHANGELOG datée, au moment de la release.
 - **À l'envoi** : `PRIVACY.md` porté sur `main` avant l'examen, les deux fiches saisies, puis, la 7.0
   en ligne sur les deux stores, la [bascule du formulaire](3-formulaire.md).
+
+La 7.1 se découpe en lots sur `v7.1`, chacun avec sa spécification ; les numéros suivent ceux de la 7.0.
+
+| Lot de la 7.1 | Contenu | État |
+|---|---|---|
+| 8. Les amis | le partage d'emploi du temps par un lien ou un code QR, sans compte ; les créneaux communs ; la page `/ami` du site | **en cours** ([spécification](8-amis.md)) |
+| 9. Le partage d'une annonce | les liens universels, les pages du site qu'il demande | à ouvrir |
+| 10. Les annonces en notification | sur consentement | à ouvrir |
