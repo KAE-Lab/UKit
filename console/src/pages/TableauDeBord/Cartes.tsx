@@ -14,7 +14,8 @@ import { useCampusChoisi } from '../../composants/campus';
 import { SANS_FILTRE, useTout } from '../../requetes/useListe';
 import { ETATS_OUVERTS } from '../../schema/tables/retours';
 import { etatDesAnnonces, type AnnonceLegere } from './annonces';
-import { libelleDeCase, parcActif, type Case, type Jeton } from './parc';
+import { libelleDeCase, type Case } from '../../stats/cases';
+import { parcActif, type Jeton } from '../../stats/parc';
 
 function Carte({ titre, icone, lien, requete, children }: {
     readonly titre: string;

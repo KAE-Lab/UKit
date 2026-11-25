@@ -49,7 +49,8 @@ export function TableDesSondes({ detail = false }: { readonly detail?: boolean }
                             <tr key={String(ligne.source)}>
                                 <td><strong>{String(ligne.source)}</strong></td>
                                 <td><Pastille ton={ligne.etat === 'ok' ? 'ok' : 'panne'} point>{String(ligne.etat)}</Pastille></td>
-                                <td>{depuis(ligne.change_le)} <span className="secondaire petit">({formaterDate(ligne.change_le)})</span></td>
+                                {/* Dense (tableau de bord, statistiques) : la duree seule, la date au survol ; la page Sources donne les deux. */}
+                                <td title={formaterDate(ligne.change_le)}>{depuis(ligne.change_le)}{detail ? <> <span className="secondaire petit">({formaterDate(ligne.change_le)})</span></> : null}</td>
                                 {detail ? <><td>{formaterDate(ligne.mesure_le)}</td><td><Detail detail={ligne.detail} /></td></> : null}
                             </tr>
                         ))}

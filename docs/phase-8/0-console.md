@@ -52,7 +52,7 @@ Chaque écran se refait, dans les deux thèmes, et se coche à la livraison.
 
 - [x] Connexion, première connexion
 - [x] Tableau de bord
-- [ ] Statistiques : vue d'ensemble, annonces, sources, réglages, rapport partenaire (nouveaux)
+- [x] Statistiques : vue d'ensemble, annonces, sources, réglages, rapport partenaire (nouveaux)
 - [ ] Sources (la carte réservée aux échecs de `source.echec` se remplit)
 - [x] Retours, fiche d'un retour, compteurs
 - [x] Jetons push
@@ -99,6 +99,31 @@ bruts, qui restent dans l'équipe ([mesure.md](../mesure.md#les-petites-cases)).
 - **`mesures` se lit par tranches** (`.range()`), sur la période choisie seulement ; `jetons_push`
   reste lu en entier tant que le parc se compte en milliers.
 - **Le parc à notifications sous-compte** : la vue d'ensemble le dit une fois, en tête de page.
+- **Le parc actif n'a pas de variation** : `jetons_push` ne garde que le dernier dépôt de chaque
+  appareil, le parc d'une semaine passée ne s'y lit pas. Le tableau de bord pose à sa place la part
+  de la 6.3 à côté des sessions ([`parc.ts`](../../console/src/stats/parc.ts)).
+- **Une semaine close bouge encore** : un téléphone envoie ses compteurs quand il passe en
+  arrière-plan, parfois le lendemain. L'exactitude se juge contre une requête SQL jouée au même
+  instant que la lecture de la console, jamais contre une ligne de base de la veille.
+- **`mesures` se lit par semaines calées sur le lundi** ([`useMesures.ts`](../../console/src/requetes/useMesures.ts)),
+  chacune en cache : la semaine du tableau de bord est celle de la vue d'ensemble.
+- **Recharts se charge à part**, avec les statistiques et la courbe du tableau de bord : le paquet
+  de départ ne grossit pas, la courbe arrive après les chiffres, à sa hauteur réservée.
+- **Les petites cases, partout** ([`cases.ts`](../../console/src/stats/cases.ts)) : un compte de un à
+  quatre devient « moins de 5 », zéro reste zéro. Le total se lit toujours à côté (un chiffre clé, une
+  part) : tant qu'une petite case se retrouverait par différence, la plus petite case visible se cache
+  aussi et se lit « masqué » (secret secondaire). Une case cachée se range par nom, jamais par compte ;
+  un taux qui s'appuie sur elle ne s'écrit pas, et sous vingt au dénominateur un taux se lit grisé. La
+  protection vaut tableau par tableau, et les tableaux de la page Annonces ne cachent que les petites
+  cases : choisir une annonce redonne ses chiffres exacts, un secret secondaire n'y protégerait rien.
+  Recouper deux tableaux en dirait plus ; c'est accepté dans la console, dont chaque éditeur peut lire
+  `mesures` ligne à ligne, pas dans le rapport.
+- **Le rapport partenaire, seul chiffre qui sort de l'équipe**, découpe le total par campus et par
+  semaine sans les croiser : un croisement n'aurait presque que des petites cases, et ses deux totaux
+  les redonneraient. Les petits campus y sont « campus regroupés » : « autres campus » se confondait
+  avec l'« Autre campus » du catalogue.
+- **Le rapport partenaire** s'exporte pour un tableur français (point-virgule, virgule décimale,
+  indicateur d'ordre des octets) et s'imprime en thème clair, quel que soit celui de la console.
 
 ## Définition de « terminé »
 

@@ -3,7 +3,7 @@
  * le fragment d'URL designe. Un compte au mot de passe provisoire ne voit que le choix du sien (7-H).
  */
 
-import { useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 
 import { Compte } from './auth/Compte';
 import { Connexion } from './auth/Connexion';
@@ -25,11 +25,15 @@ import { TableauDeBord } from './pages/TableauDeBord';
 import { segmentsDe, useRoute } from './routeur';
 import { ressourceDe } from './schema/tables';
 
+// Les statistiques et Recharts se chargent a part : les autres pages n'en portent pas le poids (lot 0, phase 8).
+const Statistiques = lazy(() => import('./pages/Statistiques'));
+
 function Page({ chemin, session }: { readonly chemin: string; readonly session: Session }) {
     const segments = segmentsDe(chemin);
     if (segments === null) return <TableauDeBord />;
     switch (segments.tete) {
         case 'sources': return <Sources />;
+        case 'statistiques': return <Suspense fallback={<SquelettePage />}><Statistiques reste={segments.reste} /></Suspense>;
         case 'journal': return <Journal reste={segments.reste} />;
         case 'retours': return <Retours reste={segments.reste} />;
         case 'annonces': return <Annonces reste={segments.reste} />;

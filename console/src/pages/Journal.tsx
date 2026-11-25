@@ -23,7 +23,7 @@ import { SqueletteBloc } from '../composants/ui/Squelette';
 import { lireTout } from '../lib/base';
 import { formaterDate } from '../lib/dates';
 import { messageDErreur } from '../lib/erreurs';
-import { exporterJson } from '../lib/exportJson';
+import { exporterJson } from '../lib/telechargement';
 import { specDepuisEtat } from '../lib/requete';
 import { useLigne } from '../requetes/useListe';
 import type { Descripteur } from '../schema/descripteurs';

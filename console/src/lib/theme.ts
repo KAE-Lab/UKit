@@ -125,6 +125,10 @@ export function installerTheme(): void {
         poser(themeResolu('systeme'));
         prevenir();
     });
+    // L'impression se fait en clair, quel que soit le theme : le rapport partenaire part sur papier ou
+    // en PDF, et un fond sombre y userait l'encre pour rien (7-G).
+    window.addEventListener('beforeprint', () => poser('light'));
+    window.addEventListener('afterprint', () => poser(themeResolu(choixCourant)));
 }
 
 export function choixDeTheme(): ChoixDeTheme {
