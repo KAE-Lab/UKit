@@ -1,4 +1,5 @@
 import { CODES_D_EMPLACEMENT, CODES_DE_TYPE, montreLePartenaire, RATIO_CARTE, type Emplacement, type TypeDAnnonce } from '../../../../src/shared/annonces/carte';
+import { refusDeLEvenement } from '../../../../src/shared/annonces/evenement';
 import { lirePartenaire } from '../schemas';
 import { CAMPUS_PAR_CIBLAGE, CIBLAGE, type Descripteur, type Option } from '../descripteurs';
 import type { Ligne } from '../../supabase';
@@ -46,6 +47,7 @@ const GROUPE_CONTENU = 'Contenu';
 const GROUPE_VISUEL = 'Visuel';
 const GROUPE_CARTES = 'Cartes et ordre';
 const GROUPE_LIEU = 'Lieu et action';
+const GROUPE_EVENEMENT = 'Événement';
 const GROUPE_SONDAGE = 'Sondage';
 const GROUPE_PUBLICATION = 'Publication';
 const GROUPE_CIBLAGE = 'Ciblage';
@@ -60,14 +62,26 @@ function partenaireAPropos(valeurs: Ligne): boolean {
     return partenaire.nom !== '' || partenaire.logo_url !== '' || partenaire.lien !== '';
 }
 
-/** Une regle a la mesure de la ligne entiere : la couleur interdite, un lieu a moitie saisi. */
+/**
+ * L'evenement ne se propose qu'a une annonce de type evenement — ou quand il porte deja une valeur, pour
+ * qu'on puisse le retirer : comme le partenaire, il survit a un changement de type.
+ */
+function evenementAPropos(valeurs: Ligne): boolean {
+    if (valeurs.type === 'evenement') return true;
+    return [valeurs.evenement_debut, valeurs.evenement_fin, valeurs.evenement_lieu].some((v) => typeof v === 'string' && v.trim() !== '');
+}
+
+/** Ce que la ligne editoriale demande d'une annonce d'evenement, rappele dans l'aide de ses champs (guide de l'equipe). */
+const LIGNE_EDITORIALE = 'Les faits — quoi, quand, où, qui l’organise —, jamais l’appel : l’université et toutes les organisations étudiantes y ont le même droit, et UKit reste neutre sur le fond (guide de l’équipe).';
+
+/** Une regle a la mesure de la ligne entiere : la couleur interdite, un lieu a moitie saisi, un evenement incomplet. */
 function valider(ligne: Ligne): string | null {
     if (ligne.couleur === 4 || ligne.couleur === '4') return 'La couleur 4 est interdite : elle duplique la 0 en thème sombre.';
     const lat = typeof ligne.lat === 'number' ? ligne.lat : null;
     const lng = typeof ligne.lng === 'number' ? ligne.lng : null;
     if ((lat === null) !== (lng === null)) return 'Le lieu demande la latitude et la longitude, ou aucune des deux.';
     if (lng !== null && Math.abs(lng) > 180) return 'La longitude va de -180 à 180.';
-    return null;
+    return refusDeLEvenement(ligne.evenement_debut, ligne.evenement_fin, ligne.evenement_lieu);
 }
 
 /**
@@ -104,6 +118,9 @@ export const ANNONCES: Descripteur = {
         { nom: 'accroche', libelle: 'Accroche', type: { type: 'texte' }, aide: 'Le chapeau sous le titre de la fiche ; sur une carte sans visuel, c’est elle qui fait l’affiche.', groupe: GROUPE_CONTENU },
         { nom: 'description', libelle: 'Description', type: { type: 'description' }, aide: 'Le mini-langage des fiches : la barre insère les marqueurs, l’aperçu les rend (docs/features/campus-vie-etudiante.md).', groupe: GROUPE_CONTENU },
         { nom: 'couleur', libelle: 'Couleur d’identité', type: { type: 'teinte' }, aide: 'Elle teinte les têtes de section, la signature et l’affiche d’une carte sans visuel ; chaque pastille la montre en clair et en sombre.', groupe: GROUPE_CONTENU },
+        { nom: 'evenement_debut', libelle: 'Début', type: { type: 'date' }, aide: `La date et l’heure où l’événement commence ; « Ajouter à mon planning » paraît alors sur la fiche. ${LIGNE_EDITORIALE}`, groupe: GROUPE_EVENEMENT, visible: evenementAPropos },
+        { nom: 'evenement_fin', libelle: 'Fin', type: { type: 'date' }, aide: 'Après le début, au plus vingt-quatre heures plus tard : une soirée peut passer minuit. Modifier ou retirer l’événement se reflète dans le planning de ceux qui l’ont ajouté.', groupe: GROUPE_EVENEMENT, visible: evenementAPropos },
+        { nom: 'evenement_lieu', libelle: 'Lieu de l’événement', type: { type: 'texte' }, aide: 'Le nom que l’étudiant cherchera sur place : « Amphi A22, bâtiment A22 ». Le point sur la carte reste le champ « Lieu » plus bas.', groupe: GROUPE_EVENEMENT, visible: evenementAPropos },
         { nom: 'image_url', libelle: 'Visuel', type: { type: 'image', dossier: 'annonces', blurhash: 'blurhash' }, aide: 'Une affiche, redimensionnée à 1080 px et compressée avant l’envoi. Vide : la carte compose une affiche typographique.', groupe: GROUPE_VISUEL },
         { nom: 'blurhash', libelle: 'Blurhash', type: { type: 'texte' }, cache: true },
         { nom: 'focale', libelle: 'Point focal et cadrage', type: { type: 'focale', image: 'image_url', ajustement: 'ajustement', ratio: RATIO_CARTE }, aide: 'Un clic ou un glisser sur l’image pose le point que le cadre 4:5 de la carte garde visible, à la même place relative ; le voile montre ce qu’il coupera.', groupe: GROUPE_VISUEL },

@@ -11,9 +11,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { estPasse, type EvenementDAnnonce } from '../../../../../src/shared/annonces/evenement';
 import { urlDeRendu } from '../../../../../src/shared/visuels/rendu';
 import { DescriptionApercu } from './Description';
-import { LARGEUR_VISUEL, ratioDeCadre, type AnnonceApercu, type ZoneDeFiche } from './modele';
+import { heuresDeLEvenement, jourDeLEvenement, LARGEUR_VISUEL, ratioDeCadre, type AnnonceApercu, type ZoneDeFiche } from './modele';
 
 const DENSITE = 2;
 /** L'air laisse au-dessus de l'endroit ou la fiche se cale. */
@@ -29,6 +30,21 @@ function CadreVisuel({ url }: { readonly url: string }) {
                 alt=""
                 onLoad={(evenement) => setRatio(ratioDeCadre(evenement.currentTarget.naturalWidth, evenement.currentTarget.naturalHeight))}
             />
+        </div>
+    );
+}
+
+/** L'evenement sous le titre, comme `EvenementDAnnonce` le rend : quand, ou, et « Ajouter a mon planning » s'il n'est pas fini. */
+function EvenementApercu({ evenement }: { readonly evenement: EvenementDAnnonce }) {
+    return (
+        <div className="ap-evenement" data-zone="evenement">
+            <div className="ap-evenement-carte">
+                <div><i className="mdi mdi-calendar-blank-outline" aria-hidden="true" />{jourDeLEvenement(evenement.debut)}</div>
+                <div><i className="mdi mdi-clock-outline" aria-hidden="true" />{heuresDeLEvenement(evenement.debut, evenement.fin)}</div>
+                <div><i className="mdi mdi-map-marker-outline" aria-hidden="true" />{evenement.lieu}</div>
+            </div>
+            {/* Un evenement fini ne s'ajoute plus : le telephone retire le bouton. */}
+            {estPasse(evenement, Date.now()) ? null : <span className="ap-bouton-tonal"><i className="mdi mdi-calendar-plus" aria-hidden="true" />Ajouter à mon planning</span>}
         </div>
     );
 }
@@ -52,6 +68,11 @@ function useCalage(defilement: React.RefObject<HTMLDivElement | null>, selecteur
     }, [defilement, selecteur, contenu]);
 }
 
+/** Ce qui fait apparaitre un endroit de la fiche : quand il change, la fiche se recale. */
+function contenuDeFiche(annonce: AnnonceApercu): string {
+    return `${annonce.images.length}|${annonce.aUnLieu ? 1 : 0}|${annonce.description === null ? 0 : 1}|${annonce.evenement === null ? 0 : 1}`;
+}
+
 export interface FicheProps {
     readonly annonce: AnnonceApercu;
     readonly teinte: string;
@@ -64,7 +85,7 @@ export function Fiche({ annonce, teinte, zone, sectionActive }: FicheProps) {
     const defilement = useRef<HTMLDivElement>(null);
     const bouton = annonce.ctaTexte !== null && annonce.ctaLien !== null;
     const selecteur = zone === 'description' && sectionActive !== null ? `[data-bloc="${sectionActive}"]` : (zone === null ? null : `[data-zone="${zone}"]`);
-    useCalage(defilement, selecteur, `${annonce.images.length}|${annonce.aUnLieu ? 1 : 0}|${annonce.description === null ? 0 : 1}`);
+    useCalage(defilement, selecteur, contenuDeFiche(annonce));
     return (
         <div className="ap-fiche">
             <div ref={defilement} className={`ap-fiche-defilement ${bouton ? 'avec-bouton' : ''}`}>
@@ -75,6 +96,7 @@ export function Fiche({ annonce, teinte, zone, sectionActive }: FicheProps) {
                     <h3 className="ap-grand-titre">{annonce.titre}</h3>
                     {annonce.accroche !== null ? <p className="ap-chapeau">{annonce.accroche}</p> : null}
                 </div>
+                {annonce.evenement !== null ? <EvenementApercu evenement={annonce.evenement} /> : null}
                 {annonce.description !== null ? (
                     <div data-zone="description"><DescriptionApercu texte={annonce.description} teinte={teinte} sectionActive={zone === 'description' ? sectionActive : null} /></div>
                 ) : null}
