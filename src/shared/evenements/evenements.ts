@@ -164,8 +164,12 @@ export function visibles(etat: EtatDesEvenements): EvenementSuivi[] {
     return resultat;
 }
 
-export function estVisible(etat: EtatDesEvenements, id: string): boolean {
-    return visibles(etat).some((suivi) => suivi.id === id);
+/**
+ * L'evenement est-il ajoute un par un ? C'est l'etat que la fiche de l'annonce montre : un evenement que
+ * l'abonnement affiche deja s'ajoute encore, pour partir dans l'agenda synchronise (constate au banc).
+ */
+export function estAjoute(etat: EtatDesEvenements, id: string): boolean {
+    return etat.ajoutes.some((suivi) => suivi.id === id);
 }
 
 /**

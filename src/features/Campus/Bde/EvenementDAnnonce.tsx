@@ -2,7 +2,8 @@
  * L'evenement d'une annonce, sous son titre (phase 8, lot 5 ; docs/phase-8/5-evenements.md) : quand et
  * ou, en trois rangees d'une carte au gabarit du sondage, puis « Ajouter a mon planning ».
  *
- * L'ajout se fait d'un toucher et se defait de meme. Apres le premier ajout, une seule fois, l'application
+ * L'ajout se fait d'un toucher et se defait de meme ; un evenement que l'abonnement montre deja
+ * s'ajoute encore, pour partir dans l'agenda synchronise. Apres le premier ajout, une seule fois, l'application
  * propose l'abonnement aux evenements du campus : un dialogue du systeme, que « Pas maintenant » ferme
  * pour de bon — le reglage reste dans l'Agenda des Reglages. Un evenement fini ne s'ajoute plus.
  */
@@ -43,7 +44,7 @@ export function EvenementDAnnonce({ theme, annonce, evenement }: { theme: AppThe
     const basculer = async () => {
         setEnCours(true);
         try {
-            if (fiche.dansLePlanning === true) {
+            if (fiche.ajoute === true) {
                 await fiche.retirer();
                 return;
             }
@@ -71,12 +72,12 @@ export function EvenementDAnnonce({ theme, annonce, evenement }: { theme: AppThe
                 <Rangee theme={theme} premiere={false} icone={{ name: 'clock-outline' }} texte={`${debut.format('HH:mm')} – ${fin.format('HH:mm')}`} />
                 <Rangee theme={theme} premiere={false} icone={{ name: 'map-marker' }} texte={evenement.lieu} />
             </View>
-            {estPasse(evenement, maintenantMs()) || fiche.dansLePlanning === null ? null : (
+            {estPasse(evenement, maintenantMs()) || fiche.ajoute === null ? null : (
                 <ActionButton
                     theme={theme}
                     variant="tonal"
-                    label={Translator.get(fiche.dansLePlanning ? 'EVENEMENT_RETIRER' : 'EVENEMENT_AJOUTER')}
-                    icon={{ name: fiche.dansLePlanning ? 'calendar-remove' : 'calendar-plus' }}
+                    label={Translator.get(fiche.ajoute ? 'EVENEMENT_RETIRER' : 'EVENEMENT_AJOUTER')}
+                    icon={{ name: fiche.ajoute ? 'calendar-remove' : 'calendar-plus' }}
                     onPress={() => { void basculer(); }}
                     disabled={enCours}
                 />

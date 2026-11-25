@@ -20,7 +20,7 @@ import {
     ajouter,
     choisirAbonnement,
     doitProposer,
-    estVisible,
+    estAjoute,
     ETAT_VIDE,
     evenementsDeLAgenda,
     evenementsParJour,
@@ -171,8 +171,8 @@ export function useAbonnementAuxEvenements(): [boolean, (actif: boolean) => void
 }
 
 export interface EvenementDeLaFiche {
-    /** `null` tant que le magasin n'est pas lu : le bouton attend plutot que de mentir. */
-    readonly dansLePlanning: boolean | null;
+    /** Ajoute un par un ; `null` tant que le magasin n'est pas lu : le bouton attend plutot que de mentir. */
+    readonly ajoute: boolean | null;
     /** Ajoute l'evenement, et dit s'il faut proposer l'abonnement — une fois, apres le premier ajout. */
     readonly ajouter: () => Promise<{ readonly proposer: boolean }>;
     readonly retirer: () => Promise<void>;
@@ -185,5 +185,5 @@ export function useEvenementDeLaFiche(annonce: BdeAnnonce): EvenementDeLaFiche {
     const courant = useEtatDesEvenements();
     const ajouterLeSuivi = useCallback(() => ajouterAuPlanning(annonce), [annonce]);
     const retirer = useCallback(() => masquerDuPlanning(annonce.id), [annonce.id]);
-    return { dansLePlanning: courant === null ? null : estVisible(courant, annonce.id), ajouter: ajouterLeSuivi, retirer, repondre: choisirLAbonnement };
+    return { ajoute: courant === null ? null : estAjoute(courant, annonce.id), ajouter: ajouterLeSuivi, retirer, repondre: choisirLAbonnement };
 }

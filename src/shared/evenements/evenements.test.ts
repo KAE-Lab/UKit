@@ -13,7 +13,7 @@ import {
     ajouter,
     choisirAbonnement,
     doitProposer,
-    estVisible,
+    estAjoute,
     ETAT_VIDE,
     evenementsDeLAgenda,
     evenementsParJour,
@@ -83,13 +83,20 @@ describe('l’ajout, le masquage, l’abonnement', () => {
         etat = masquer(masquer(etat, 'a'), 'b');
         expect(visibles(etat).map((s) => s.id)).toEqual(['c']);
         expect(etat.ajoutes).toEqual([]);
-        expect(estVisible(etat, 'a')).toBe(false);
+        expect(estAjoute(etat, 'a')).toBe(false);
     });
 
     test('ajouter un evenement masque le rend visible', () => {
         const etat = ajouter(masquer(ETAT_VIDE, 'a'), suivi('a'));
         expect(etat.masques).toEqual([]);
-        expect(estVisible(etat, 'a')).toBe(true);
+        expect(estAjoute(etat, 'a')).toBe(true);
+    });
+
+    test('un evenement que l’abonnement montre n’est pas ajoute : la fiche propose encore de l’ajouter, pour l’agenda', () => {
+        const etat = choisirAbonnement({ ...ETAT_VIDE, publies: [suivi('a')] }, true);
+        expect(visibles(etat).map((s) => s.id)).toEqual(['a']);
+        expect(estAjoute(etat, 'a')).toBe(false);
+        expect(evenementsDeLAgenda(ajouter(etat, suivi('a'))).map((e) => e.id)).toEqual(['annonce:a']);
     });
 
     test('la proposition se fait une fois, et jamais a qui est deja abonne', () => {
