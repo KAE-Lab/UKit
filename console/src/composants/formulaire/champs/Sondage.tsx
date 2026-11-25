@@ -1,7 +1,8 @@
 /**
  * Le sondage d'une annonce (phase 8, lot 4) : la question, deux a six choix, la cloture. Un choix garde
- * son identifiant quand son libelle change — ses voix le suivent — ; un choix neuf prend la premiere
- * lettre libre. « Retirer le sondage » vide tout, et la colonne part nulle.
+ * son identifiant quand son libelle change — ses voix le suivent — ; un choix neuf en tire un au hasard,
+ * jamais celui d'un choix retire, dont les voix passeraient sinon au nouveau. « Retirer le sondage » vide
+ * tout, et la colonne part nulle.
  */
 
 import { Plus, X } from 'lucide-react';
@@ -11,23 +12,24 @@ import { lireSondageSaisi, SONDAGE_VIDE, type SondageSaisi } from '../../../sche
 import { Bouton } from '../../ui/Bouton';
 import type { ChampProps } from './types';
 
-const LETTRES = 'abcdefghijklmnopqrstuvwxyz';
+const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-function identifiantLibre(choix: SondageSaisi['choix']): string {
-    return [...LETTRES].find((lettre) => !choix.some((c) => c.id === lettre)) ?? `c${choix.length}`;
+/** Huit caracteres tires au hasard : un identifiant qu'aucun choix, present ou retire, n'a porte. */
+function identifiantNeuf(): string {
+    return [...crypto.getRandomValues(new Uint8Array(8))].map((octet) => ALPHABET[octet % ALPHABET.length]).join('');
 }
 
 export function ChampSondage({ id, saisie, onChange, desactive }: ChampProps) {
     const sondage = lireSondageSaisi(saisie);
     const poser = (partiel: Partial<SondageSaisi>) => onChange({ ...sondage, ...partiel });
     const vide = sondage.question === '' && sondage.choix.length === 0 && sondage.clos_le === '';
-    const ajouter = () => poser({ choix: [...sondage.choix, { id: identifiantLibre(sondage.choix), libelle: '' }] });
+    const ajouter = () => poser({ choix: [...sondage.choix, { id: identifiantNeuf(), libelle: '' }] });
 
     if (vide) {
         return (
             <div className="boutons">
                 <Bouton variante="tonal" compact disabled={desactive} icone={<Plus className="icone" aria-hidden="true" />}
-                    onClick={() => onChange({ question: '', choix: [{ id: 'a', libelle: '' }, { id: 'b', libelle: '' }], clos_le: '' })}>
+                    onClick={() => onChange({ question: '', choix: [{ id: identifiantNeuf(), libelle: '' }, { id: identifiantNeuf(), libelle: '' }], clos_le: '' })}>
                     Ajouter un sondage
                 </Bouton>
             </div>
