@@ -58,3 +58,14 @@ details pre { margin: var(--espace-sm) 0 0; padding: var(--espace-sm); border-ra
 .etat-du-lieu .espace { flex: 1; }
 .officiel-a-publier { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espace-sm); margin-bottom: var(--espace-md); }
 .officiel-a-publier .etiquette { font-size: var(--taille-xs); color: var(--texte-2); }
+
+/* Les retours de l'application (phase 8, lot 3) : les captures en vignettes, une reponse et son geste. */
+.vignettes { display: flex; flex-wrap: wrap; gap: var(--espace-sm); }
+.vignettes img { display: block; width: 140px; max-width: 40vw; border: 1px solid var(--bordure); border-radius: var(--rayon-md); }
+.question.reponse-d-equipe { grid-template-columns: 1fr auto; align-items: start; }
+.question.reponse-d-equipe .reponse { grid-column: 1; }
+.question.reponse-d-equipe .bouton { grid-column: 2; grid-row: 1 / span 2; }
+a.question { color: inherit; text-decoration: none; }
+a.question:hover { background: var(--accent-doux); }
+.chiffre-de-probleme { display: flex; align-items: baseline; gap: var(--espace-sm); margin: 0 0 var(--espace-sm); }
+.chiffre-de-probleme strong { font-size: var(--taille-xl); font-variant-numeric: tabular-nums; }

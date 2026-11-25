@@ -26,9 +26,9 @@ mais une annonce se compose sur un écran d'ordinateur.
 
 | Rôle | Ce qu'il fait |
 |---|---|
-| **Admin** | tout : les annonces, les messages de service et leurs notifications, le catalogue des universités, les bâtiments, les visuels, les testeurs, les retours et l'adresse que les gens y laissent, et l'équipe |
+| **Admin** | tout : les annonces, les messages de service et leurs notifications, le catalogue des universités, les bâtiments, les visuels, les testeurs, les retours, leurs captures, l'adresse que les gens y laissent et les réponses, les problèmes connus, et l'équipe |
 | **Rédacteur** | crée, modifie, programme et archive les **annonces** des campus qui lui sont confiés, et lit tout le reste. Il ne supprime rien, et une annonce « pour tous les campus » reste un geste d'admin |
-| **Lecteur** | lit toute la console, sans y écrire. Les adresses laissées dans les retours ne lui sont pas montrées |
+| **Lecteur** | lit toute la console, sans y écrire. Les adresses laissées dans les retours et leurs captures ne lui sont pas montrées |
 
 Ce n'est pas la console qui décide, c'est la base de données : un bouton grisé n'est qu'un
 avertissement, la règle s'applique de toute façon. En tête de chaque page, un bandeau dit ce que ton
@@ -137,7 +137,7 @@ ne comptent rien.
 - **Supprimer au lieu d'archiver.** Une annonce archivée garde sa trace et ses chiffres ; une annonce
   supprimée les perd. Seul un admin supprime.
 - **Partager une capture d'écran qui montre une donnée personnelle** : l'adresse laissée dans un
-  retour, un nom, un numéro. Les retours restent dans la console.
+  retour, une capture envoyée par un étudiant, un nom, un numéro. Les retours restent dans la console.
 - **Publier un essai pour tout le monde.** Un essai se fait en audience **Les testeurs seulement**,
   toujours ; « tout le monde », c'est plus de deux mille téléphones.
 - **Publier un visuel dont on n'a pas les droits** : le logo d'une université ou d'une marque, une
@@ -161,7 +161,16 @@ ne comptent rien.
 - **Les messages de service** s'adressent à tout le parc : une information, un avertissement, un
   incident. **Notifier** envoie une notification aux téléphones visés, **une seule fois** : relis avant.
 - **Les retours** se reclassent (nature, état, note). L'adresse laissée s'affiche au clic,
-  **Afficher l'adresse**, et ne se recopie nulle part ailleurs.
+  **Afficher l'adresse**, et ne se recopie nulle part ailleurs. Depuis la 7.0, la plupart arrivent de
+  l'application (**Source : Application**) : leur fiche montre ce que l'étudiant a laissé joint, ses
+  captures et, s'il l'a demandé, la case **Répondre** — ce que tu y écris, il le lit dans « Mes
+  retours », avec l'**état** que tu choisis (reçu, en cours, traité, clos). Une réponse part telle
+  quelle : relis-la, elle ne se corrige pas, elle se retire. Les captures s'effacent seules trente
+  jours après la clôture.
+- **Les problèmes connus** : ce que l'application montre avant d'envoyer un bug. Un titre que
+  l'étudiant reconnaît, sans jargon, publié pour la plateforme touchée ; à côté, les « Moi aussi » et
+  les appareils, et les détails reçus, à reprendre pour mieux formuler. **Corrigé**, avec la version,
+  le garde un mois dans l'application ; **Clos** le retire.
 - **Les testeurs** : ajoute les téléphones de l'équipe (un identifiant, un nom).
 - **Les signalements** : ce que les étudiants signalent sur les restaurants, les bibliothèques et les
   bâtiments, lieu par lieu, avec ce que l'application en montre. **Masquer** retire une voix de

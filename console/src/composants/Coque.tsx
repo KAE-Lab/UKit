@@ -8,7 +8,7 @@
  */
 
 import {
-    Activity, Bell, BookOpen, Building2, ChartLine, Flag, Image, Inbox, KeyRound, LayoutDashboard, Megaphone, MessageSquare, School, ScrollText, Smile, Tag, UserCog, Users, type LucideIcon,
+    Activity, Bell, BookOpen, Bug, Building2, ChartLine, Flag, Image, Inbox, KeyRound, LayoutDashboard, Megaphone, MessageSquare, School, ScrollText, Smile, Tag, UserCog, Users, type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
@@ -25,7 +25,7 @@ import { NavigationMobile } from './NavigationMobile';
 import { Pastille } from './ui/Pastille';
 
 const ICONES: Readonly<Record<string, LucideIcon>> = {
-    '/': LayoutDashboard, '/statistiques': ChartLine, '/sources': Activity, '/retours': Inbox, '/jetons': Bell, '/signalements': Flag, '/journal': ScrollText,
+    '/': LayoutDashboard, '/statistiques': ChartLine, '/sources': Activity, '/retours': Inbox, '/problemes': Bug, '/jetons': Bell, '/signalements': Flag, '/journal': ScrollText,
     '/annonces': Megaphone, '/messages': MessageSquare, '/testeurs': Users, '/visuels': Image, '/etablissements': School,
     '/salutations': Smile, '/batiments': Building2, '/version': Tag, '/compte': KeyRound, '/equipe': UserCog,
 };
