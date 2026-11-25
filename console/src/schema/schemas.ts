@@ -318,10 +318,11 @@ const sondage: SchemaDeChamp = z.custom<Saisie>().transform((saisie, ctx) => {
     if (question.length < q.min || question.length > q.max) return erreur(`La question compte de ${q.min} à ${q.max} caractères.`);
     if (choix.length < BORNES_DU_SONDAGE.choix.min) return erreur('Il faut au moins deux choix remplis.');
     if (choix.some((c) => c.libelle.length > BORNES_DU_SONDAGE.libelle.max)) return erreur(`Un choix compte ${BORNES_DU_SONDAGE.libelle.max} caractères au plus.`);
+    if (new Set(choix.map((c) => c.libelle.toLocaleLowerCase('fr'))).size !== choix.length) return erreur('Deux choix portent le même libellé.');
     const clos = depuisSaisie(brut.clos_le);
     if (clos === null) return erreur('La date de clôture est obligatoire.');
     const valeur = { question, choix, clos_le: clos };
-    if (lireSondage(valeur) === null) return erreur('Le sondage est hors de la forme attendue : deux à six choix aux libellés distincts.');
+    if (lireSondage(valeur) === null) return erreur('Le sondage est hors de la forme attendue : deux à six choix.');
     return valeur;
 });
 
