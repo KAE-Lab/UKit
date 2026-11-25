@@ -47,9 +47,10 @@ Trois principes portent le projet :
 
 - **Souveraineté.** Aucune dépendance à un service propriétaire payant. Les cartes sont rendues par
   MapLibre sur des données OpenStreetMap, jamais par un fournisseur qui trace l'utilisateur.
-- **Rien de vous ne transite en silence.** Aucun compte UKit n'est requis, aucune donnée
-  personnelle ne quitte l'appareil d'elle-même : l'application interroge les sources
-  **directement depuis l'appareil**, avec la connexion de l'utilisateur, et conserve tout localement.
+- **Rien de vous ne transite en silence.** Aucun compte UKit n'est requis, et rien de ce que
+  l'étudiant consulte ou écrit ne quitte l'appareil sans être dit : l'application interroge les
+  sources **directement depuis l'appareil**, avec la connexion de l'utilisateur, et conserve tout
+  localement.
   Ce qui relève du compte universitaire est chiffré par le trousseau de l'appareil et ne le quitte
   jamais — c'est d'ailleurs la raison pour laquelle le moteur d'automatisation est *embarqué* plutôt
   qu'hébergé. Ce que l'application déduit de l'emploi du temps (la carte du jour, où manger, les
