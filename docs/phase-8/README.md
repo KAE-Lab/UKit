@@ -202,9 +202,24 @@ console qui lit les données d'un lot part sur `main` avec lui.
 | 6. L'intelligence | où manger, les changements détectés, la journée en une carte | **livré le 2026-11-25** : la carte du jour, midi et les changements dans le Planning, banc joué sauf le week-end ; reste le passage sur iPhone ([spécification](6-intelligence.md)) |
 | 7. Le natif, les documents, les règles | la barre de navigation d'Android 9, les fonctionnalités matérielles déclarées pour Google Play ; `PRIVACY.md`, les fiches des stores, le README ; les règles de la communauté publiées | **livré le 2026-11-25** : la barre suit le thème et les deux fonctionnalités sont facultatives (build de développement `f843dc86`, `aapt2` et banc joués, [registre](../defauts-fonctionnels.md)) ; `PRIVACY.md`, README, [backend.md](../backend.md), [mesure.md](../mesure.md) et le [CHANGELOG](../../CHANGELOG.md) à jour ; les règles publiées sur https://ukit-bordeaux.fr/communaute ; reste la saisie des [fiches des stores](fiches-des-stores.md) et la relecture juridique |
 
+**La recette d'ensemble**, jouée le 2026-11-25 sur `b3e460a7`, les sept lots ensemble : **rien ne casse
+entre deux lots**. Portes vertes (1 730 tests, console, `expo export` des deux plateformes). Au banc,
+build `f843dc86` : `ukit` d'une installation neuve à la Scolarité connectée, Planning (carte du jour,
+midi, semaine, événement ajouté, abonnement, fiche et retrait), Campus (Sur place, rappel des règles,
+signalement non vérifié, sondage, bibliothèque, bâtiment), retours (formulaire, réponse en tête au
+lancement, Mes retours, boîte à idées), hors ligne, les deux thèmes, en français puis par sondage en
+anglais et en espagnol ; `ukit-a8` hors WebView, la barre de navigation dans les deux thèmes. Le
+démarrage n'a pas bougé : trois lancements à froid sur le même build, le JavaScript de la 6.3.2 puis
+celui de la 7.0, premier rendu à 456–496 ms contre 469–488 ms, conteneur racine à 913–982 ms contre
+947–989 ms. Un défaut de la 7.0 corrigé (la feuille « Signaler » ouvrait le choix d'un plat hors de la
+vue sur l'A8) ; quatre relevés au [registre](../defauts-fonctionnels.md), aucun bloquant : trois antérieurs
+ou non reproduits, et une limite du correctif de la barre d'Android 9 sous une fenêtre modale. Le build iOS de développement `2575da3b` est prêt, et l'essai sur iPhone a sa liste :
+[essai-iphone-7-0.md](essai-iphone-7-0.md).
+
 **Ce qui reste avant la sortie de la 7.0**, les sept lots livrés :
 
-- **Le chemin attesté**, jamais joué : App Attest sur un iPhone (build de développement refait), Play
+- **L'essai sur iPhone**, d'une demi-heure : [la liste](essai-iphone-7-0.md).
+- **Le chemin attesté**, jamais joué : App Attest sur un iPhone (build de développement `2575da3b`, prêt), Play
   Integrity configuré par Kylian puis joué sur un build de la piste de test interne
   ([lot 1](1-base-communautaire.md#le-protocole-sur-téléphone)), et son quota comparé à la croissance
   visée. D'ici là, aucune contribution Android ne compte.

@@ -19,6 +19,54 @@ de la leur laisser en travers.
 
 ## Ouverts
 
+### Sans position lisible, le Campus attend sans fin — relevé par la recette d'ensemble de la 7.0 le 2026-11-25
+
+Sur `ukit` après une installation neuve, permission de position accordée mais aucun point fourni par
+l'émulateur (`dumpsys location` : `last location=null` partout) : les carrousels Restaurants et
+Bibliothèques du tableau de bord et la liste Restaurants restent sur « Lecture de ce qui est ouvert… »
+sans fin. [`resoudre`](../src/features/Campus/hooks/useCampusLocation.ts) attend
+`getCurrentPositionAsync` sans délai quand `getLastKnownPositionAsync` ne rend rien, et la promesse en vol
+est partagée par tout le Campus jusqu'à la fin du processus. Un `geo fix` l'a débloqué une fois, pas la
+seconde ; la position refusée, tout se charge, sans distance. Hérité de 6.1-C (le fichier n'a pas bougé
+depuis le 2026-11-10), mais la 7.0 l'étend : « Ça attend ? » ne se pose qu'une position résolue
+([`useSurPlaceDuRestaurant`](../src/features/Campus/communaute/useSurPlaceDuRestaurant.ts)). Sur un
+téléphone, la position réseau répond d'ordinaire en quelques secondes ; le cas réel est un téléphone sans
+point GPS ni réseau de localisation. Piste : une course contre un délai d'une dizaine de secondes dans
+`resoudre`, qui rend `null` (« sans position, aucune position »), avec un test du délai.
+
+### Sur Android 9, la barre de navigation redevient claire sous une fenêtre modale en sombre — relevé par la recette d'ensemble de la 7.0 le 2026-11-25
+
+Sur `ukit-a8`, build `f843dc86`, thème sombre : la barre suit bien le thème sur les écrans
+([`AppUI.tsx`](../src/shared/ui/AppUI.tsx), lot 7), mais tant qu'un `Modal` de React Native est ouvert
+(feuille « Signaler », `Dialogue`, propositions de la Scolarité), elle repasse au gris clair du
+système, et redevient sombre à sa fermeture. Le `Modal` a sa propre fenêtre, que `setStyle` ne touche
+pas. Une limite du correctif du lot 7, pas une régression : avant lui, la barre était claire partout. Piste
+à vérifier : la propriété `navigationBarTranslucent` du `Modal` (React Native 0.77 et plus), posée dans
+les composants communs, puis le banc. À voir aussi sur l'A8 réel.
+
+### La première connexion après une installation peut ne jamais aboutir sur le banc — relevé par la recette d'ensemble de la 7.0 le 2026-11-25, non reproduit
+
+Sur `ukit`, build `f843dc86` installé à neuf, premier processus : trois connexions à Bordeaux d'affilée
+échouent en `blocked [CAS_INDISPONIBLE]` (« Le portail de l'université ne répond pas »), l'attente de
+`#username` expirée alors que la page du CAS est chargée. Lu par le débogueur de la WebView : l'agent est
+installé, `#username` existe, et la page **poste** bien ses `ready` (générations 4 à 6), mais l'hôte ne
+lui envoie plus aucune commande — le message n'atteint pas `onMessage`. Après un arrêt et une relance de
+l'application, puis après un `pm clear`, la même connexion réussit en 9 à 13 s, `onMessage` reçu. Seule
+différence notée avec ces essais : le premier processus avait affiché la feuille d'accueil du menu de
+développement d'Expo par-dessus l'application. À croiser avec les refus de Bordeaux de la console (plus
+bas) ; à juger sur l'iPhone : la première connexion juste après l'installation
+([essai-iphone-7-0.md](phase-8/essai-iphone-7-0.md)).
+
+### Plusieurs salles ou groupes d'un cours Celcat s'affichent collés — relevé par la recette d'ensemble de la 7.0 le 2026-11-25
+
+Au Collège ST, groupe `INF501A1`, le TD « Anglais Débutant 2 » du lundi 23 novembre s'affiche
+« A21/ Salle 160A21/ Salle 162 » dans la vue semaine et dans sa fiche, et sa liste de groupes
+« BG302ABG302BBG302C… (18 more...) » : les éléments multiples arrivent sans séparateur, et « (18
+more...) » est l'anglais de la source. Ni la vue ni le découpage
+([`CourseAnnotations`](../src/features/Planning/components/CourseAnnotations.ts)) n'ont bougé en 7.0.
+Piste : le séparateur que Celcat met entre deux salles (un `<br>` retiré sans espace ?), à lire dans la
+réponse brute avant tout correctif.
+
 ### La vitrine de l'accueil se chevauche en grande police — relevé au banc par le lot 7 le 2026-11-25
 
 Sur `ukit-a8` (Android 9), police du système à 1,3 (`banc.sh police 1.3`), installation neuve : le
@@ -52,6 +100,10 @@ correspond à rien, montre bien l'état vide). Le filtre de [`CrousScreen`](../s
 est juste à la lecture ; la piste est le rendu d'une liste réduite à peu de cartes (entrée en cascade,
 décalage du défilement). Vu en passant au lot 2 de la phase 8, hors de son périmètre ; à reproduire au
 clavier de l'émulateur avant tout correctif.
+
+Revu par la recette d'ensemble de la 7.0 le 2026-11-25 (`ukit`, sans position) : « Amazone »,
+« Resto » et « Sirtaki » laissent tous trois la liste blanche, et l'arbre d'accessibilité n'y porte ni
+carte ni état vide ; vider le champ rend la liste. « Resto » ne montre donc plus rien non plus.
 
 ### Treize paquets Expo ont des correctifs de retard sur le SDK 57 — relevé par `expo install --check` le 2026-11-25
 
@@ -128,6 +180,11 @@ portail de Bordeaux (Moodle et la messagerie, famille `blocked`) et par Celcat (
 sonde vérifie qu'un service répond, pas que le parcours de l'application aboutit. À instruire : la part
 des mots de passe faux (qu'aucune mesure ne distingue aujourd'hui), le parcours du portail au banc sur
 `ukit`, et ce que la famille `blocked` recouvre. Les chiffres sont dans la console, page Sources.
+
+Une piste vue au banc par la recette d'ensemble de la 7.0 : un `blocked [CAS_INDISPONIBLE]` sur une page
+du CAS bien chargée, dont les messages ne parvenaient plus à l'hôte
+([plus haut](#la-première-connexion-après-une-installation-peut-ne-jamais-aboutir-sur-le-banc--relevé-par-la-recette-densemble-de-la-70-le-2026-11-25-non-reproduit)).
+Un tel échec ne dit rien du portail.
 
 ### ~~Google Play exclut les appareils sans mode portrait ni Wi-Fi~~ — signalé par la Play Console le 2026-11-24, corrigé le 2026-11-25 dans le binaire de la 7.0
 
