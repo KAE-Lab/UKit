@@ -3,31 +3,20 @@
  * dependance ni natif, pour la matrice ; `react-native-svg`, deja la, pour la dessiner. Un seul trace
  * pour tous les modules, et la marge blanche de quatre modules que la norme demande autour.
  *
- * L'appareil photo du systeme le lit et ouvre le lien : l'application n'a pas de lecteur a elle.
+ * L'appareil photo du systeme le lit et ouvre le lien : l'application n'a pas de lecteur a elle. Le
+ * trace se calcule dans `services/codeQr.ts`.
  */
 
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { correction, generate } from 'lean-qr';
 
 import { tokens } from '../../../shared/theme/Theme';
+import { traceDuCodeQr } from '../services/codeQr';
 
-/** La zone de silence autour du code, en modules (ISO/IEC 18004). */
-const MARGE = 4;
-
-/** Le trace des modules sombres : un carre d'un module par case, sur la grille du code. */
-function traceDe(valeur: string): { trace: string; cote: number } | null {
+function dessinDe(valeur: string): ReturnType<typeof traceDuCodeQr> | null {
     try {
-        // Le niveau M : un code lisible a distance de bras, assez court pour un lien de deux cents caracteres.
-        const code = generate(valeur, { minCorrectionLevel: correction.M });
-        let trace = '';
-        for (let y = 0; y < code.size; y += 1) {
-            for (let x = 0; x < code.size; x += 1) {
-                if (code.get(x, y)) trace += `M${x + MARGE} ${y + MARGE}h1v1h-1z`;
-            }
-        }
-        return { trace, cote: code.size + MARGE * 2 };
+        return traceDuCodeQr(valeur);
     } catch (erreur) {
         console.warn('[amis] code QR impossible', erreur);
         return null;
@@ -35,7 +24,7 @@ function traceDe(valeur: string): { trace: string; cote: number } | null {
 }
 
 export function CodeQr({ valeur, taille, accessibilityLabel }: { valeur: string; taille: number; accessibilityLabel: string }) {
-    const dessin = useMemo(() => traceDe(valeur), [valeur]);
+    const dessin = useMemo(() => dessinDe(valeur), [valeur]);
     if (dessin === null) return null;
     return (
         <View style={[styles.papier, { width: taille, height: taille }]} accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}>
