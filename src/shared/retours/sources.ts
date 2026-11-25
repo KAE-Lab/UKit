@@ -46,7 +46,9 @@ export async function sourcesDuContexte(onglet: string | null, erreur: EchecJoin
         onglet,
         reseau: await reseau(),
         echecs: echecsRecents(),
-        parcours: parcoursRecent().filter((ecran) => !ECRANS_DU_FORMULAIRE.has(ecran)),
+        // Sans les ecrans du formulaire, puis sans les repetitions que leur retrait rapproche.
+        parcours: parcoursRecent().filter((ecran) => !ECRANS_DU_FORMULAIRE.has(ecran))
+            .filter((ecran, i, tous) => i === 0 || tous[i - 1] !== ecran),
         erreur,
     };
 }
