@@ -8,7 +8,8 @@ ce qu'elle n'est pas, et comment on publie : [docs/backend.md](../docs/backend.m
 | [`schema.sql`](schema.sql) | tables, index, contraintes, **et les deux buckets** |
 | [`fonctions.sql`](fonctions.sql) | les gardes : qui est éditeur, et depuis 7-H qui peut quoi et où ; le journal par déclencheurs ; la version d'une ligne contre l'écrasement ; la porte de l'adresse d'un retour — dans un schéma `private` que l'API n'expose pas, sauf cette porte — et les portes d'écriture de l'application : `deposer_jeton`, `retirer_jeton` (6.1.x-E), `compter` (7-D) |
 | [`policies.sql`](policies.sql) | RLS : lecture publique restreinte, écriture selon le rôle de l'éditeur authentifié (7-H) et par la clé de service |
-| [`functions/`](functions/) | les deux fonctions de la base : `notifier` (un message en notification push) et `editeurs` (l'équipe : inviter, mot de passe provisoire, révoquer), et ce qu'elles partagent (`_shared/`) |
+| [`functions/`](functions/) | les trois fonctions de la base : `notifier` (un message en notification push), `editeurs` (l'équipe : inviter, mot de passe provisoire, révoquer), `communaute` (les contributions des étudiants, attestées), et ce qu'elles partagent (`_shared/`) |
+| [`recettes/`](recettes/) | les recettes SQL qui se rejouent en transaction annulée sur la production : celle de la communauté |
 | [`etablissements.sql`](etablissements.sql) | le catalogue des universités : une ligne par établissement, `on conflict do update` |
 | [`batiments-bordeaux-inp.sql`](batiments-bordeaux-inp.sql) | les dix bâtiments de Bordeaux INP, relevés sur OpenStreetMap — la surcouche de `assets/locations.json` pour une université que le binaire n'embarque pas |
 
@@ -335,7 +336,7 @@ qui ne corrige rien, et rien à l'écran ne le dirait.
 
 ## Les fonctions
 
-[`functions/`](functions/) porte les deux fonctions du projet, qui partagent
+[`functions/`](functions/) porte les fonctions du projet. Les deux de la console partagent
 [`_shared/`](functions/_shared/) — les en-têtes, la réponse, et **qui appelle** : le compte de la
 session, vérifié auprès du service d'authentification, et son rôle lu dans `editeurs`. Chacune est
 réservée aux admins depuis le jalon [7-H](../docs/phase-7/7-h-console-roles.md), et répond 403 sinon.
@@ -371,6 +372,58 @@ mot de passe provisoire dans son dialogue. Un refus 403 veut dire que la session
 admin ; un 409, que le message est inactif, expiré ou déjà notifié — ou que la personne invitée est
 déjà dans l'équipe, ou que la révocation retirerait le dernier admin.
 
+## La communauté
+
+Le [lot 1 de la phase 8](../docs/phase-8/1-base-communautaire.md) : la fonction `communaute`, seule
+porte des contributions, et `public.contribuer`, qu'elle seule appelle. Trois choses vivent hors du
+dépôt, et chacune se pose une fois.
+
+**Les réglages**, dans `private.reglages_communaute` : les plafonds, les seuils, les poids et les
+durées, que la documentation publique ne donne pas. Une clé absente fait échouer l'écriture (503) au
+lieu de la laisser passer sans borne. Les neuf clés sont nommées dans la migration ; les valeurs se
+posent par `psql`, jamais par un fichier versionné :
+
+```sql
+insert into private.reglages_communaute (cle, valeur, description) values ('<cle>', <valeur>, '<pourquoi>')
+on conflict (cle) do update set valeur = excluded.valeur, description = excluded.description;
+```
+
+**Les secrets de la fonction**, posés par la CLI sans jamais s'afficher :
+
+| Secret | Ce qu'il fait | Absent |
+|---|---|---|
+| `COMMUNAUTE_SECRET` | 32 octets en base64 : la clé des défis et celle des empreintes d'adresse, tirées de lui | la fonction refuse tout (503) |
+| `APPLE_EQUIPE` | l'identifiant d'équipe Apple, qui fait les deux applications acceptées par App Attest | aucune clé App Attest ne s'enregistre : les iPhone contribuent sans attestation |
+| `PLAY_INTEGRITY_COMPTE_DE_SERVICE` | le JSON du compte de service Google qui déchiffre les jetons Play Integrity | Android contribue sans attestation |
+
+```bash
+set -a && source .env && set +a
+npx --yes supabase@2.117.0 secrets set --project-ref owiksddeqcyyifnmpyqm COMMUNAUTE_SECRET="$(openssl rand -base64 32)"
+npx --yes supabase@2.117.0 secrets set --project-ref owiksddeqcyyifnmpyqm APPLE_EQUIPE="$EXPO_APPLE_TEAM_ID"
+npx --yes supabase@2.117.0 functions deploy communaute --project-ref owiksddeqcyyifnmpyqm --use-api --no-verify-jwt
+```
+
+Changer `COMMUNAUTE_SECRET` périme les défis en cours et change les empreintes du jour : sans autre
+conséquence. Le typage se vérifie avec le `deno.json` de la fonction, qui épingle ses paquets :
+`npx --yes deno check --no-lock --config supabase/functions/communaute/deno.json supabase/functions/communaute/index.ts`.
+
+**La recette**, [`recettes/communaute.sql`](recettes/communaute.sql), se joue en transaction annulée,
+avec la migration avant sa poussée, seule ensuite ; elle pose ses propres réglages et ses propres
+sujets, qui disparaissent avec elle. Et par l'API publique, ce qui doit être refusé l'est :
+
+```bash
+curl -s "$SUPABASE_URL/rest/v1/signalements?select=appareil" -H "apikey: $SUPABASE_ANON_KEY"          # 42501
+curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/contribuer" -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" -d '{"p": {}}'                                                 # 42501
+curl -s -X POST "$SUPABASE_URL/functions/v1/communaute" -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" -d '{"action": "defi"}'                                        # {"defi": "..."}
+```
+
+**Les durées de conservation se tiennent seules**, à chaque écriture de `contribuer` : un signalement
+trente jours après sa fin, un appareil douze mois après sa dernière contribution, une empreinte
+d'adresse le jour même. À l'inverse du journal et de la mesure, ce sont des données des étudiants, et
+la promesse de [PRIVACY.md](../PRIVACY.md) ne doit pas dépendre d'un geste oublié.
+
 ## Ce qui n'a pas sa place ici
 
 Pas de fonction métier, pas de vue qui calcule. La base porte de la donnée ; ce qui se calcule se
@@ -380,8 +433,9 @@ Elle porte **des gardes**, depuis le jalon [6.1-B](../docs/phase-6/6-1-b-pilotag
 la phrase ci-dessus tient toujours : `private.est_editeur()` dit qui a le droit d'écrire — et depuis
 7-H, `private.role_editeur()`, `private.est_admin()` et `private.peut_publier()` disent quoi et où —,
 le déclencheur `journal` trace ce qui a été écrit, `maj_le` tient la version d'une ligne contre
-l'écrasement, `contact_du_retour()` ne rend une adresse qu'à un admin, et un déclencheur garde toujours
-un admin. Ce sont des politiques d'accès et d'intégrité exprimées en SQL — aucune ne décide de ce que
+l'écrasement, `contact_du_retour()` ne rend une adresse qu'à un admin, un déclencheur garde toujours
+un admin, et depuis la phase 8 `contribuer` tient les plafonds, la réputation et le poids d'une voix
+de la communauté — jamais l'état d'un lieu, que l'application calcule. Ce sont des politiques d'accès et d'intégrité exprimées en SQL — aucune ne décide de ce que
 l'application affiche. Une fonction qui calculerait quelque chose pour l'écran serait la première
 entorse, et elle se refuse.
 

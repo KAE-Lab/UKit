@@ -24,11 +24,13 @@ aucun identifiant ne la traverse, aucune donnée personnelle n'y est écrite. L'
 sans jamais la joindre : chaque chose qu'elle publie a un **socle embarqué** dans le binaire, et la
 base ne fait que le mettre à jour.
 
-**Une écriture, depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md), et une seule** : le jeton
-push d'un appareil, avec ce qu'il faut pour le cibler — campus, version, plateforme, statut de
-testeur —, par deux fonctions `security definer` et jamais par la table. Pseudonyme, effacé par
-l'interrupteur des Réglages, dit dans [PRIVACY.md](../PRIVACY.md). Tout le reste de cette page
-tient : la base ne relaie rien, et l'application vit sans elle.
+**Une écriture, depuis [6.1.x-E](phase-6/6-1-x-e-notifications-push.md)** : le jeton push d'un
+appareil, avec ce qu'il faut pour le cibler — campus, version, plateforme, statut de testeur —, par
+deux fonctions `security definer` et jamais par la table. Pseudonyme, effacé par l'interrupteur des
+Réglages, dit dans [PRIVACY.md](../PRIVACY.md). La mesure de [7-D](phase-7/7-d-la-mesure.md) en est
+la deuxième ; **la communauté**, depuis le [lot 1 de la phase 8](phase-8/1-base-communautaire.md), la
+troisième, et la seule qui passe par une Edge Function ([plus bas](#le-chemin-décriture-de-la-communauté)).
+Tout le reste de cette page tient : la base ne relaie rien, et l'application vit sans elle.
 
 C'est ce qui permet au [README](../README.md) de continuer à promettre ce qu'il promettait : aucun
 compte n'est requis, et rien de ce qui appartient à l'utilisateur ne quitte son appareil. Le moteur
@@ -95,6 +97,11 @@ depuis l'interface web : ce qui est fait à la main n'est pas reproductible.
 | `retours` | ce que les utilisateurs écrivent dans le formulaire, importé toutes les 72 heures depuis la feuille de réponses ; depuis 7-H, l'adresse laissée ne vit que dans `contact`, que seul un admin lit, par `contact_du_retour()` | la console seule | [6.1.x-C](phase-6/6-1-x-c-retours.md) | — |
 | `salutations` | le mot du haut de l'onglet Scolarité, quand une règle publiée doit passer devant le socle embarqué — voir [scolarite.md](features/scolarite.md#la-salutation-est-une-règle-pas-une-condition) |
 | `blueprints` | index de livraison : nom, version, chemin, empreinte, moteur minimal, `desactive` | le script de publication | **6-C** | [`blueprints/`](../blueprints/) |
+| `sujets` | le vocabulaire fermé de la communauté : un sujet, sa nature (signalement ou vote), son domaine, sa famille de durée, ses valeurs ou sa forme ; chaque lot y ajoute ses lignes par migration | la fonction `contribuer`, les éditeurs | [phase 8, lot 1](phase-8/1-base-communautaire.md) | — |
+| `appareils` | **écrite par la fonction `communaute`** : la clé serveur d'un appareil (l'identifiant de sa clé App Attest, ou l'empreinte d'un secret tiré sur l'appareil), sa clé publique, son compteur d'assertions, sa réputation, son blocage — jamais l'identifiant d'installation | la fonction ; un admin compte les lignes, sans la clé | lot 1 | — |
+| `signalements` | **écrite par la fonction `communaute`** : une voix sur une cible — sujet, valeur, fin, poids fixé à l'écriture, statut, borne de validité —, et l'appareil qui l'a écrite, que la lecture publique ne voit pas | l'application, par [`shared/communaute`](../src/shared/communaute/index.ts) : les signalements encore valables aujourd'hui, colonne par colonne | lot 1 | — |
+| `votes` | **écrite par la fonction `communaute`** : un bulletin par appareil, sujet et cible | les éditeurs ; l'application au lot 4 | lot 1 | — |
+| `empreintes_ip` | un compteur par empreinte d'adresse et par jour de Paris, pour le plafond par adresse ; l'adresse n'y entre pas | la fonction `contribuer` seule | lot 1 | — |
 
 `batiments` est **lue depuis le jalon [6-D](phase-6/6-d-campus.md)**, par
 [`shared/locations`](../src/shared/locations/index.ts), et elle est une **surcouche** :
@@ -307,6 +314,11 @@ de recherche vide, noms qualifiés — les trois précautions que la documentati
 sont des politiques d'accès exprimées en SQL. Une troisième fonction qui calculerait quelque chose pour
 l'écran serait la première entorse, et elle se refuse.
 
+**La communauté garde la confiance, pas l'état** ([lot 1](phase-8/1-base-communautaire.md)) :
+`contribuer` juge les plafonds, le blocage, la réputation et le poids d'une voix, parce que l'appareil
+ne peut pas se les accorder — ce sont des gardes, comme `est_editeur()`. L'état d'un lieu, lui, se
+calcule sur l'appareil ([`etat.ts`](../src/shared/communaute/etat.ts)), et la base n'en sait rien.
+
 **Une exception, qui ne calcule rien pour l'écran de l'application** : `public.parc_actif_arrondi()`
 (migration `20261115200000`) rend le parc actif de [mesure.md](mesure.md) arrondi à la centaine
 inférieure, pour le chiffre public de kylianmalartre.com. Sans elle, le site devait lire `jetons_push`
@@ -350,6 +362,13 @@ sans politique est une table qu'on oubliera de protéger le jour où elle en aur
   qui partagent le rôle `authenticated` de la base.
 - **Le jeton d'un appareil ne se lit par aucun compte de la console**, admin compris (7-H) : le service
   d'envoi d'Expo accepte une notification vers tout jeton connu, et la console compte le parc sans lui.
+- **La communauté** ([lot 1](phase-8/1-base-communautaire.md)) : aucune écriture par `anon` ni par un
+  compte authentifié, ni par les tables ni par les portes — `contribuer` et `enregistrer_appareil` ne
+  s'exécutent que par le `service_role`, que seule la fonction `communaute` détient. La clé publiable
+  lit les signalements encore valables aujourd'hui, à l'heure de Paris, statuts compris, **sans
+  l'appareil** ni la confirmation, par un privilège de colonne ; un `select *` lui est refusé. Les
+  éditeurs lisent les mêmes colonnes sur toutes les lignes, un admin compte les appareils sans leur
+  clé, et `empreintes_ip` ne se lit par aucun compte.
 
 Le jour où la partie sociale arrivera, elle ajoutera ses tables et ses politiques adossées à
 `auth.uid()`. Rien de ce qui est écrit ici ne devra être défait.
@@ -373,7 +392,9 @@ jamais par une table : le jeton push ([6.1.x-E](phase-6/6-1-x-e-notifications-pu
 l'application vers la base : des nombres sans identifiant, par jour ou par heure, campus, version et
 plateforme, envoyés par lots au passage en arrière-plan et à l'entretien, jamais au démarrage
 ([mesure.md](mesure.md)). Les deux se coupent d'un interrupteur, et `anon` ne peut rien lire de ce
-qu'il a écrit.
+qu'il a écrit. La troisième, depuis le [lot 1 de la phase 8](phase-8/1-base-communautaire.md), ne passe
+pas par la base mais par une fonction qui atteste l'appareil : ce que l'étudiant publie
+([ci-dessous](#le-chemin-décriture-de-la-communauté)).
 
 **La paresse n'est pas un détail de style.** Instancier au chargement du module mettrait la base sur
 le chemin de démarrage de l'application, ce que ce dos promet exactement de ne pas faire.
@@ -383,6 +404,27 @@ passage, et **celui-ci lève** si l'hôte ne fournit pas de `WebSocket` — cons
 que rien dans UKit n'utilise Realtime. React Native en fournit un, donc le cas ne se produit pas sur
 appareil ; la construction est tout de même gardée, parce qu'une exception sur le chemin de démarrage
 donnerait un écran blanc là où le comportement attendu est de continuer sans la base.
+
+### Le chemin d'écriture de la communauté
+
+Depuis le [lot 1 de la phase 8](phase-8/1-base-communautaire.md), un étudiant publie des signalements
+et des votes, et la mesure du parc ne suffit plus : une voix doit venir d'un vrai appareil. **Aucune
+fonction d'écriture n'est ouverte à `anon`**, à l'inverse de `compter` : ce serait contourner
+l'attestation. Le chemin a trois étages.
+
+1. **L'application** ([`shared/communaute`](../src/shared/communaute/index.ts)) demande un défi à la
+   fonction `communaute`, écrit le texte exact de sa contribution, et le prouve — une assertion App
+   Attest sur iOS, un jeton Play Integrity sur Android, rien sinon.
+2. **La fonction** ([`supabase/functions/communaute`](../supabase/functions/communaute/index.ts))
+   vérifie le défi, la preuve et le lien entre la clé et le texte, calcule l'empreinte de l'adresse, et
+   appelle `public.contribuer` avec la clé de service. Elle est appelée avec la clé publiable, sans
+   JWT (`verify_jwt = false`) : sa porte est l'attestation.
+3. **La base** juge les plafonds, le blocage, le poids et le vocabulaire, écrit, et crédite la
+   réputation des voix confirmées.
+
+Une contribution sans attestation passe sous un plafond bas, avec un poids nul : elle s'affiche en
+retrait et ne compte jamais. La lecture reste celle de la clé publiable, anonyme : tous les
+signalements du jour, triés sur l'appareil.
 
 ### Le modèle d'erreur
 
