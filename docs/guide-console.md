@@ -51,14 +51,19 @@ et la fiche donneront sur un téléphone, en clair et en sombre, et suit le cham
 4. **Lieu et action.** Pour le lieu, colle un point copié d'une carte (clic droit sur Google Maps) :
    la fiche proposera « S'y rendre ». Un bouton demande un libellé **et** un lien complet, qui commence
    par `https://`.
-5. **Publication.** Garde le statut **Brouillon** tant que tu travailles : personne ne le voit. Passe à
+5. **Sondage**, si l'annonce pose une question : **Ajouter un sondage**, la question, deux à six
+   choix, la date de clôture. Il s'affiche sous la description de la fiche ; chaque téléphone vote une
+   fois, sans être reconnu, et voit les résultats après son vote. Ses résultats se lisent sous
+   l'aperçu, une fois l'annonce enregistrée. Ne change pas les choix après les premières voix : un
+   choix retiré perd les siennes. **Jamais sur un sujet politique** (plus bas).
+6. **Publication.** Garde le statut **Brouillon** tant que tu travailles : personne ne le voit. Passe à
    **Publiée** quand c'est prêt. Une date de publication **dans le futur** programme l'annonce : elle
    apparaîtra toute seule à l'heure dite, et l'en-tête le dit (« Programmée, publiée le 3 octobre à
    11 h »). Une date d'expiration la retire toute seule.
-6. **Ciblage.** Commence **toujours** par l'audience **Les testeurs seulement** (voir plus bas). Les
+7. **Ciblage.** Commence **toujours** par l'audience **Les testeurs seulement** (voir plus bas). Les
    campus : tes campus sont déjà cochés, et un rédacteur ne peut cocher que les siens. Laisse les
    versions et les plateformes vides, sauf consigne.
-7. **Enregistrer**, en bas, ou **Ctrl+S** (**Cmd+S** sur Mac).
+8. **Enregistrer**, en bas, ou **Ctrl+S** (**Cmd+S** sur Mac).
 
 ![Le ciblage d'une annonce pour un rédacteur : son campus déjà coché, les autres grisés](screenshots/console/console-annonce-campus-redacteur.png)
 
@@ -143,6 +148,9 @@ ne comptent rien.
 - **Publier un visuel dont on n'a pas les droits** : le logo d'une université ou d'une marque, une
   photo trouvée en ligne. Un logo affiché sur une annonce laisse croire que son propriétaire la
   soutient.
+- **Un sondage sur un sujet politique.** UKit est un outil, neutre sur le fond : un sondage porte sur
+  la vie du campus — un créneau, un lieu, un choix d'animation —, jamais sur une élection, un parti, une
+  cause ou une prise de position. Dans le doute, on ne le publie pas.
 - **Prêter son compte.** Chaque compte est personnel, et tout ce qu'il écrit est enregistré à son nom.
   Pour quelqu'un de plus, un admin l'invite.
 
@@ -171,6 +179,11 @@ ne comptent rien.
   l'étudiant reconnaît, sans jargon, publié pour la plateforme touchée ; à côté, les « Moi aussi » et
   les appareils, et les détails reçus, à reprendre pour mieux formuler. **Corrigé**, avec la version,
   le garde un mois dans l'application ; **Clos** le retire.
+- **Les idées** (**Communauté → Idées**) : la boîte à idées de l'application. Une idée retenue d'un
+  retour s'y écrit **reformulée**, jamais recopiée, sans rien qui désigne son auteur ; **Proposée**
+  la publie, **En cours** le dit, **Livrée** demande la version, que les téléphones qui l'ont soutenue
+  annoncent ; **Close** la retire. À côté, ses « Moi aussi » et les détails reçus, comme pour un
+  problème connu.
 - **Les testeurs** : ajoute les téléphones de l'équipe (un identifiant, un nom).
 - **Les signalements** : ce que les étudiants signalent sur les restaurants, les bibliothèques et les
   bâtiments, lieu par lieu, avec ce que l'application en montre. **Masquer** retire une voix de
