@@ -199,13 +199,19 @@ function SaisieDuChoix({ theme, feuille, horaires, plats }: { theme: AppThemeTyp
                     const ferme = feuille.saisie[service] === 'ferme';
                     const estimee = feuille.saisie[service] === undefined;
                     const creneau = feuille.creneauDe(service);
+                    // Le service et « Ferme » sur une ligne, ses heures dessous : a 360 points, les quatre ne
+                    // tiennent pas cote a cote, et « Ferme » partait seul a la ligne.
                     return (
-                        <View key={service} style={styles.saisie}>
-                            <Text style={[styles.libelleDeSaisie, { color: theme.fontSecondary }]}>{nomDuService(service)}</Text>
-                            <Puce theme={theme} actif={!ferme} estimee={estimee} libelle={formaterMinutes(creneau.debut, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'debut' })} />
-                            <Text style={{ color: theme.fontSecondary }}>–</Text>
-                            <Puce theme={theme} actif={!ferme} estimee={estimee} libelle={formaterMinutes(creneau.fin, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'fin' })} />
-                            <Puce theme={theme} choisie={ferme} libelle={Translator.get('SIGNAL_SERVICE_FERME')} onPress={() => feuille.basculerFerme(service)} />
+                        <View key={service} style={styles.service}>
+                            <View style={styles.saisie}>
+                                <Text style={[styles.libelleDeSaisie, { color: theme.fontSecondary }]}>{nomDuService(service)}</Text>
+                                <Puce theme={theme} choisie={ferme} libelle={Translator.get('SIGNAL_SERVICE_FERME')} onPress={() => feuille.basculerFerme(service)} />
+                            </View>
+                            <View style={styles.saisie}>
+                                <Puce theme={theme} actif={!ferme} estimee={estimee} libelle={formaterMinutes(creneau.debut, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'debut' })} />
+                                <Text style={{ color: theme.fontSecondary }}>–</Text>
+                                <Puce theme={theme} actif={!ferme} estimee={estimee} libelle={formaterMinutes(creneau.fin, separateur)} onPress={() => feuille.setSelecteur({ quoi: 'heure', service, borne: 'fin' })} />
+                            </View>
                         </View>
                     );
                 })}
@@ -344,9 +350,12 @@ const styles = StyleSheet.create({
         marginTop: tokens.space.sm,
     },
     libelleDeSaisie: {
+        flex: 1,
         fontSize: tokens.fontSize.sm,
         fontWeight: tokens.fontWeight.semibold,
-        minWidth: 64,
+    },
+    service: {
+        marginTop: tokens.space.sm,
     },
     puce: {
         minHeight: 36,
