@@ -13,6 +13,8 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { comparerVersions } from '../../shared/ciblage';
+import { versionApplication } from '../../shared/ciblage/contexte';
 import { jourDeParis } from '../../shared/communaute/donnees';
 import Translator from '../../shared/i18n/Translator';
 import { EVENEMENT_RETOURS, relireLesReponses } from '../../shared/retours';
@@ -34,7 +36,7 @@ const DUREE_DE_LA_PROPOSITION_MS = 8000;
 const SANS_PROPOSITION = new Set(['Retour', 'MesRetours']);
 const Z_INDEX = 900;
 
-function ReponseEnTete({ theme }: { theme: AppThemeType }) {
+function ReponseEnTete({ theme, surVisible }: { theme: AppThemeType; surVisible: (visible: boolean) => void }) {
     const [annonce, setAnnonce] = useState<RetourConnu | null>(null);
 
     const relire = useCallback(() => {
@@ -59,10 +61,12 @@ function ReponseEnTete({ theme }: { theme: AppThemeType }) {
     };
 
     const derniere = annonce?.reponses[annonce.reponses.length - 1];
+    const visible = annonce !== null && derniere !== undefined && ecranCourant() !== 'MesRetours';
+    useEffect(() => surVisible(visible), [visible, surVisible]);
     return (
         <Dialogue
             theme={theme}
-            visible={annonce !== null && derniere !== undefined && ecranCourant() !== 'MesRetours'}
+            visible={visible}
             fermer={() => fermer(false)}
             titre={Translator.get('REPONSE_DE_L_EQUIPE')}
             corps={derniere?.texte ?? ''}
@@ -75,7 +79,14 @@ function ReponseEnTete({ theme }: { theme: AppThemeType }) {
  * La sortie d'une idee que cet appareil a soutenue (lot 4) : en tete, une fois, au lancement ou au retour au
  * premier plan. L'appareil compare ses soutiens aux statuts publies ; la base ne sait pas qui a soutenu quoi.
  */
-function IdeeLivreeEnTete({ theme }: { theme: AppThemeType }) {
+/** « Mets a jour » seulement pour une version plus ancienne que celle qui livre l'idee. */
+function corpsDeLaSortie(idee: Idee): string {
+    if (idee.versionLivree === null) return idee.titre;
+    const aJour = comparerVersions(versionApplication() ?? '', idee.versionLivree) !== -1;
+    return Translator.get(aJour ? 'IDEE_LIVREE_CORPS_A_JOUR' : 'IDEE_LIVREE_CORPS', idee.titre, idee.versionLivree);
+}
+
+function IdeeLivreeEnTete({ theme, attendre }: { theme: AppThemeType; attendre: boolean }) {
     const [idee, setIdee] = useState<Idee | null>(null);
 
     useEffect(() => {
@@ -98,10 +109,11 @@ function IdeeLivreeEnTete({ theme }: { theme: AppThemeType }) {
     return (
         <Dialogue
             theme={theme}
-            visible={idee !== null && ecranCourant() !== 'Idees'}
+            // Deux dialogues ne s'empilent pas (iOS n'en montrerait qu'un) : la reponse de l'equipe passe d'abord.
+            visible={idee !== null && !attendre}
             fermer={() => fermer(false)}
             titre={Translator.get('IDEE_LIVREE_TITRE')}
-            corps={idee === null ? '' : idee.versionLivree !== null ? Translator.get('IDEE_LIVREE_CORPS', idee.titre, idee.versionLivree) : idee.titre}
+            corps={idee === null ? '' : corpsDeLaSortie(idee)}
             action={{ libelle: Translator.get('IDEE_LIVREE_VOIR'), onPress: () => fermer(true) }}
         />
     );
@@ -183,11 +195,12 @@ function PropositionDeCapture({ theme }: { theme: AppThemeType }) {
 export function RetoursHote({ actif }: { actif: boolean }) {
     const { themeName } = useContext(AppContext);
     const theme = style.Theme[themeName ?? 'light'];
+    const [reponseVisible, setReponseVisible] = useState(false);
     if (!actif) return null;
     return (
         <>
-            <ReponseEnTete theme={theme} />
-            <IdeeLivreeEnTete theme={theme} />
+            <ReponseEnTete theme={theme} surVisible={setReponseVisible} />
+            <IdeeLivreeEnTete theme={theme} attendre={reponseVisible} />
             <PropositionDeCapture theme={theme} />
         </>
     );

@@ -19,6 +19,7 @@ import { maintenant, maintenantMs } from '../../../shared/services/Temps';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
 import { lignesSurPlace, type LigneSurPlace } from './presentation';
 import { reglesDejaRappelees, retenirLeRappel } from './rappelDesRegles';
+import { noterUneQuestionDAvis } from '../../../shared/notation';
 
 const TIC_MS = 30_000;
 
@@ -104,6 +105,8 @@ export function useSurPlace({ domaine, cible, empreinteDesHoraires, platsDuJour 
     }, [domaine, cible, signalements, instant, platsDuJour]);
 
     const envoyer = useCallback(async (contribution: Contribution) => {
+        // Une reponse a « Sur place » suit une question : la fiche de notation ne se proposera pas ce jour-la (lot 4).
+        noterUneQuestionDAvis();
         setEnvoiEnCours(true);
         const resultat = await envoyerUneContribution(contribution);
         annoncer(resultat);

@@ -39,8 +39,11 @@ async function noterMonChoix(annonce: string, choix: string): Promise<void> {
     await AsyncStorage.setItem(CLE, JSON.stringify(Object.fromEntries(suivants))).catch(() => undefined);
 }
 
-/** `vote` : compte, ou deja donne ; `clos` : le sondage ne s'ouvre plus ; `echec` : a refaire plus tard. */
-export type IssueDuVote = 'vote' | 'clos' | 'echec';
+/**
+ * `vote` : compte, ou deja donne ; `clos` : le sondage ne s'ouvre plus ; `change` : ses choix ont change
+ * depuis la lecture de l'annonce ; `echec` : a refaire plus tard.
+ */
+export type IssueDuVote = 'vote' | 'clos' | 'change' | 'echec';
 
 export async function voter(annonce: string, choix: string): Promise<IssueDuVote> {
     noterUneQuestionDAvis();
@@ -50,6 +53,7 @@ export async function voter(annonce: string, choix: string): Promise<IssueDuVote
         return 'vote';
     }
     if (resultat.etat === 'refusee' && (resultat.raison === 'sondage_clos' || resultat.raison === 'cible_inconnue')) return 'clos';
+    if (resultat.etat === 'refusee' && resultat.raison === 'valeur_invalide') return 'change';
     return 'echec';
 }
 

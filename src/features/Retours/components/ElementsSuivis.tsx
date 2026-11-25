@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ResultatDeContribution } from '../../../shared/communaute';
-import Translator from '../../../shared/i18n/Translator';
+import Translator, { type TranslationKey } from '../../../shared/i18n/Translator';
 import { aCompte } from '../../../shared/retours/suivis';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { ErrorAlert } from '../../../shared/ui/Alerts';
@@ -26,8 +26,8 @@ export interface ElementSuivi {
     readonly etat?: string;
 }
 
-function Ligne({ theme, element, vote, voter, detailler }: {
-    theme: AppThemeType; element: ElementSuivi; vote: boolean; voter: () => void; detailler: () => void;
+function Ligne({ theme, element, vote, fait, voter, detailler }: {
+    theme: AppThemeType; element: ElementSuivi; vote: boolean; fait: TranslationKey; voter: () => void; detailler: () => void;
 }) {
     return (
         <View style={styles.ligne}>
@@ -39,7 +39,7 @@ function Ligne({ theme, element, vote, voter, detailler }: {
                 <>
                     {element.etat !== undefined ? <Text style={[styles.detail, { color: theme.accent }]}>{element.etat}</Text> : null}
                     <View style={styles.gestes}>
-                        <Puce theme={theme} icone="thumb-up-outline" libelle={Translator.get(vote ? 'MOI_AUSSI_FAIT' : 'MOI_AUSSI')} onPress={voter} faite={vote} />
+                        <Puce theme={theme} icone="thumb-up-outline" libelle={Translator.get(vote ? fait : 'MOI_AUSSI')} onPress={voter} faite={vote} />
                         <Puce theme={theme} icone="plus" libelle={Translator.get('MOI_AUSSI_DETAIL')} onPress={detailler} />
                     </View>
                 </>
@@ -48,9 +48,11 @@ function Ligne({ theme, element, vote, voter, detailler }: {
     );
 }
 
-export function ElementsSuivis({ theme, titre, elements, votes, soutenir, aVote, detailler }: {
+export function ElementsSuivis({ theme, titre, elements, votes, soutenir, fait = 'MOI_AUSSI_FAIT', aVote, detailler }: {
     theme: AppThemeType;
     titre?: string;
+    /** Le mot d'un « moi aussi » donne : « Signale » pour un probleme, « Soutenue » pour une idee. */
+    fait?: TranslationKey;
     elements: readonly ElementSuivi[];
     votes: readonly string[];
     /** Le vote, par le service du genre ; `null` quand il ne peut pas partir. */
@@ -81,6 +83,7 @@ export function ElementsSuivis({ theme, titre, elements, votes, soutenir, aVote,
                     theme={theme}
                     element={element}
                     vote={votes.includes(element.id)}
+                    fait={fait}
                     voter={() => { void voter(element); }}
                     detailler={() => detailler(element)}
                 />

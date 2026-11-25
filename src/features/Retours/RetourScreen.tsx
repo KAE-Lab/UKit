@@ -59,7 +59,7 @@ function direLIssue(issue: IssueDuDepot): boolean {
 function clesDuTexte(f: ReturnType<typeof useFormulaireDeRetour>, moiAussiVisible: boolean) {
     return {
         intro: f.nature === 'campus' ? 'RETOUR_INTRO_CAMPUS' : moiAussiVisible ? 'RETOUR_INTRO_BUG' : 'RETOUR_INTRO',
-        invite: f.rattache !== null ? 'RETOUR_TEXTE_DETAIL' : f.nature === 'bug' ? 'RETOUR_TEXTE_BUG' : 'RETOUR_TEXTE_IDEE',
+        invite: f.probleme !== null ? 'RETOUR_TEXTE_DETAIL' : f.nature === 'bug' ? 'RETOUR_TEXTE_BUG' : 'RETOUR_TEXTE_IDEE',
     } as const;
 }
 
@@ -139,9 +139,10 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
                     <ElementsSuivis
                         theme={theme}
                         titre={Translator.get('IDEES_DEJA_PROPOSEES')}
-                        elements={f.idees.map(elementDIdee)}
+                        elements={f.idees.map((i) => elementDIdee(i))}
                         votes={f.soutiens}
                         soutenir={soutenir}
+                        fait="IDEE_SOUTENUE"
                         aVote={(id) => f.setSoutiens((avant) => [...avant, id])}
                         detailler={(i) => navigation.push('Retour', { ...parametres, nature: 'fonctionnalite', idee: { id: i.id, titre: i.titre } })}
                     />

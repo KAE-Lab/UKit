@@ -13,8 +13,9 @@ export function elementDeProbleme(p: ProblemeConnu): ElementSuivi {
     return { id: p.id, titre: p.titre, detail: p.detail, fin };
 }
 
-export function elementDIdee(i: Idee): ElementSuivi {
+/** `enCours` : dire « En cours » sur l'element — faux dans la boite, qui range deja ses idees par statut. */
+export function elementDIdee(i: Idee, enCours = true): ElementSuivi {
     const fin = i.statut !== 'livree' ? null
         : i.versionLivree !== null ? Translator.get('IDEE_LIVREE', i.versionLivree) : Translator.get('IDEE_LIVREE_SANS_VERSION');
-    return { id: i.id, titre: i.titre, detail: i.detail, fin, ...(i.statut === 'en_cours' ? { etat: Translator.get('IDEE_EN_COURS') } : {}) };
+    return { id: i.id, titre: i.titre, detail: i.detail, fin, ...(enCours && i.statut === 'en_cours' ? { etat: Translator.get('IDEE_EN_COURS') } : {}) };
 }

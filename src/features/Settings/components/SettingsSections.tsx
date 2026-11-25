@@ -158,8 +158,9 @@ export const PreferencesSection = ({ theme, valeurNotifications, valeurAgenda, o
 
 /**
  * Les retours (lot 3 de la 7.0) : ecrire a l'equipe, et ce qui en revient. La rangee « Mes retours »
- * porte le nombre de reponses non lues, comme la pastille de l'onglet. Sans base de publication, le
- * formulaire natif n'existe pas : le groupe non plus.
+ * porte le nombre de reponses non lues, comme la pastille de l'onglet ; la boite a idees et « Noter
+ * UKit » suivent (lot 4). Sans base de publication, le formulaire natif et la boite n'existent pas : le
+ * groupe ne porte que « Noter UKit ».
  */
 export const RetoursSection = ({ theme, ecrire, ouvrirMesRetours, ouvrirIdees }: {
     theme: AppThemeType; ecrire: () => void; ouvrirMesRetours: () => void; ouvrirIdees: () => void;

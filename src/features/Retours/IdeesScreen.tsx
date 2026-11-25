@@ -45,9 +45,10 @@ export default function IdeesScreen({ navigation, headerPadding, onAnimatedScrol
                         key={g.cle}
                         theme={theme}
                         titre={Translator.get(g.cle)}
-                        elements={g.idees.map(elementDIdee)}
+                        elements={g.idees.map((i) => elementDIdee(i, false))}
                         votes={soutiens}
                         soutenir={soutenir}
+                        fait="IDEE_SOUTENUE"
                         aVote={aSoutenu}
                         detailler={detailler}
                     />

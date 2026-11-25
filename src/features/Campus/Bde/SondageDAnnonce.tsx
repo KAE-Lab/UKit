@@ -76,6 +76,7 @@ export function SondageDAnnonce({ theme, annonce, sondage }: { theme: AppThemeTy
         const issue = await s.voter(choix);
         if (issue === 'echec') new ErrorAlert(Translator.get('SONDAGE_ECHEC')).show();
         if (issue === 'clos') new ErrorAlert(Translator.get('SONDAGE_FERME')).show();
+        if (issue === 'change') new ErrorAlert(Translator.get('SONDAGE_CHANGE')).show();
     };
 
     return (

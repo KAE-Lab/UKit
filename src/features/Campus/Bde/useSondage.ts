@@ -48,7 +48,7 @@ export function useSondage(annonce: string, sondage: Sondage): EtatDuSondage {
             const issue = await voter(annonce, id);
             if (issue === 'vote') setChoix(id);
             if (issue === 'clos') setOuvert(false);
-            if (issue !== 'echec') relire();
+            if (issue === 'vote' || issue === 'clos') relire();
             return issue;
         } finally {
             setEnCours(null);
