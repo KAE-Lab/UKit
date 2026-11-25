@@ -35,7 +35,19 @@
 .tableau tbody tr.cliquable { cursor: pointer; }
 .tableau tbody tr.cliquable:hover td { background: var(--surface-2); }
 .tableau tbody tr.cliquable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 0; }
-.tableau td.tronque { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+.tableau td.tronque { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+/*
+ * La colonne souple, le titre de la ligne : elle prend la place que les autres laissent et se tronque
+ * a sa mesure (`max-width: 0` la laisse retrecir), si bien qu'une liste tient dans sa largeur sans
+ * defiler. Ses reperes ne se tronquent pas : c'est le titre qui cede.
+ */
+.tableau td.souple { width: 100%; max-width: 0; min-width: 140px; }
+.titre-de-ligne { display: flex; align-items: center; gap: var(--espace-sm); min-width: 0; }
+/* Le titre garde au moins la moitie de la cellule ; au-dela, ce sont les reperes qui se coupent. */
+.texte-de-ligne { min-width: min(50%, 8em); overflow: hidden; text-overflow: ellipsis; }
+.reperes { display: inline-flex; gap: var(--espace-xs); min-width: 0; overflow: hidden; }
+.repere:not(:only-child) { flex: none; }
+.repere { display: inline-flex; align-items: center; gap: var(--espace-xs); padding: 0 var(--espace-sm); line-height: 20px; border-radius: var(--rayon-pilule); border: 1px solid var(--bordure); font-size: var(--taille-xs); color: var(--texte-2); white-space: nowrap; }
 .tableau td.date { white-space: nowrap; color: var(--texte-2); }
 .tableau .vignette { width: 36px; height: 36px; object-fit: cover; border-radius: var(--rayon-sm); background: var(--surface-2); display: block; }
 .tableau tbody.perime { opacity: 0.6; transition: opacity var(--duree-courte); }
@@ -52,13 +64,13 @@
 
 /* ---- Compteurs (retours, tableau de bord) ------------------------------------------------- */
 .trois-colonnes > .carte { margin-top: 0; }
-.compteurs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--espace-sm); }
+.compteurs { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--espace-sm); }
 .compteur { background: var(--surface); border: 1px solid var(--contour); border-radius: var(--rayon-lg); padding: var(--espace-md); display: grid; gap: 2px; min-height: 84px; }
 .compteur .valeur { font-size: var(--taille-xxl); font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
 .compteur .libelle { font-size: var(--taille-xs); color: var(--texte-2); }
 .compteur.actif { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .compteur .bouton-nu { display: grid; gap: 2px; text-align: left; width: 100%; }
-.barres { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); align-items: end; height: 64px; }
+.barres { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); align-items: end; height: 64px; margin-top: var(--espace-lg); }
 .barres .barre-semaine { background: var(--accent-doux); border-radius: var(--rayon-sm) var(--rayon-sm) 0 0; position: relative; min-height: 2px; }
 .barres .barre-semaine span { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: var(--taille-xs); color: var(--texte-2); }
 .legende-semaines { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--espace-xs); font-size: var(--taille-xs); color: var(--texte-2); text-align: center; margin-top: var(--espace-xs); }

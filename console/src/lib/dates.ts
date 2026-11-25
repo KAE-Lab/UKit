@@ -28,6 +28,19 @@ export function formaterDate(iso: unknown): string {
     return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
+/**
+ * Une date de liste, la plus courte qui reste juste : sans l'annee quand c'est celle du moment
+ * (« 19 nov., 14:11 »), sans l'heure quand ce n'est pas le cas (« 8 août 2025 »). La date entiere
+ * reste au survol de la cellule, et dans le formulaire.
+ */
+export function formaterDateDeListe(iso: unknown, maintenant: Date = new Date()): string {
+    if (typeof iso !== 'string' || iso === '') return '—';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    if (date.getFullYear() !== maintenant.getFullYear()) return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' }).format(date);
+    return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
 /** « il y a 3 h », « depuis 2 j » : la duree depuis un instant, en clair. */
 export function depuis(iso: unknown, maintenant: Date = new Date()): string {
     if (typeof iso !== 'string' || iso === '') return '—';

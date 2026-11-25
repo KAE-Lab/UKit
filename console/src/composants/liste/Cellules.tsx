@@ -6,11 +6,13 @@
 import type { JSX } from 'react';
 import { ImageOff } from 'lucide-react';
 
-import { formaterDate } from '../../lib/dates';
+import { formaterDate, formaterDateDeListe } from '../../lib/dates';
 import type { Champ, EtatCalcule } from '../../schema/descripteurs';
+import type { Ligne } from '../../supabase';
 import { resumeStructure } from '../../schema/resumes';
 import { valeursInconnues } from '../../schema/schemas';
 import { Pastille, ValeurInconnue } from '../ui/Pastille';
+import { texteDeRepere } from './reperes';
 
 export function estVide(valeur: unknown): boolean {
     return valeur === null || valeur === undefined || valeur === '';
@@ -70,7 +72,7 @@ export interface CelluleProps {
 
 const CELLULES: Record<string, (props: CelluleProps & { readonly champ: Champ }) => JSX.Element> = {
     booleen: ({ valeur }) => celluleBooleen(valeur),
-    date: ({ valeur }) => <>{formaterDate(valeur)}</>,
+    date: ({ valeur }) => <span title={formaterDate(valeur)}>{formaterDateDeListe(valeur)}</span>,
     image: ({ valeur }) => celluleImage(valeur),
     json: ({ valeur }) => celluleJson(valeur),
     etablissements: ({ valeur, codesConnus }) => celluleEtablissements(valeur, codesConnus),
@@ -92,13 +94,36 @@ export function CelluleCalculee({ etat }: { readonly etat: EtatCalcule }) {
     return <span title={etat.phrase ?? undefined}><Pastille ton={etat.ton} point>{etat.libelle}</Pastille></span>;
 }
 
+/** Les reperes d'une ligne, a cote de son titre : seulement ce qui s'ecarte du cas courant (reperes.ts). */
+export function Reperes({ champs, ligne, codesConnus }: { readonly champs: readonly Champ[]; readonly ligne: Ligne; readonly codesConnus: readonly string[] | null }) {
+    const reperes = champs.flatMap((champ) => {
+        const texte = texteDeRepere(champ, ligne[champ.nom]);
+        return texte === null ? [] : [{ champ, texte }];
+    });
+    if (reperes.length === 0) return null;
+    return (
+        <span className="reperes">
+            {reperes.map(({ champ, texte }) => (
+                <span key={champ.nom} className="repere" title={champ.libelle}>
+                    {texte === '' ? <Cellule champ={champ} valeur={ligne[champ.nom]} codesConnus={codesConnus} /> : texte}
+                </span>
+            ))}
+        </span>
+    );
+}
+
 /** Un texte long (une zone) se tronque comme un titre : sans ca, la colonne s'elargit a la longueur de la plus longue reponse. */
 export function seTronque(nom: string, champ: Champ | undefined): boolean {
     return nom === 'titre' || nom === 'nom' || nom === 'texte' || champ?.type.type === 'zone' || champ?.type.type === 'description';
 }
 
-/** La classe d'une cellule : tronquee pour un texte long, d'un seul tenant pour une date. */
-export function classeDeCellule(nom: string, champ: Champ | undefined): string | undefined {
-    if (seTronque(nom, champ)) return 'tronque';
+/**
+ * La classe d'une cellule. La colonne souple — le titre de la ligne — prend la place qui reste et se
+ * tronque a sa mesure : la liste tient dans sa largeur sans defiler. Un autre texte se tronque a une
+ * largeur bornee, une date reste d'un seul tenant.
+ */
+export function classeDeCellule(nom: string, champ: Champ | undefined, souple: boolean): string | undefined {
+    if (souple) return 'souple';
+    if (seTronque(nom, champ) || champ?.type.type === 'texte') return 'tronque';
     return champ?.type.type === 'date' ? 'date' : undefined;
 }

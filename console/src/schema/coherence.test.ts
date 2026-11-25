@@ -12,6 +12,7 @@ import { expect, test } from 'vitest';
 import { champDe, colonnesTriables, type Descripteur } from './descripteurs';
 import { RESSOURCES } from './tables';
 import { JOURNAL } from './tables/suivi';
+import { seTronque } from '../composants/liste/Cellules';
 
 const TYPES_DE_FILTRE = new Set(['booleen', 'choix']);
 const TYPES_DE_RECHERCHE = new Set(['texte', 'zone', 'description', 'uuid', 'version']);
@@ -98,4 +99,15 @@ test.each(CAS)('%s : un verrou est une date en lecture seule, que la base tient'
 
 test.each(CAS)('%s : une table sans cle lisible ne s ouvre pas', (_chemin, ressource) => {
     if (ressource.cle.length === 0) expect(ressource.ouvrable, 'une ligne sans cle ne sait pas ou s ouvrir').toBe(false);
+});
+
+test.each(CAS)('%s : un repere est un champ de la liste, pose a cote d un titre', (_chemin, ressource) => {
+    const reperes = ressource.reperes ?? [];
+    if (reperes.length === 0) return;
+    for (const nom of reperes) {
+        expect(champDe(ressource, nom), `repere ${nom}`).toBeDefined();
+        expect(ressource.liste.includes(nom), `repere ${nom} hors de la liste`).toBe(true);
+    }
+    const enColonne = ressource.liste.filter((nom) => !reperes.includes(nom));
+    expect(enColonne.some((nom) => seTronque(nom, champDe(ressource, nom))), 'aucune colonne souple pour porter les reperes').toBe(true);
 });

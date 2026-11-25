@@ -19,6 +19,8 @@ export interface Option {
     readonly libelle: string;
     /** En liste, une pastille de cette couleur plutot que le libelle nu : l'etat d'un retour. */
     readonly ton?: 'ok' | 'panne' | 'avert' | 'accent';
+    /** Le libelle d'un repere de liste, quand le libelle du formulaire est une phrase : « Testeurs ». */
+    readonly court?: string;
 }
 
 export type TypeDeChamp =
@@ -92,6 +94,11 @@ export interface Champ {
      * sa validation : la regle doit donc le montrer des qu'il porte une valeur.
      */
     readonly visible?: (valeurs: Ligne) => boolean;
+    /**
+     * Le mot d'un repere de liste (`Descripteur.reperes`) : « Épinglée », « dès » devant une version,
+     * « inactif » pour une case cochee par defaut. Le libelle du champ sinon.
+     */
+    readonly repere?: string;
     /** La forme qu'un texte doit avoir, et la phrase qui dit laquelle : un lien qui commence par `https://`. */
     readonly forme?: { readonly motif: RegExp; readonly message: string };
 }
@@ -192,6 +199,12 @@ export interface Descripteur {
     readonly champs: readonly Champ[];
     /** Les colonnes affichees en liste, dans l'ordre : des champs, ou des colonnes calculees. */
     readonly liste: readonly string[];
+    /**
+     * Les champs qui ne prennent pas de colonne : un repere a cote du titre de la ligne (la premiere
+     * colonne qui se tronque), seulement quand la valeur s'ecarte du cas courant — une colonne
+     * « Épinglée » pleine de « non » ou « Campus » pleine de « tous » ne dit rien (liste/reperes.ts).
+     */
+    readonly reperes?: readonly string[];
     /** Les colonnes de liste calculees sur la ligne, citees dans `liste` par leur nom. */
     readonly calculees?: readonly ColonneCalculee[];
     readonly tri?: { readonly colonne: string; readonly desc?: boolean };
@@ -239,7 +252,7 @@ export const CIBLAGE: readonly Champ[] = [
     {
         nom: 'audience',
         libelle: 'Audience',
-        type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement' }] },
+        type: { type: 'choix', options: [{ valeur: 'tous', libelle: 'Tout le monde' }, { valeur: 'testeurs', libelle: 'Les testeurs seulement', court: 'Testeurs' }] },
         defaut: 'tous',
         aide: 'Les testeurs sont les appareils enregistrés dans la table Testeurs : de quoi regarder un contenu sur son téléphone avant de l’envoyer à tout le monde.',
     },
@@ -249,8 +262,8 @@ export const CIBLAGE: readonly Champ[] = [
         type: { type: 'etablissements' },
         aide: 'Aucune case cochée : tous les campus.',
     },
-    { nom: 'version_min', libelle: 'Version minimale', type: { type: 'version' }, aide: 'Bornes incluses, en X.Y.Z. Vide : pas de borne.' },
-    { nom: 'version_max', libelle: 'Version maximale', type: { type: 'version' }, aide: '« Mets à jour » est un message dont la version maximale est la version précédente.' },
+    { nom: 'version_min', libelle: 'Version minimale', type: { type: 'version' }, repere: 'dès', aide: 'Bornes incluses, en X.Y.Z. Vide : pas de borne.' },
+    { nom: 'version_max', libelle: 'Version maximale', type: { type: 'version' }, repere: 'jusqu’à', aide: '« Mets à jour » est un message dont la version maximale est la version précédente.' },
     {
         nom: 'plateformes',
         libelle: 'Plateformes',

@@ -47,8 +47,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 .bouton-nu:disabled { cursor: default; }
 
 /* Les petits gabarits que les pages composent. */
-.pile { display: grid; gap: var(--espace-md); }
-.pile-etroite { display: grid; gap: var(--espace-sm); width: 100%; }
+/* Une seule colonne qui ne s'elargit pas a son contenu : une table ou une ligne longue y defile ou s'y coupe, sans pousser la page. */
+.pile { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--espace-md); }
+.pile-etroite { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--espace-sm); width: 100%; }
 .direct { display: contents; }
 .espace-haut { margin-top: var(--espace-md); }
 .espace-bas { margin-bottom: var(--espace-md); }

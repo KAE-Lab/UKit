@@ -18,6 +18,8 @@ export const MESSAGES: Descripteur = {
     verrou: 'maj_le',
     tri: { colonne: 'publie_le', desc: true },
     liste: ['titre', 'niveau', 'actif', 'audience', 'etablissements', 'plateformes', 'version_min', 'version_max', 'publie_le', 'notifie_le'],
+    // Le ciblage n'a d'ordinaire rien a dire : il se lit a cote du titre quand il borne le message.
+    reperes: ['audience', 'etablissements', 'plateformes', 'version_min', 'version_max'],
     filtres: ['niveau', 'actif', 'audience'],
     recherche: ['titre', 'corps', 'cle'],
     campus: CAMPUS_PAR_CIBLAGE,

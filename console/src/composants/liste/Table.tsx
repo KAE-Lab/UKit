@@ -22,13 +22,13 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useMemo, type KeyboardEvent } from 'react';
 
 import type { EtatDeTable } from '../../lib/requete';
-import { champDe, cleDeLigne, cleVersUrl, colonneCalculee, colonnesTriables, type Descripteur } from '../../schema/descripteurs';
+import { champDe, cleDeLigne, cleVersUrl, colonneCalculee, colonnesTriables, type Champ, type Descripteur } from '../../schema/descripteurs';
 import type { Ligne } from '../../supabase';
 import { BoutonNu } from '../ui/BoutonNu';
 import { EtatVide } from '../ui/EtatVide';
 import { ErreurDeLecture } from '../ui/ErreurDeLecture';
 import { SqueletteDeLignes } from '../ui/Squelette';
-import { Cellule, CelluleCalculee, classeDeCellule } from './Cellules';
+import { Cellule, CelluleCalculee, classeDeCellule, Reperes, seTronque } from './Cellules';
 
 const FONCTIONS = tableFeatures({ rowSortingFeature, rowPaginationFeature, columnFilteringFeature, globalFilteringFeature });
 const aide = createColumnHelper<typeof FONCTIONS, Ligne>();
@@ -51,13 +51,49 @@ export interface TableProps {
     readonly vide?: string;
 }
 
+/** Une cellule : un etat calcule, ou un champ ; la colonne souple porte en plus les reperes de la ligne. */
+function CelluleDeTable({ descripteur, nom, ligne, valeur, souple, champsDeRepere, codesConnus, maintenant }: {
+    readonly descripteur: Descripteur;
+    readonly nom: string;
+    readonly ligne: Ligne;
+    readonly valeur: unknown;
+    readonly souple: boolean;
+    readonly champsDeRepere: readonly Champ[];
+    readonly codesConnus: readonly string[] | null;
+    readonly maintenant: Date;
+}) {
+    const calculee = colonneCalculee(descripteur, nom);
+    if (calculee !== undefined) return <td><CelluleCalculee etat={calculee.valeur(ligne, maintenant)} /></td>;
+    const champ = champDe(descripteur, nom);
+    const contenu = <Cellule champ={champ} valeur={valeur} codesConnus={codesConnus} />;
+    return (
+        <td className={classeDeCellule(nom, champ, souple)}>
+            {souple ? (
+                <span className="titre-de-ligne">
+                    <span className="texte-de-ligne">{contenu}</span>
+                    <Reperes champs={champsDeRepere} ligne={ligne} codesConnus={codesConnus} />
+                </span>
+            ) : contenu}
+        </td>
+    );
+}
+
 export function Table({ descripteur, etat, poser, lignes, total, enChargement, perime, erreur, reessayer, codesConnus, lienDe, vide }: TableProps) {
     const triables = colonnesTriables(descripteur);
-    const colonnes = useMemo(() => descripteur.liste.map((nom) => aide.accessor((ligne) => ligne[nom], {
+    const { visibles, souple, champsDeRepere } = useMemo(() => {
+        const reperes = descripteur.reperes ?? [];
+        const enColonne = descripteur.liste.filter((nom) => !reperes.includes(nom));
+        return {
+            visibles: enColonne,
+            souple: enColonne.find((nom) => colonneCalculee(descripteur, nom) === undefined && seTronque(nom, champDe(descripteur, nom))),
+            champsDeRepere: reperes.flatMap((nom) => champDe(descripteur, nom) ?? []),
+        };
+    }, [descripteur]);
+    const colonnes = useMemo(() => visibles.map((nom) => aide.accessor((ligne) => ligne[nom], {
         id: nom,
         header: colonneCalculee(descripteur, nom)?.libelle ?? champDe(descripteur, nom)?.libelle ?? nom,
         enableSorting: triables.includes(nom),
-    })), [descripteur, triables]);
+    })), [descripteur, visibles, triables]);
     // Un etat calcule se lit a l'instant de l'affichage, comme la pastille de l'editeur.
     const maintenant = new Date();
 
@@ -109,12 +145,12 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
                         </tr>
                     ))}
                 </thead>
-                {lignes === undefined && enChargement ? <SqueletteDeLignes lignes={nombreDeSquelettes} colonnes={descripteur.liste.length} /> : null}
+                {lignes === undefined && enChargement ? <SqueletteDeLignes lignes={nombreDeSquelettes} colonnes={visibles.length} /> : null}
                 {lignes === undefined && !enChargement && erreur !== null ? (
-                    <tbody><tr><td colSpan={descripteur.liste.length} style={{ height: `calc(var(--hauteur-ligne) * ${nombreDeSquelettes})` }}><ErreurDeLecture erreur={erreur} reessayer={reessayer} /></td></tr></tbody>
+                    <tbody><tr><td colSpan={visibles.length} style={{ height: `calc(var(--hauteur-ligne) * ${nombreDeSquelettes})` }}><ErreurDeLecture erreur={erreur} reessayer={reessayer} /></td></tr></tbody>
                 ) : null}
                 {lignes !== undefined && lignes.length === 0 ? (
-                    <tbody><tr><td colSpan={descripteur.liste.length}><EtatVide>{vide ?? descripteur.vide ?? 'Aucune ligne pour ces filtres.'}</EtatVide></td></tr></tbody>
+                    <tbody><tr><td colSpan={visibles.length}><EtatVide>{vide ?? descripteur.vide ?? 'Aucune ligne pour ces filtres.'}</EtatVide></td></tr></tbody>
                 ) : null}
                 {lignes !== undefined && lignes.length > 0 ? (
                     <tbody className={perime ? 'perime' : undefined} aria-busy={perime}>
@@ -127,16 +163,9 @@ export function Table({ descripteur, etat, poser, lignes, total, enChargement, p
                                 onClick={ouvrable ? () => ouvrir(rangee.original) : undefined}
                                 onKeyDown={ouvrable ? (e) => auClavier(e, rangee.original) : undefined}
                             >
-                                {rangee.getAllCells().map((cellule) => {
-                                    const calculee = colonneCalculee(descripteur, cellule.column.id);
-                                    if (calculee !== undefined) return <td key={cellule.id}><CelluleCalculee etat={calculee.valeur(rangee.original, maintenant)} /></td>;
-                                    const champ = champDe(descripteur, cellule.column.id);
-                                    return (
-                                        <td key={cellule.id} className={classeDeCellule(cellule.column.id, champ)}>
-                                            <Cellule champ={champ} valeur={cellule.getValue()} codesConnus={codesConnus} />
-                                        </td>
-                                    );
-                                })}
+                                {rangee.getAllCells().map((cellule) => (
+                                    <CelluleDeTable key={cellule.id} descripteur={descripteur} nom={cellule.column.id} ligne={rangee.original} valeur={cellule.getValue()} souple={cellule.column.id === souple} champsDeRepere={champsDeRepere} codesConnus={codesConnus} maintenant={maintenant} />
+                                ))}
                             </tr>
                         ))}
                     </tbody>

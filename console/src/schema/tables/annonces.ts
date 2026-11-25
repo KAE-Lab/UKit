@@ -86,7 +86,11 @@ export const ANNONCES: Descripteur = {
     tri: { colonne: 'publiee_le', desc: true },
     // L'etat que les telephones voient, pas le statut editorial : une annonce publiee mais decochee,
     // programmee ou expiree n'est visible de personne, et la liste le dit.
-    liste: ['image_url', 'titre', 'etat', 'type', 'emetteur', 'epinglee', 'audience', 'etablissements', 'publiee_le', 'expire_le'],
+    liste: ['image_url', 'titre', 'etat', 'type', 'emetteur', 'epinglee', 'audience', 'etablissements', 'publiee_le'],
+    // Une annonce est d'ordinaire un evenement, sans epingle, pour tout le monde, sur tous les campus :
+    // ce qui s'en ecarte se dit a cote du titre, le reste ne prend pas de colonne. L'expiration se lit
+    // dans l'etat (« Expirée », « Jusqu'au … » au survol).
+    reperes: ['type', 'epinglee', 'audience', 'etablissements'],
     calculees: [{ nom: 'etat', libelle: 'État', valeur: etatDAnnonce }],
     filtres: ['statut', 'type', 'active', 'epinglee', 'audience'],
     recherche: ['titre', 'emetteur', 'accroche'],
