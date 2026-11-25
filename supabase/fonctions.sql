@@ -449,3 +449,324 @@ $$;
 
 revoke execute on function public.parc_actif_arrondi() from public;
 grant execute on function public.parc_actif_arrondi() to anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- La communaute (phase 8, lot 1 ; migration 20261125020000_communaute.sql)
+-- -----------------------------------------------------------------------------
+--
+-- La configuration des plafonds, et les deux portes d'ecriture de la fonction `communaute`, reservees
+-- au service_role : la base y garde la confiance — plafonds, reputation, poids d'une voix —, jamais
+-- l'etat d'un lieu, que l'application calcule.
+
+-- La configuration.
+--
+-- Les plafonds, les seuils et les poids, hors de la documentation publique : la table vit dans
+-- `private`, que l'API n'expose pas, et ses valeurs ne sont pas dans le depot. Une cle absente fait
+-- echouer l'ecriture plutot que de la laisser passer sans borne. Les cles : plafond_appareil_atteste,
+-- plafond_appareil_non_atteste, plafond_non_attestes_jour, plafond_ip_jour, seuil_fiable,
+-- anciennete_fiable_jours, duree_direct_minutes, duree_correction_jours, fin_max_jours.
+create table if not exists private.reglages_communaute (
+    cle         text    primary key,
+    valeur      integer not null check (valeur >= 0),
+    description text
+);
+
+create or replace function private.reglage_communaute(p_cle text)
+returns integer
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    v_valeur integer;
+begin
+    select valeur into v_valeur from private.reglages_communaute where cle = p_cle;
+    if v_valeur is null then
+        raise exception 'reglage communautaire absent : %', p_cle using errcode = 'P0002';
+    end if;
+    return v_valeur;
+end;
+$$;
+
+-- Le compte du jour d'une empreinte, et l'effacement des jours passes : l'empreinte ne survit pas a
+-- son jour de plus que le temps de la premiere ecriture du lendemain.
+create or replace function private.compter_adresse(p_empreinte bytea, p_jour date)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_n integer;
+begin
+    delete from public.empreintes_ip where jour < p_jour;
+    insert into public.empreintes_ip (jour, empreinte, n) values (p_jour, p_empreinte, 1)
+    on conflict (jour, empreinte) do update set n = public.empreintes_ip.n + 1
+    returning n into v_n;
+    return v_n;
+end;
+$$;
+
+revoke execute on function private.reglage_communaute(text) from public, anon, authenticated;
+revoke execute on function private.compter_adresse(bytea, date) from public, anon, authenticated;
+
+-- `maj_le` des signalements ne bouge que si le statut bouge : une confirmation, qui ne change rien de
+-- ce que l'application lit, ne renvoie pas la ligne a tout le parc.
+drop trigger if exists maj_le on public.signalements;
+create trigger maj_le before update on public.signalements
+    for each row when (old.statut is distinct from new.statut)
+    execute function private.tenir_maj_le();
+
+-- -----------------------------------------------------------------------------
+-- Les deux portes d'ecriture, reservees au service_role
+-- -----------------------------------------------------------------------------
+--
+-- Les refus attendus — un plafond, un appareil bloque, une assertion rejouee, un sujet inconnu —
+-- rendent `{"statut": "refusee", "raison": ...}` et la transaction se valide : le compte de l'adresse
+-- et le compteur d'assertions avancent meme quand la contribution est refusee, sans quoi un refus se
+-- rejouerait a l'infini. Une forme fausse leve (22023) : la fonction `communaute` l'a deja filtree, et
+-- ce qui arrive malgre tout ici est un defaut, pas un refus.
+
+-- L'enregistrement d'une cle App Attest, apres la verification de son attestation par la fonction
+-- `communaute` : la cle publique et l'environnement, un compteur a zero. Une cle deja connue reste
+-- telle quelle.
+create or replace function public.enregistrer_appareil(p jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_jour         date := (now() at time zone 'Europe/Paris')::date;
+    v_cle          bytea;
+    v_cle_publique bytea;
+    v_env          text;
+    v_empreinte    bytea;
+    v_n            integer;
+begin
+    if p is null or jsonb_typeof(p) <> 'object' then
+        raise exception 'enregistrer_appareil : un objet est attendu' using errcode = '22023';
+    end if;
+    v_cle          := decode(p ->> 'cle', 'hex');
+    v_cle_publique := decode(p ->> 'cle_publique', 'hex');
+    v_env          := p ->> 'environnement';
+    v_empreinte    := decode(p ->> 'empreinte_ip', 'hex');
+    if octet_length(v_cle) is distinct from 32 or octet_length(v_cle_publique) is distinct from 65
+       or octet_length(v_empreinte) is distinct from 32 or v_env not in ('production', 'developpement') then
+        raise exception 'enregistrer_appareil : forme inattendue' using errcode = '22023';
+    end if;
+
+    v_n := private.compter_adresse(v_empreinte, v_jour);
+    if v_n > private.reglage_communaute('plafond_ip_jour') then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_ip');
+    end if;
+
+    insert into public.appareils (cle, nature, plateforme, cle_publique, environnement)
+    values (v_cle, 'app_attest', 'ios', v_cle_publique, v_env)
+    on conflict (cle) do nothing;
+    if found then
+        return jsonb_build_object('statut', 'enregistre');
+    end if;
+    if exists (select 1 from public.appareils where cle = v_cle and cle_publique = v_cle_publique) then
+        return jsonb_build_object('statut', 'deja_enregistre');
+    end if;
+    return jsonb_build_object('statut', 'refusee', 'raison', 'cle_differente');
+end;
+$$;
+
+-- Une contribution. `p` : `{ appareil: { cle, nature, plateforme, atteste, compteur? }, empreinte_ip,
+-- contribution: { sujet, cible, valeur, fin? }, essai }`, les octets en hexadecimal. `atteste` vient de
+-- la fonction `communaute`, qui a verifie l'assertion App Attest ou le verdict Play Integrity ;
+-- `essai` joue tout jusqu'au poids — l'adresse, l'appareil, son compteur, ses plafonds — sans rien
+-- ecrire d'autre, pour le menu de developpement et le protocole sur telephone.
+create or replace function public.contribuer(p jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_jour       date        := (now() at time zone 'Europe/Paris')::date;
+    v_debut      timestamptz := (now() at time zone 'Europe/Paris')::date::timestamp at time zone 'Europe/Paris';
+    v_dispositif jsonb       := p -> 'appareil';
+    v_apport     jsonb       := p -> 'contribution';
+    v_cle        bytea;
+    v_nature     text;
+    v_plateforme text;
+    v_atteste    boolean;
+    v_compteur   bigint;
+    v_empreinte  bytea;
+    v_essai      boolean;
+    v_appareil   public.appareils%rowtype;
+    v_sujet      public.sujets%rowtype;
+    v_cible      text;
+    v_valeur     text;
+    v_fin        date;
+    v_poids      smallint;
+    v_n          integer;
+    v_expire     timestamptz;
+    v_id         uuid;
+begin
+    if p is null or jsonb_typeof(p) <> 'object' or jsonb_typeof(v_dispositif) is distinct from 'object'
+       or jsonb_typeof(v_apport) is distinct from 'object' then
+        raise exception 'contribuer : forme inattendue' using errcode = '22023';
+    end if;
+    v_cle        := decode(v_dispositif ->> 'cle', 'hex');
+    v_nature     := v_dispositif ->> 'nature';
+    v_plateforme := v_dispositif ->> 'plateforme';
+    v_atteste    := (v_dispositif ->> 'atteste')::boolean;
+    v_compteur   := (v_dispositif ->> 'compteur')::bigint;
+    v_empreinte  := decode(p ->> 'empreinte_ip', 'hex');
+    v_essai      := coalesce((p ->> 'essai')::boolean, false);
+    v_cible      := v_apport ->> 'cible';
+    v_valeur     := v_apport ->> 'valeur';
+    if octet_length(v_cle) is distinct from 32 or octet_length(v_empreinte) is distinct from 32
+       or v_nature not in ('app_attest', 'secret') or v_plateforme not in ('ios', 'android')
+       or v_atteste is null or (v_nature = 'app_attest' and (not v_atteste or v_compteur is null)) then
+        raise exception 'contribuer : appareil inattendu' using errcode = '22023';
+    end if;
+
+    -- 1. L'adresse, comptee avant tout le reste : un flot refuse est un flot compte.
+    v_n := private.compter_adresse(v_empreinte, v_jour);
+    if v_n > private.reglage_communaute('plafond_ip_jour') then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_ip');
+    end if;
+
+    -- 2. L'appareil, verrouille le temps de la transaction : deux contributions simultanees du meme
+    --    appareil se jugent l'une apres l'autre, plafonds et compteur compris.
+    if v_nature = 'secret' then
+        insert into public.appareils (cle, nature, plateforme) values (v_cle, 'secret', v_plateforme)
+        on conflict (cle) do nothing;
+    end if;
+    select * into v_appareil from public.appareils where cle = v_cle for update;
+    if not found or v_appareil.nature <> v_nature then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'appareil_inconnu');
+    end if;
+    if v_nature = 'app_attest' and v_compteur <= v_appareil.compteur then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'compteur_rejoue');
+    end if;
+    update public.appareils
+       set vu_le      = now(),
+           compteur   = coalesce(v_compteur, compteur),
+           atteste_le = case when v_atteste then now() else atteste_le end
+     where cle = v_cle;
+    if v_appareil.bloque_le is not null then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'appareil_bloque');
+    end if;
+
+    -- 3. Les plafonds du jour : par appareil, bas pour qui n'est pas atteste ; et, pour le non
+    --    atteste, un plafond de tout le parc, qui borne un flot venu de nombreuses adresses.
+    v_n := (select count(*) from public.signalements where appareil = v_cle and cree_le >= v_debut)
+         + (select count(*) from public.votes where appareil = v_cle and cree_le >= v_debut);
+    if v_n >= private.reglage_communaute(case when v_atteste then 'plafond_appareil_atteste'
+                                              else 'plafond_appareil_non_atteste' end) then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_appareil');
+    end if;
+    if not v_atteste then
+        v_n := (select count(*) from public.signalements where poids = 0 and cree_le >= v_debut)
+             + (select count(*) from public.votes where poids = 0 and cree_le >= v_debut);
+        if v_n >= private.reglage_communaute('plafond_non_attestes_jour') then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'plafond_non_attestes');
+        end if;
+    end if;
+
+    -- 4. Le poids : jamais une voix sans attestation ; deux pour un appareil fiable, souvent confirme
+    --    et assez ancien pour qu'une reputation ne se fabrique pas en un jour.
+    v_poids := case
+        when not v_atteste then 0
+        when v_appareil.reputation >= private.reglage_communaute('seuil_fiable')
+             and v_appareil.cree_le <= now() - make_interval(days => private.reglage_communaute('anciennete_fiable_jours')) then 2
+        else 1
+    end;
+    if v_essai then
+        return jsonb_build_object('statut', 'essai', 'poids', v_poids, 'atteste', v_atteste);
+    end if;
+
+    -- 5. Le sujet, la cible, la valeur et la fin.
+    select * into v_sujet from public.sujets where sujet = v_apport ->> 'sujet' and actif;
+    if not found then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'sujet_inconnu');
+    end if;
+    if v_cible is null or v_cible !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$' then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'cible_invalide');
+    end if;
+    if v_valeur is null or char_length(v_valeur) not between 1 and 120
+       or (v_sujet.valeurs is not null and not (v_valeur = any (v_sujet.valeurs)))
+       or (v_sujet.forme is not null and v_valeur !~ v_sujet.forme) then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'valeur_invalide');
+    end if;
+    if v_sujet.famille = 'date' then
+        begin
+            v_fin := (v_apport ->> 'fin')::date;
+        exception when others then
+            v_fin := null;
+        end;
+        if v_fin is null or v_fin < v_jour or v_fin > v_jour + private.reglage_communaute('fin_max_jours') then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'fin_invalide');
+        end if;
+    elsif v_apport ? 'fin' and jsonb_typeof(v_apport -> 'fin') <> 'null' then
+        return jsonb_build_object('statut', 'refusee', 'raison', 'fin_invalide');
+    end if;
+
+    -- 6a. Un vote : un bulletin par appareil et par cible, definitif.
+    if v_sujet.nature = 'vote' then
+        insert into public.votes (sujet, cible, appareil, valeur, poids)
+        values (v_sujet.sujet, v_cible, v_cle, v_valeur, v_poids)
+        on conflict (sujet, cible, appareil) do nothing;
+        if not found then
+            return jsonb_build_object('statut', 'refusee', 'raison', 'deja_vote');
+        end if;
+        return jsonb_build_object('statut', 'acceptee', 'poids', v_poids);
+    end if;
+
+    -- 6b. Un signalement : sa borne de validite selon sa famille, la voix precedente du meme
+    --     appareil remplacee, puis le credit de reputation des voix concordantes d'autres appareils.
+    v_expire := case v_sujet.famille
+        when 'jour'       then (v_jour + 1)::timestamp at time zone 'Europe/Paris'
+        when 'date'       then (v_fin + 1)::timestamp at time zone 'Europe/Paris'
+        when 'direct'     then now() + make_interval(mins => private.reglage_communaute('duree_direct_minutes'))
+        when 'correction' then now() + make_interval(days => private.reglage_communaute('duree_correction_jours'))
+    end;
+
+    update public.signalements
+       set statut = 'remplacee'
+     where appareil = v_cle and sujet = v_sujet.sujet and cible = v_cible
+       and statut = 'active' and expire_le > now();
+
+    insert into public.signalements (sujet, cible, valeur, fin, poids, expire_le, appareil)
+    values (v_sujet.sujet, v_cible, v_valeur, v_fin, v_poids, v_expire, v_cle)
+    returning id into v_id;
+
+    if v_poids >= 1 then
+        with confirmes as (
+            update public.signalements
+               set confirme_le = now()
+             where sujet = v_sujet.sujet and cible = v_cible and valeur = v_valeur
+               and statut = 'active' and poids >= 1 and confirme_le is null
+               and expire_le > now() and appareil <> v_cle and id <> v_id
+            returning appareil
+        )
+        update public.appareils a
+           set reputation = a.reputation + c.n
+          from (select appareil, count(*)::integer as n from confirmes group by appareil) c
+         where a.cle = c.appareil;
+    end if;
+
+    -- 7. Les durees de conservation, tenues a chaque ecriture plutot que par une tache a part :
+    --    un signalement trente jours apres sa fin, un appareil douze mois apres sa derniere
+    --    contribution, s'il ne porte plus rien.
+    delete from public.signalements where expire_le < now() - interval '30 days';
+    delete from public.appareils a
+     where a.vu_le < now() - interval '12 months'
+       and not exists (select 1 from public.signalements s where s.appareil = a.cle)
+       and not exists (select 1 from public.votes x where x.appareil = a.cle);
+
+    return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'poids', v_poids);
+end;
+$$;
+
+revoke execute on function public.enregistrer_appareil(jsonb) from public, anon, authenticated;
+revoke execute on function public.contribuer(jsonb) from public, anon, authenticated;
+grant execute on function public.enregistrer_appareil(jsonb) to service_role;
+grant execute on function public.contribuer(jsonb) to service_role;

@@ -428,3 +428,62 @@ create policy "media supprimable par les admins"
     on storage.objects for delete
     to authenticated
     using (bucket_id = 'media' and (select private.est_admin()));
+
+-- -----------------------------------------------------------------------------
+-- La communaute (phase 8, lot 1 ; migration 20261125020000_communaute.sql)
+-- -----------------------------------------------------------------------------
+--
+-- `revoke` d'abord : une table nouvelle nait avec tous les privileges accordes a `anon` et
+-- `authenticated` (les privileges par defaut du projet). Puis la lecture publique des signalements,
+-- colonne par colonne — ni `appareil`, ni `confirme_le` — et ligne par ligne : ce qui vaut encore
+-- aujourd'hui, a l'heure de Paris, statuts compris, pour que la lecture incrementale apprenne qu'une
+-- voix a ete remplacee ou masquee. Un `select *` de la cle publiable est refuse : l'application
+-- nomme ses colonnes. Les editeurs lisent les memes colonnes sur toutes les lignes ; un admin compte
+-- les appareils sans lire leur cle. `empreintes_ip` ne se lit par aucun compte.
+alter table public.sujets        enable row level security;
+alter table public.appareils     enable row level security;
+alter table public.signalements  enable row level security;
+alter table public.votes         enable row level security;
+alter table public.empreintes_ip enable row level security;
+alter table private.reglages_communaute enable row level security;
+
+revoke all on public.sujets, public.appareils, public.signalements, public.votes, public.empreintes_ip
+    from anon, authenticated;
+revoke all on private.reglages_communaute from anon, authenticated;
+
+grant select (id, sujet, cible, valeur, fin, poids, statut, cree_le, expire_le, maj_le)
+    on public.signalements to anon, authenticated;
+
+drop policy if exists "signalements du jour lisibles" on public.signalements;
+create policy "signalements du jour lisibles"
+    on public.signalements for select
+    to anon, authenticated
+    using (expire_le > date_trunc('day', now() at time zone 'Europe/Paris') at time zone 'Europe/Paris');
+
+drop policy if exists "signalements lisibles par les editeurs" on public.signalements;
+create policy "signalements lisibles par les editeurs"
+    on public.signalements for select
+    to authenticated
+    using (private.est_editeur());
+
+grant select on public.sujets to authenticated;
+drop policy if exists "sujets lisibles par les editeurs" on public.sujets;
+create policy "sujets lisibles par les editeurs"
+    on public.sujets for select
+    to authenticated
+    using (private.est_editeur());
+
+grant select (sujet, cible, valeur, poids, cree_le) on public.votes to authenticated;
+drop policy if exists "votes lisibles par les editeurs" on public.votes;
+create policy "votes lisibles par les editeurs"
+    on public.votes for select
+    to authenticated
+    using (private.est_editeur());
+
+grant select (nature, plateforme, environnement, reputation, atteste_le, bloque_le, cree_le, vu_le)
+    on public.appareils to authenticated;
+drop policy if exists "appareils comptes par les admins" on public.appareils;
+create policy "appareils comptes par les admins"
+    on public.appareils for select
+    to authenticated
+    using (private.est_admin());

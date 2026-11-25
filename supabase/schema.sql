@@ -689,3 +689,137 @@ insert into storage.buckets (id, name, public)
 values ('blueprints', 'blueprints', true),
        ('media',      'media',      true)
 on conflict (id) do update set public = excluded.public;
+
+-- =============================================================================
+-- La communaute (phase 8, lot 1 ; migration 20261125020000_communaute.sql)
+-- =============================================================================
+--
+-- Ce que les etudiants ecrivent depuis l'application, par la seule fonction `communaute` : le
+-- vocabulaire, les appareils, les signalements, les votes, les empreintes d'adresse. La configuration
+-- vit dans `private` (fonctions.sql), les portes d'ecriture aussi, les politiques dans policies.sql
+-- (docs/phase-8/1-base-communautaire.md).
+
+-- -----------------------------------------------------------------------------
+-- Le vocabulaire
+-- -----------------------------------------------------------------------------
+--
+-- Un sujet est un type de contribution que l'application propose, jamais un texte libre. Les lots qui
+-- suivent y ajoutent leurs lignes par migration — les signalements des restaurants, des bibliotheques
+-- et des batiments, les sondages, la boite a idees —, sans toucher au reste. `domaine` dit ce que
+-- designe la `cible` d'une contribution (un restaurant par son code Croustillant, un batiment par
+-- `<etablissement>/<code>`, une annonce par son id) ; `famille` dit combien de temps un signalement
+-- vaut (jour : jusqu'au soir ; date : jusqu'a sa `fin` ; correction : jusqu'a la console ou au plafond
+-- de duree ; direct : quelques minutes) ; un vote n'en a pas. Une valeur est prise dans `valeurs`, ou,
+-- pour un choix dans une liste que l'application lit ailleurs (un plat du menu du jour), conforme a
+-- `forme`. Un sujet retire passe `actif = false` : sa ligne reste tant que des signalements la citent.
+create table if not exists public.sujets (
+    sujet       text    primary key check (sujet ~ '^[a-z]+(\.[a-z_]+)+$' and char_length(sujet) <= 48),
+    nature      text    not null check (nature in ('signalement', 'vote')),
+    domaine     text    not null check (domaine ~ '^[a-z_]{1,24}$'),
+    famille     text    check (famille in ('jour', 'date', 'correction', 'direct')),
+    valeurs     text[]  check (cardinality(valeurs) between 1 and 32),
+    forme       text    check (char_length(forme) <= 200),
+    description text,
+    actif       boolean not null default true,
+    check ((nature = 'vote') = (famille is null)),
+    check ((valeurs is null) <> (forme is null))
+);
+
+-- -----------------------------------------------------------------------------
+-- Les appareils
+-- -----------------------------------------------------------------------------
+--
+-- La cle serveur d'un appareil, jamais son identifiant d'installation (PRIVACY.md, 4 ter) : sur iOS,
+-- l'identifiant de la cle App Attest (l'empreinte SHA-256 de sa cle publique, `nature = app_attest`) ;
+-- ailleurs — Android, et un iPhone sans App Attest —, l'empreinte SHA-256 d'un secret tire sur
+-- l'appareil et envoye avec chaque contribution (`nature = secret`). La base ne garde jamais le secret
+-- lui-meme. Une reinstallation fait une autre cle : la reputation repart de zero.
+--
+-- `compteur` est celui des assertions App Attest : il ne fait que monter, et une assertion rejouee
+-- est refusee. `atteste_le` : la derniere contribution attestee. `bloque_le` : la moderation (lot 2).
+create table if not exists public.appareils (
+    cle           bytea       primary key check (octet_length(cle) = 32),
+    nature        text        not null check (nature in ('app_attest', 'secret')),
+    plateforme    text        not null check (plateforme in ('ios', 'android')),
+    -- App Attest : le point P-256 non compresse de la cle attestee, de quoi verifier ses assertions.
+    cle_publique  bytea       check (octet_length(cle_publique) = 65),
+    environnement text        check (environnement in ('production', 'developpement')),
+    compteur      bigint      not null default 0 check (compteur >= 0),
+    reputation    integer     not null default 0 check (reputation >= 0),
+    atteste_le    timestamptz,
+    bloque_le     timestamptz,
+    cree_le       timestamptz not null default now(),
+    vu_le         timestamptz not null default now(),
+    check ((nature = 'app_attest') = (cle_publique is not null)),
+    check ((nature = 'app_attest') = (environnement is not null)),
+    check (nature = 'secret' or plateforme = 'ios')
+);
+
+create index if not exists appareils_vu_le on public.appareils (vu_le);
+
+-- -----------------------------------------------------------------------------
+-- Les signalements
+-- -----------------------------------------------------------------------------
+--
+-- Une voix sur un lieu : un sujet, une cible, une valeur. `poids` est fixe a l'ecriture : 0 pour une
+-- contribution non attestee, qui s'affiche en retrait sans jamais compter ; 1 pour une voix ; 2 pour
+-- la voix d'un appareil fiable. `expire_le` borne ce qu'un signalement peut valoir, selon sa famille ;
+-- l'application en tire la duree qu'elle affiche, jamais plus. Un appareil n'a qu'une voix vivante
+-- par sujet et par cible : la suivante passe la precedente en `remplacee`. `masquee` : la moderation.
+-- `maj_le` bouge quand le statut bouge — c'est le curseur de la lecture incrementale de l'application.
+create table if not exists public.signalements (
+    id          uuid        primary key default gen_random_uuid(),
+    sujet       text        not null references public.sujets (sujet),
+    cible       text        not null check (cible ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$'),
+    valeur      text        not null check (char_length(valeur) between 1 and 120),
+    fin         date,
+    poids       smallint    not null check (poids between 0 and 2),
+    statut      text        not null default 'active' check (statut in ('active', 'remplacee', 'masquee')),
+    cree_le     timestamptz not null default now(),
+    expire_le   timestamptz not null,
+    maj_le      timestamptz not null default now(),
+    appareil    bytea       not null references public.appareils (cle),
+    -- La premiere confirmation par un autre appareil, qui a credite l'auteur d'un point de reputation.
+    confirme_le timestamptz,
+    check (expire_le > cree_le)
+);
+
+create index if not exists signalements_maj_le on public.signalements (maj_le);
+create index if not exists signalements_expire_le on public.signalements (expire_le);
+create index if not exists signalements_appareil on public.signalements (appareil, cree_le);
+create index if not exists signalements_cible on public.signalements (sujet, cible) where statut = 'active';
+
+-- -----------------------------------------------------------------------------
+-- Les votes
+-- -----------------------------------------------------------------------------
+--
+-- Un bulletin par appareil et par cible : une option de sondage, un « moi aussi » sur une idee ou un
+-- probleme connu (lot 4). Aucune lecture publique dans ce lot : le lot qui les montre la pose.
+create table if not exists public.votes (
+    sujet    text        not null references public.sujets (sujet),
+    cible    text        not null check (cible ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$'),
+    appareil bytea       not null references public.appareils (cle),
+    valeur   text        not null check (char_length(valeur) between 1 and 120),
+    poids    smallint    not null check (poids between 0 and 2),
+    cree_le  timestamptz not null default now(),
+    primary key (sujet, cible, appareil)
+);
+
+create index if not exists votes_appareil on public.votes (appareil, cree_le);
+
+-- -----------------------------------------------------------------------------
+-- Les adresses IP, en empreinte
+-- -----------------------------------------------------------------------------
+--
+-- Un compteur par empreinte et par jour de Paris, pour le plafond haut par adresse : un amphi entier
+-- sort par la meme. L'empreinte est un HMAC de l'adresse et du jour, calcule par la fonction
+-- `communaute` avec une cle qui n'est qu'a elle : l'adresse n'entre jamais dans la base, et
+-- l'empreinte d'un jour ne se relie a celle d'aucun autre. Les lignes d'un jour passe s'effacent a la
+-- premiere ecriture du jour suivant (`private.compter_adresse`). Rien ne relie une empreinte a un
+-- appareil ni a un signalement.
+create table if not exists public.empreintes_ip (
+    jour      date    not null,
+    empreinte bytea   not null check (octet_length(empreinte) = 32),
+    n         integer not null default 0 check (n >= 0),
+    primary key (jour, empreinte)
+);
