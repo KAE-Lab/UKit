@@ -189,3 +189,31 @@ export function ligneDeSalle(description: string, format: FormatSalles | null = 
 
     return candidates[0] ?? '';
 }
+
+/**
+ * Ou se donne un cours : les batiments **declares** d'abord, l'heuristique ensuite.
+ *
+ * Celcat declare ses batiments (`sites`) ; tout ce qui suit est du devinement dans du texte libre — la
+ * ligne de salle a son rang, puis le premier code trouve dans cette ligne, puis dans l'intitule. Les
+ * trois replis servent encore : un evenement iCalendar n'a pas de `sites`, et les caches ecrits avant
+ * ce champ non plus. Sortie de la fiche de cours pour un second usage, le batiment du cours qui suit
+ * le trou de midi (docs/phase-8/6-intelligence.md) : les deux lisent le meme lieu.
+ */
+export function lieuxDuCours(
+    cours: { readonly sites?: readonly string[]; readonly description?: string; readonly subject?: string },
+    format: FormatSalles | null = formatSallesActif(),
+): LieuDeCours[] {
+    const declares = lieuxDesSites(cours.sites, format);
+    if (declares.length > 0) return declares;
+
+    const ligne = ligneDeSalle(cours.description ?? '', format);
+    if (ligne) {
+        const parLibelle = getLocations(ligne, format);
+        if (parLibelle.length > 0) return parLibelle;
+
+        const dansLeTexte = getLocationsInText(ligne, format);
+        if (dansLeTexte.length > 0) return dansLeTexte;
+    }
+
+    return getLocationsInText(cours.subject ?? '', format);
+}

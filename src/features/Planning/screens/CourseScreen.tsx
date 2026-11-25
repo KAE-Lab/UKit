@@ -7,7 +7,7 @@ import * as Location from 'expo-location';
 
 import style, { tokens } from '../../../shared/theme/Theme';
 import Translator from '../../../shared/i18n/Translator';
-import { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../../../shared/services/AppCore';
+import { lieuxDuCours } from '../../../shared/services/AppCore';
 import type { LieuDeCours } from '../../../shared/locations/salles';
 import { AppContext } from '../../../shared/services/AppCore';
 import { EmbeddedMap } from '../../../shared/map/EmbeddedMap';
@@ -141,25 +141,11 @@ class CourseScreenComponent extends React.Component<CourseProps, CourseState> {
 	 * devenait le nom de l'enseignant, silencieusement.
 	 *
 	 * Les trois replis restent, et ils servent : un evenement iCalendar n'a pas de `sites`, et les
-	 * caches ecrits avant ce champ n'en portent pas non plus.
+	 * caches ecrits avant ce champ n'en portent pas non plus. La resolution vit dans `lieuxDuCours`
+	 * (shared/locations/salles.ts), que le trou de midi de la carte du jour lit aussi.
 	 */
 	resoudreLieux(): LieuDeCours[] {
-		const declares = lieuxDesSites(this.state.data.sites);
-		if (declares.length > 0) return declares;
-
-		// La ligne susceptible de porter une salle, et le rang auquel la chercher, sont une donnee
-		// d'etablissement depuis le jalon 6-I : une description Celcat porte la salle a partir de la
-		// troisieme ligne, un evenement iCalendar la tient d'un champ separe remis en tete.
-		const roomLine = ligneDeSalle(this.state.data.description ?? '');
-		if (roomLine) {
-			const parLibelle = getLocations(roomLine);
-			if (parLibelle.length > 0) return parLibelle;
-
-			const dansLeTexte = getLocationsInText(roomLine);
-			if (dansLeTexte.length > 0) return dansLeTexte;
-		}
-
-		return getLocationsInText(this.state.data.subject ?? '');
+		return lieuxDuCours(this.state.data);
 	}
 
 	renderMap(theme: import('../../../shared/theme/Theme').AppThemeType) {

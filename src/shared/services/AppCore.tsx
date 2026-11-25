@@ -98,7 +98,7 @@ export function isArraysEquals(a: unknown[], b: unknown[]): boolean {
 // La reconnaissance de salle a demenage dans `shared/locations/salles.ts` au jalon 6-I : la decoupe
 // et le motif etaient des constantes bordelaises, ils sont devenus une donnee d'etablissement. Les
 // deux fonctions restent exportees d'ici pour ne casser aucun appelant.
-export { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from '../locations/salles';
+export { getLocations, getLocationsInText, lieuxDesSites, lieuxDuCours, ligneDeSalle } from '../locations/salles';
 
 // ── GESTION DES COURS ───────────────────────────────
 // La regle vit dans `features/Planning/services/filtresUe.ts`, pur donc jouable sous Node : un cours

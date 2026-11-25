@@ -13,7 +13,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { getLocations, getLocationsInText, lieuxDesSites, ligneDeSalle } from './salles';
+import { getLocations, getLocationsInText, lieuxDesSites, lieuxDuCours, ligneDeSalle } from './salles';
 import { appliquerSurcouche } from './referentiel';
 import type { FormatSalles } from '../etablissements/catalogue';
 
@@ -232,5 +232,21 @@ describe('ligneDeSalle', () => {
 
     it('rend une chaine vide sur une description absente', () => {
         expect(ligneDeSalle('', BORDEAUX)).toBe('');
+    });
+});
+
+describe('lieuxDuCours', () => {
+    it('lit les batiments declares avant la description', () => {
+        const lieux = lieuxDuCours({ sites: ['Bâtiment A28'], description: 'L3 INFO\nM. DUPONT\nA22/ Amphi 1' }, BORDEAUX);
+        expect(lieux.map((l) => l.title)).toEqual(['A28']);
+    });
+
+    it('retombe sur la ligne de salle, puis sur l intitule', () => {
+        expect(lieuxDuCours({ description: 'L3 INFO\nM. DUPONT\nA22/ Amphi 1' }, BORDEAUX).map((l) => l.title)).toEqual(['A22']);
+        expect(lieuxDuCours({ description: '', subject: 'Examen en A29' }, BORDEAUX).map((l) => l.title)).toEqual(['A29']);
+    });
+
+    it('ne rend rien sans referentiel de lieux', () => {
+        expect(lieuxDuCours({ sites: ['Bâtiment A28'] }, null)).toEqual([]);
     });
 });
