@@ -635,6 +635,7 @@ declare
     v_n          integer;
     v_expire     timestamptz;
     v_id         uuid;
+    v_raison     text;
 begin
     if p is null or jsonb_typeof(p) <> 'object' or jsonb_typeof(v_dispositif) is distinct from 'object'
        or jsonb_typeof(v_apport) is distinct from 'object' then
@@ -748,6 +749,14 @@ begin
         end if;
     elsif v_apport ? 'fin' and jsonb_typeof(v_apport -> 'fin') <> 'null' then
         return jsonb_build_object('statut', 'refusee', 'raison', 'fin_invalide');
+    end if;
+
+    -- 5b. La cible d'un vote (lot 4) : un sondage ouvert et l'un de ses choix, une idee publiee.
+    if v_sujet.nature = 'vote' then
+        v_raison := private.juger_vote(v_sujet.sujet, v_cible, v_valeur);
+        if v_raison is not null then
+            return jsonb_build_object('statut', 'refusee', 'raison', v_raison);
+        end if;
     end if;
 
     -- 6a. Un vote : un bulletin par jeton et par cible, definitif, d'un poids d'une voix au plus — un
@@ -1070,7 +1079,7 @@ create trigger journal after insert or update or delete on public.retours_repons
 --
 -- `deposer_retour`, apres `admettre` et la preuve de l'appareil. `p` : `{ appareil: { cle, nature,
 -- plateforme, atteste, compteur? }, empreinte_ip, jeton, retour: { depot, nature, texte, campus?, volontaire?,
--- contact?, probleme?, contexte?, captures, cle_reponse? } }`, les octets en hexadecimal. Les refus
+-- contact?, probleme?, idee?, contexte?, captures, cle_reponse? } }`, les octets en hexadecimal. Les refus
 -- attendus rendent `{"statut": "refusee", "raison": ...}` et la transaction se valide, comme
 -- `contribuer` : les comptes avancent meme quand le retour est refuse. Une forme fausse leve (22023).
 -- La fonction `communaute` a deja borne chaque champ et masque les adresses et les numeros du texte.
@@ -1100,6 +1109,7 @@ declare
     v_contact     text;
     v_volontaire  boolean;
     v_probleme    uuid;
+    v_idee        uuid;
     v_contexte    jsonb;
     v_captures    integer;
     v_cle_reponse bytea;
@@ -1212,6 +1222,12 @@ begin
          where id = (v_r ->> 'probleme')::uuid and statut in ('publie', 'corrige');
     end if;
 
+    -- Une idee close ou retiree depuis : de meme (lot 4).
+    if (v_r ->> 'idee') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+        select id into v_idee from public.idees
+         where id = (v_r ->> 'idee')::uuid and statut in ('proposee', 'en_cours');
+    end if;
+
     -- 5. La ligne. Sa cle, comme celle d'un retour importe, est une empreinte SHA-256 : celle de son
     --    texte, de son instant et d'un sel tire au hasard (7-L).
     v_id := encode(extensions.digest(
@@ -1219,12 +1235,12 @@ begin
         'sha256'), 'hex');
     insert into public.retours (
         id, recu_le, nature, campus, section, appareil, systeme, version_app, texte, contact, volontaire,
-        reponses, source, contexte, captures, probleme, atteste, reponse_possible, cle_reponse, depot)
+        reponses, source, contexte, captures, probleme, idee, atteste, reponse_possible, cle_reponse, depot)
     values (
         v_id, now(), v_type, v_campus, left(v_contexte ->> 'onglet', 40), left(v_contexte ->> 'appareil', 120),
         left(v_contexte ->> 'systeme', 60), left(v_contexte ->> 'version', 20), v_texte, v_contact, v_volontaire,
-        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_atteste, v_cle_reponse is not null, v_cle_reponse, v_depot);
-    return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'probleme', v_probleme);
+        '{}'::jsonb, 'app', v_contexte, v_captures, v_probleme, v_idee, v_atteste, v_cle_reponse is not null, v_cle_reponse, v_depot);
+    return jsonb_build_object('statut', 'acceptee', 'id', v_id, 'captures', v_captures, 'probleme', v_probleme, 'idee', v_idee);
 end;
 $$;
 
@@ -1346,3 +1362,120 @@ $$;
 
 revoke execute on function private.purger_retours() from public, anon, authenticated;
 select cron.schedule('retours-purge', '17 * * * *', 'select private.purger_retours()');
+
+-- =============================================================================
+-- Les sondages et la boite a idees (phase 8, lot 4)
+-- =============================================================================
+
+drop trigger if exists maj_le on public.idees;
+create trigger maj_le before update on public.idees
+    for each row execute function private.tenir_maj_le();
+
+drop trigger if exists journal on public.idees;
+create trigger journal after insert or update or delete on public.idees
+    for each row execute function private.journaliser('id');
+
+-- La cible d'un vote : appelee par `contribuer` pour un vote, apres la valeur : la raison d'un refus, ou
+-- `null`. Un sondage se vote dans une annonce visible, avant sa cloture, pour l'un de ses choix ; une
+-- idee, proposee ou en cours. Les autres sujets passent tels quels.
+create or replace function private.juger_vote(p_sujet text, p_cible text, p_valeur text)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    v_sondage jsonb;
+begin
+    if p_sujet = 'sondage.choix' then
+        if p_cible !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+            return 'cible_inconnue';
+        end if;
+        select a.sondage into v_sondage from public.annonces a
+         where a.id = p_cible::uuid and a.active and a.statut = 'publiee' and a.publiee_le <= now()
+           and (a.expire_le is null or a.expire_le > now());
+        if v_sondage is null then
+            return 'cible_inconnue';
+        end if;
+        if (v_sondage ->> 'clos_le')::timestamptz <= now() then
+            return 'sondage_clos';
+        end if;
+        if not exists (select 1 from jsonb_array_elements(v_sondage -> 'choix') c where c ->> 'id' = p_valeur) then
+            return 'valeur_invalide';
+        end if;
+    elsif p_sujet = 'idee.moi_aussi' then
+        if p_cible !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+           or not exists (select 1 from public.idees where id = p_cible::uuid and statut in ('proposee', 'en_cours')) then
+            return 'cible_inconnue';
+        end if;
+    end if;
+    return null;
+end;
+$$;
+
+revoke execute on function private.juger_vote(text, text, text) from public, anon, authenticated;
+grant execute on function private.juger_vote(text, text, text) to service_role;
+
+-- Les resultats d'un sondage.
+-- Lisibles par tous, pour l'annonce visible d'`anon` : `{ total, parts: { <choix>: <part> } }`. Seules les
+-- voix attestees comptent. Une part est un pourcentage entier ; un choix sous cinq voix rend `null`
+-- (« moins de 5 », docs/mesure.md) ; sous cinq voix en tout, aucune part. `total` ne se rend que si aucune
+-- case n'est masquee : sinon la case masquee se lirait par soustraction. `null` pour une annonce sans
+-- sondage ou invisible. Le vote ne porte aucun identifiant : la base ne sait pas qui a vote, et ne peut
+-- pas reserver les resultats aux votants — l'application ne les montre qu'apres le vote.
+create or replace function public.resultats_sondage(p_annonce uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    v_sondage jsonb;
+    v_total   integer;
+    v_masque  boolean;
+    v_parts   jsonb;
+begin
+    select a.sondage into v_sondage from public.annonces a
+     where a.id = p_annonce and a.active and a.statut = 'publiee' and a.publiee_le <= now()
+       and (a.expire_le is null or a.expire_le > now());
+    if v_sondage is null then
+        return null;
+    end if;
+    with choix as (
+        select c ->> 'id' as id from jsonb_array_elements(v_sondage -> 'choix') c
+    ), comptes as (
+        select choix.id, count(v.valeur)::integer as n
+          from choix
+          left join public.votes v
+            on v.sujet = 'sondage.choix' and v.cible = p_annonce::text and v.valeur = choix.id and v.poids >= 1
+         group by choix.id
+    )
+    select coalesce(sum(n), 0)::integer, bool_or(n < 5),
+           jsonb_object_agg(id, case when n >= 5 then round(100.0 * n / nullif(tout, 0))::integer end)
+      into v_total, v_masque, v_parts
+      from (select id, n, sum(n) over () as tout from comptes) t;
+    if v_total < 5 then
+        return jsonb_build_object('total', null, 'parts', '{}'::jsonb);
+    end if;
+    return jsonb_build_object('total', case when v_masque then null else v_total end, 'parts', v_parts);
+end;
+$$;
+
+revoke execute on function public.resultats_sondage(uuid) from public;
+grant execute on function public.resultats_sondage(uuid) to anon, authenticated;
+
+-- La conservation des votes : Douze mois apres leur jour (lot 1 : « fixee au lot 4 »). Un vote ne porte aucun identifiant ; la duree
+-- borne ce que le jeton, que la fonction seule sait recalculer, garde d'un appareil.
+create or replace function private.purger_votes()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+    delete from public.votes where cree_le < now() - interval '12 months';
+$$;
+
+revoke execute on function private.purger_votes() from public, anon, authenticated;
+select cron.schedule('votes-purge', '23 3 * * *', 'select private.purger_votes()');

@@ -608,3 +608,48 @@ create policy "reponses retirees par les admins"
     on public.retours_reponses for delete
     to authenticated
     using ((select private.est_admin()));
+
+-- =============================================================================
+-- Les sondages et la boite a idees (phase 8, lot 4)
+-- =============================================================================
+
+-- `idees` : l'application lit ce qui est publie, l'equipe tout, un admin ecrit. `retours.idee` s'ajoute a
+-- la lecture de l'equipe. `annonces.sondage` suit les droits de la table, accordes a la table entiere :
+-- qui lit ou ecrit une annonce lit ou ecrit son sondage.
+grant select (idee) on public.retours to authenticated;
+
+alter table public.idees enable row level security;
+revoke all on public.idees from anon, authenticated;
+grant select on public.idees to anon, authenticated;
+grant insert, update, delete on public.idees to authenticated;
+
+drop policy if exists "idees publiees lisibles" on public.idees;
+create policy "idees publiees lisibles"
+    on public.idees for select
+    to anon, authenticated
+    using (statut in ('proposee', 'en_cours', 'livree'));
+
+drop policy if exists "idees lisibles par les editeurs" on public.idees;
+create policy "idees lisibles par les editeurs"
+    on public.idees for select
+    to authenticated
+    using ((select private.est_editeur()));
+
+drop policy if exists "idees creables par les admins" on public.idees;
+create policy "idees creables par les admins"
+    on public.idees for insert
+    to authenticated
+    with check ((select private.est_admin()));
+
+drop policy if exists "idees modifiables par les admins" on public.idees;
+create policy "idees modifiables par les admins"
+    on public.idees for update
+    to authenticated
+    using ((select private.est_admin()))
+    with check ((select private.est_admin()));
+
+drop policy if exists "idees supprimables par les admins" on public.idees;
+create policy "idees supprimables par les admins"
+    on public.idees for delete
+    to authenticated
+    using ((select private.est_admin()));

@@ -1030,3 +1030,70 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('retours', 'retours', false, 1048576, array['image/jpeg'])
 on conflict (id) do update
     set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+-- =============================================================================
+-- Les sondages et la boite a idees (phase 8, lot 4 ; docs/phase-8/4-sondages-idees-notation.md)
+-- =============================================================================
+
+-- Le sondage d'une annonce : `{ question, choix: [{ id, libelle }], clos_le }`. Sa garde de forme vit ici,
+-- avant la colonne qui la cite : fonctions.sql se joue apres ce fichier.
+create or replace function private.sondage_valide(s jsonb)
+returns boolean
+language plpgsql
+immutable
+set search_path = ''
+as $$
+begin
+    -- Pas a pas : un `and` ne garantit pas l'ordre, et `jsonb_object_keys` leve sur ce qui n'est pas un objet.
+    if s is null or jsonb_typeof(s) <> 'object' or jsonb_typeof(s -> 'choix') is distinct from 'array'
+       or jsonb_typeof(s -> 'question') is distinct from 'string' or jsonb_typeof(s -> 'clos_le') is distinct from 'string' then
+        return false;
+    end if;
+    if exists (select 1 from jsonb_object_keys(s) k where k not in ('question', 'choix', 'clos_le'))
+       or char_length(btrim(s ->> 'question')) not between 4 and 140
+       or (s ->> 'clos_le') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2}([.][0-9]{1,6})?)?(Z|[+-][0-9]{2}:[0-9]{2})$'
+       or jsonb_array_length(s -> 'choix') not between 2 and 6 then
+        return false;
+    end if;
+    if exists (select 1 from jsonb_array_elements(s -> 'choix') c where jsonb_typeof(c) <> 'object') then
+        return false;
+    end if;
+    return not exists (
+               select 1 from jsonb_array_elements(s -> 'choix') c
+                where jsonb_typeof(c -> 'id') is distinct from 'string'
+                   or (c ->> 'id') !~ '^[a-z0-9]{1,8}$'
+                   or jsonb_typeof(c -> 'libelle') is distinct from 'string'
+                   or char_length(btrim(c ->> 'libelle')) not between 1 and 60)
+       and (select count(distinct c ->> 'id') from jsonb_array_elements(s -> 'choix') c) = jsonb_array_length(s -> 'choix');
+end;
+$$;
+
+alter table public.annonces add column if not exists sondage jsonb
+    constraint annonces_sondage_check check (sondage is null or private.sondage_valide(sondage));
+
+insert into public.sujets (sujet, nature, domaine, famille, valeurs, forme, description) values
+    ('sondage.choix', 'vote', 'annonce', null, null, '^[a-z0-9]{1,8}$',
+     'un choix dans le sondage d''une annonce : l''identifiant du choix'),
+    ('idee.moi_aussi', 'vote', 'idee', null, array['oui'], null,
+     'moi aussi sur une idee publiee')
+on conflict (sujet) do update
+    set nature = excluded.nature, domaine = excluded.domaine, famille = excluded.famille, valeurs = excluded.valeurs,
+        forme = excluded.forme, description = excluded.description, actif = true;
+
+-- Les idees que l'equipe retient des retours, reformulees pour etre lues par tous, au gabarit des
+-- problemes connus. `brouillon` ne se lit que par l'equipe ; `proposee` et `en_cours` se soutiennent ;
+-- `livree` se lit avec sa version ; `close` disparait.
+create table if not exists public.idees (
+    id             uuid        primary key default gen_random_uuid(),
+    titre          text        not null check (char_length(btrim(titre)) between 4 and 140),
+    detail         text        check (char_length(detail) <= 600),
+    statut         text        not null default 'brouillon'
+                               check (statut in ('brouillon', 'proposee', 'en_cours', 'livree', 'close')),
+    version_livree text        check (version_livree ~ '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'),
+    cree_le        timestamptz not null default now(),
+    maj_le         timestamptz not null default now()
+);
+
+-- « Moi aussi, et j'ajoute un detail » : le retour range sous l'idee, comme sous un probleme connu.
+alter table public.retours add column if not exists idee uuid references public.idees (id) on delete set null;
+create index if not exists retours_idee on public.retours (idee) where idee is not null;
