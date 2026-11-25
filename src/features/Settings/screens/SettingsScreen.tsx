@@ -42,7 +42,9 @@ import {
     NotificationsSection,
     PreferencesSection,
     ReinitialisationSection,
+    RetoursSection,
 } from '../components/SettingsSections';
+import { ouvrirLeFormulaire } from '../../../shared/navigation/formulaireDeRetours';
 
 export interface SettingsProps {
     navigation: import('@react-navigation/native').NavigationProp<Record<string, unknown>>;
@@ -525,6 +527,11 @@ class Settings extends React.Component<SettingsProps, SettingsState> {
                     openApparence={() => this.ouvrirPage('apparence')}
                 />
                 <PreferencesSection theme={theme} valeurNotifications={valeurNotifications} valeurAgenda={valeurAgenda} ouvrir={this.ouvrirPage} />
+                <RetoursSection
+                    theme={theme}
+                    ecrire={() => ouvrirLeFormulaire(this.props.navigation as never, { porte: 'pastille', onglet: 'Settings' })}
+                    ouvrirMesRetours={() => this.props.navigation.navigate('MesRetours')}
+                />
                 <ReinitialisationSection theme={theme} openResetDialog={this.openResetDialog} />
                 {this.renderPopups(theme)}
             </PageDesReglages>

@@ -52,6 +52,7 @@ import { CourseManager, SettingsManager } from './AppCore';
 import { NotificationManager } from './NotificationService';
 import { deposerLeJeton, retirerLeJeton, type EtatDepot } from '../push';
 import { envoyerLesMesures, type EtatEnvoi } from '../mesure';
+import { relireLesReponses, viderLaBoite } from '../retours';
 import { onRetourAuPremierPlan } from './premierPlan';
 import { maintenantMs } from './Temps';
 import { INTERVALLE_ENTRETIEN_MS, estDu, type OrigineSynchro, origineDuRun } from './calendrier/tentative';
@@ -210,6 +211,11 @@ async function jouer(origine: OrigineEntretien): Promise<BilanEntretien> {
     const push = await deposerLeJeton();
     // La mesure part ici aussi, hors echeance — et jamais au lancement : rien ne part au demarrage.
     const mesure: BilanEntretien['mesure'] = origine === 'lancement' ? 'non-joue' : await envoyerLesMesures();
+    // Les retours (lot 3), hors echeance : la boite d'envoi qui attendait, puis les reponses, au plus
+    // toutes les six heures. La tache de fond les relit aussi, ce qui notifie une reponse arrivee.
+    // Ni l'un ni l'autre ne leve.
+    await viderLaBoite();
+    await relireLesReponses();
 
     const du = force(origine) || estDu(await dernierEntretienAt(), maintenantMs());
 

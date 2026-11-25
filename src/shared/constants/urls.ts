@@ -9,6 +9,9 @@ export const URL = {
     // Une seule page pour tous les campus, publiee sur le site au lot 7 de la 7.0 : une constante, et
     // non une adresse du catalogue, qui varie d'un etablissement a l'autre.
     REGLES_DE_LA_COMMUNAUTE: 'https://ukit-bordeaux.fr/communaute',
+    // Ce qu'un volontaire prete pour adapter son campus, lue depuis la demande de campus du formulaire de
+    // retour (lot 3) comme depuis le formulaire Google : son adresse ne change pas sans eux.
+    ENGAGEMENT_CAMPUS: 'https://ukit-bordeaux.fr/engagement',
 };
 
 // `VERSION_STORE`, `APPLE_APP` et `GOOGLE_APP` vivaient ici : le controle de mise a jour lisait le

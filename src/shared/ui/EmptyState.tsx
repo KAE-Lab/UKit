@@ -39,7 +39,7 @@
  */
 
 import React from 'react';
-import { Text, View, ViewStyle } from 'react-native';
+import { Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { tokens, toneColor, toneSoftColor, type AppThemeType, type SemanticTone } from '../theme/Theme';
@@ -71,6 +71,11 @@ export interface EmptyStateProps {
      * n'est pas une alerte.
      */
     tone?: SemanticTone;
+    /**
+     * Un lien discret sous l'action, la voie secondaire : « Signaler ce probleme » sur une carte
+     * d'erreur (lot 3 de la 7.0). Jamais la seule sortie d'un etat.
+     */
+    lien?: { readonly label: string; readonly onPress: () => void } | null;
 }
 
 /**
@@ -91,7 +96,7 @@ function surfaceDIcone(theme: AppThemeType, tone: SemanticTone): { fond: string;
     return { fond: toneSoftColor(theme, tone), glyphe: toneColor(theme, tone), filet: null };
 }
 
-export function EmptyState({ icon, title, message, theme, action, variant = 'card', tone = 'neutral' }: EmptyStateProps) {
+export function EmptyState({ icon, title, message, theme, action, variant = 'card', tone = 'neutral', lien }: EmptyStateProps) {
     const { fond, glyphe, filet } = surfaceDIcone(theme, tone);
 
     /*
@@ -168,6 +173,12 @@ export function EmptyState({ icon, title, message, theme, action, variant = 'car
                     {...(action.icon !== undefined ? { icon: { name: action.icon } as const } : {})}
                     style={{ marginTop: tokens.space.lg }}
                 />
+            ) : null}
+
+            {lien ? (
+                <TouchableOpacity accessibilityRole="button" onPress={lien.onPress} hitSlop={tokens.space.sm} style={{ marginTop: action ? tokens.space.md : tokens.space.lg }}>
+                    <Text style={{ color: theme.primary, fontSize: tokens.fontSize.sm, fontWeight: tokens.fontWeight.semibold }}>{lien.label}</Text>
+                </TouchableOpacity>
             ) : null}
         </View>
     );

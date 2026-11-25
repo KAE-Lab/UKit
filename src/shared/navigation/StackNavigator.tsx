@@ -25,6 +25,9 @@ import BdeDetailsScreen from '../../features/Campus/Bde/BdeDetailsScreen';
 import BdeScreen from '../../features/Campus/Bde/BdeScreen';
 import FreeRoomScreen from '../../features/Campus/FreeRoom/FreeRoomScreen';
 import FreeRoomDetailsScreen from '../../features/Campus/FreeRoom/FreeRoomDetailsScreen';
+import RetourScreen from '../../features/Retours/RetourScreen';
+import MesRetoursScreen from '../../features/Retours/MesRetoursScreen';
+import type { ParametresDuFormulaire } from '../../features/Retours/useFormulaireDeRetour';
 
 import style, { tokens } from '../theme/Theme';
 import { AppContext, treatTitle } from '../services/AppCore';
@@ -62,6 +65,9 @@ export type RootStackParamList = {
     FreeRoomScreen: undefined;
     FreeRoomDetails: { building?: Record<string, unknown> };
     Course: { title?: string; data?: { UE?: string; source?: string } };
+    /** Le formulaire de retour natif (phase 8, lot 3). */
+    Retour: ParametresDuFormulaire | undefined;
+    MesRetours: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -69,6 +75,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 /** L'ecran des Reglages pousse sur une page : la barre suit son defilement, comme les autres sous-pages. */
 const PageDeReglageEcran = withHeaderAnimation(Settings);
 const EcranDuJeuAvecEnTete = withStaticHeader(EcranDuJeu);
+const RetourEcran = withHeaderAnimation(RetourScreen);
+const MesRetoursEcran = withHeaderAnimation(MesRetoursScreen);
 
 /** Le titre d'une fiche : le nom de ce qu'elle montre, « Details » s'il manque. */
 function nomOuDetails(nom: unknown): string {
@@ -128,6 +136,10 @@ export default function StackNavigator() {
                             <Stack.Screen name="Settings" component={Settings} options={({ route }) => NavBarHelper({ title: Translator.get('SETTINGS'), themeName, route, gestureEnabled: true })} />
                             {/* Une page de detail des Reglages, servie par l'ecran des Reglages lui-meme (7-J, troisieme passe). */}
                             <Stack.Screen name="Reglage" component={PageDeReglageEcran} options={({ route }) => NavBarHelper({ title: Translator.get(TITRE_DE_PAGE[route.params.page]), themeName, route, gestureEnabled: true })} />
+
+                            {/* Le formulaire de retour et ce qui en revient (phase 8, lot 3). */}
+                            <Stack.Screen name="Retour" component={RetourEcran} options={({ route }) => NavBarHelper({ title: Translator.get('RETOUR_TITRE'), themeName, route, gestureEnabled: true })} />
+                            <Stack.Screen name="MesRetours" component={MesRetoursEcran} options={({ route }) => NavBarHelper({ title: Translator.get('MES_RETOURS'), themeName, route, gestureEnabled: true })} />
 
                             <Stack.Screen name="Filters" component={FiltersScreen} options={({ route }) => NavBarHelper({ title: Translator.get('FILTERS'), themeName, route, gestureEnabled: true })} />
 

@@ -9,8 +9,8 @@
  * L'onglet s'ouvre donc, et la page dit ce qu'il en est : **pas une panne**, un campus pas encore
  * relie. Elle a la forme du formulaire de connexion — le bandeau, la phrase, une carte d'action —
  * parce que c'est la page que les autres campus voient a cet endroit, et que l'etudiant n'a pas a
- * apprendre un troisieme gabarit. Elle porte le seul geste qui compte — la demande, dont l'adresse
- * vient du catalogue (`services.adaptation`) — et le lien qui corrige un mauvais choix, « Tu es d'un
+ * apprendre un troisieme gabarit. Elle porte le seul geste qui compte — la demande, dans le formulaire
+ * de retour depuis la 7.0 (shared/navigation/formulaireDeRetours.ts) — et le lien qui corrige un mauvais choix, « Tu es d'un
  * autre campus ? ». Le bouton Compte de la barre, lui, reste sous le voile : c'est le compte qui
  * n'est pas encore possible ici, pas l'onglet.
  *
@@ -29,7 +29,7 @@ import Translator from '../../../shared/i18n/Translator';
 import { PastilleService } from '../../../shared/messages/PastilleService';
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { getCodeEtablissementActif } from '../../../shared/etablissements';
-import { lienDuFormulaire } from '../../../shared/navigation/formulaireDeRetours';
+import { formulaireDisponible } from '../../../shared/navigation/formulaireDeRetours';
 import { basculerEtablissement } from '../../../shared/etablissements/bascule';
 import { ActionButton } from '../../../shared/ui/ActionButton';
 import { ChoixEtablissement } from '../../../shared/ui/ChoixEtablissement';
@@ -38,7 +38,7 @@ import { HEADER_OFFSET, TAB_BAR_HEIGHT } from '../../../shared/ui/ScreenState';
 
 export interface CampusNonRelieProps {
     theme: AppThemeType;
-    /** Ouvre le formulaire de demande de campus dans le navigateur integre. */
+    /** Ouvre la demande de campus du formulaire de retour. */
     onDemande: () => void;
 }
 
@@ -46,7 +46,7 @@ export function CampusNonRelie({ theme, onDemande }: CampusNonRelieProps) {
     const insets = useSafeAreaInsets();
     /** Le choix d'etablissement, ouvert par « Tu es d'un autre campus ? ». */
     const [choixCampus, setChoixCampus] = useState(false);
-    const demande = lienDuFormulaire({ porte: 'campus' });
+    const demande = formulaireDisponible({ porte: 'campus' });
 
     return (
         <View style={[styles.page, { backgroundColor: theme.background }]}>
@@ -75,7 +75,7 @@ export function CampusNonRelie({ theme, onDemande }: CampusNonRelieProps) {
                         title={Translator.get('CAMPUS_NOT_SUPPORTED_TITLE')}
                         message={Translator.get('CAMPUS_NOT_SUPPORTED')}
                         theme={theme}
-                        action={demande === null ? null : {
+                        action={!demande ? null : {
                             label: Translator.get('CAMPUS_REQUEST_ACTION'),
                             onPress: onDemande,
                         }}

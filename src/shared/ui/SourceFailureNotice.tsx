@@ -23,11 +23,19 @@
  * n'a jamais de bouton Reessayer et peut parfaitement avoir une action, et c'est precisement le cas
  * qui a motive ce jalon : l'onglet Planning d'une universite qui attend un lien n'est pas en panne, il
  * attend un geste. Les deux ne s'affichent jamais ensemble.
+ *
+ * Depuis la 7.0 (lot 3), **une carte qui dit une panne mene au formulaire de retour**, par un lien
+ * discret, son erreur jointe : la famille, et l'hote du dernier echec de cette famille dans la session —
+ * jamais une adresse complete, qui peut porter un lien d'abonnement. Une absence (`config`) ou un depart
+ * (`cancelled`) n'est pas une panne : pas de lien. Hors de la navigation — l'accueil —, pas de lien non plus.
  */
 
-import React from 'react';
+import React, { useContext } from 'react';
+import { NavigationContext } from '@react-navigation/native';
 
 import Translator from '../i18n/Translator';
+import { formulaireNatif } from '../navigation/formulaireDeRetours';
+import { dernierEchecDeFamille } from '../retours/journalDeSession';
 import { AppThemeType } from '../theme/Theme';
 import { EmptyState, type EmptyStateAction } from './EmptyState';
 import type { UkitFailure } from '../aetherius';
@@ -50,6 +58,18 @@ interface SourceFailureNoticeProps {
 }
 
 export function SourceFailureNotice({ failure, theme, onRetry, action, variant = 'card' }: SourceFailureNoticeProps) {
+    // Le contexte, et non `useNavigation` : il vaut `undefined` hors d'un navigateur au lieu de lever.
+    const navigation = useContext(NavigationContext);
+    const signaler = failure.tone === 'danger' && navigation !== undefined && formulaireNatif()
+        ? {
+            label: Translator.get('ERREUR_SIGNALER'),
+            onPress: () => {
+                const dernier = dernierEchecDeFamille(failure.kind);
+                navigation.navigate('Retour', { nature: 'bug', erreur: { ...(dernier?.hote !== undefined ? { hote: dernier.hote } : {}), famille: failure.kind } });
+            },
+        }
+        : null;
+
     // Une action proposee remplace la reprise : les deux au meme endroit rendraient la cible ambigue,
     // et un echec qui porte une action n'est de toute facon jamais reessayable (famille `config`).
     const bouton: NoticeAction | null = action
@@ -71,6 +91,7 @@ export function SourceFailureNotice({ failure, theme, onRetry, action, variant =
             message={Translator.get(failure.messageKey)}
             theme={theme}
             action={bouton}
+            lien={signaler}
         />
     );
 }

@@ -14,6 +14,9 @@ import type { CauseEchecSynchro } from '../../../shared/services/calendrier/cibl
 import { tokens, type AppThemeType } from '../../../shared/theme/Theme';
 import { PointDeCouleur } from '../../../shared/ui/PointDeCouleur';
 import { useMesureActive } from '../../../shared/mesure';
+import { formulaireNatif } from '../../../shared/navigation/formulaireDeRetours';
+import { detectionPossible } from '../../../shared/retours/captures';
+import { usePropositionApresCapture, useReponsesNonLues } from '../../../shared/retours/useRetours';
 import { GroupeDeReglages, IntroDePage, RangeeDeReglage } from '../../../shared/ui/GroupeDeReglages';
 import { Icon } from '../../../shared/ui/Icon';
 import { DELAI, delaiVoisin, type PageDeReglage } from '../pagesDeReglages';
@@ -152,6 +155,22 @@ export const PreferencesSection = ({ theme, valeurNotifications, valeurAgenda, o
     </GroupeDeReglages>
 );
 
+/**
+ * Les retours (lot 3 de la 7.0) : ecrire a l'equipe, et ce qui en revient. La rangee « Mes retours »
+ * porte le nombre de reponses non lues, comme la pastille de l'onglet. Sans base de publication, le
+ * formulaire natif n'existe pas : le groupe non plus.
+ */
+export const RetoursSection = ({ theme, ecrire, ouvrirMesRetours }: { theme: AppThemeType; ecrire: () => void; ouvrirMesRetours: () => void }) => {
+    const nonLues = useReponsesNonLues();
+    if (!formulaireNatif()) return null;
+    return (
+        <GroupeDeReglages theme={theme} titre={Translator.get('RETOURS_GROUPE')}>
+            <RangeeDeReglage theme={theme} icone="message-text-outline" libelle={Translator.get('RETOUR_TITRE')} onPress={ecrire} />
+            <RangeeDeReglage theme={theme} icone="message-reply-text-outline" libelle={Translator.get('MES_RETOURS')} valeur={nonLues > 0 ? String(nonLues) : undefined} onPress={ouvrirMesRetours} />
+        </GroupeDeReglages>
+    );
+};
+
 /** Une action qui retire tout : seule en bas, son libelle en rouge, et la confirmation suit (SettingsModals). */
 export const ReinitialisationSection = ({ theme, openResetDialog }: { theme: AppThemeType; openResetDialog: () => void }) => (
     <GroupeDeReglages theme={theme}>
@@ -274,6 +293,8 @@ export const NotificationsSection = ({ theme, courseNotificationsEnabled, toggle
  */
 export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
     const [active, activer] = useMesureActive();
+    // « Ne plus proposer », depuis la proposition apres une capture (lot 3), se rouvre ici.
+    const [proposer, setProposer] = usePropositionApresCapture();
     return (
         <>
             <IntroDePage theme={theme}>{Translator.get('INTRO_CONFIDENTIALITE')}</IntroDePage>
@@ -284,6 +305,14 @@ export const ConfidentialiteSection = ({ theme }: { theme: AppThemeType }) => {
                     libelle={Translator.get('ANONYMOUS_STATS')}
                     interrupteur={{ valeur: active, onChange: activer }}
                 />
+                {detectionPossible() ? (
+                    <RangeeDeReglage
+                        theme={theme}
+                        icone="message-text-outline"
+                        libelle={Translator.get('CAPTURE_PROPOSER_REGLAGE')}
+                        interrupteur={{ valeur: proposer, onChange: setProposer }}
+                    />
+                ) : null}
             </GroupeDeReglages>
         </>
     );

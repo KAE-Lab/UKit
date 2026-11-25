@@ -1,5 +1,8 @@
 /**
- * Le formulaire de retours, pre-rempli : la couture entre le catalogue, l'appareil et le navigateur.
+ * Le formulaire de retours : depuis la 7.0, l'ecran natif (phase 8, lot 3 ; docs/phase-8/3-formulaire.md),
+ * et le formulaire Google pre-rempli en repli, pour un binaire sans base de publication.
+ *
+ * **Historique, toujours vrai pour le repli :** la couture entre le catalogue, l'appareil et le navigateur.
  *
  * Trois portes y menent — la pastille grise de chaque onglet, la modale d'un campus non relie, la page
  * Scolarite d'un campus non relie — et toutes passent ici (jalon 7-C). Le catalogue porte deux
@@ -15,6 +18,7 @@
 import * as Device from 'expo-device';
 
 import { versionApplication } from '../ciblage/contexte';
+import { getSupabase } from '../supabase';
 import { getEtablissementActif, serviceEtablissement } from '../etablissements/catalogue';
 import { parametresDuFormulaire, remplirGabarit } from './liensDuFormulaire';
 
@@ -32,7 +36,7 @@ function systeme(): string | null {
 }
 
 /** L'adresse a ouvrir pour une porte, ou `null` quand le catalogue ne publie aucun formulaire. */
-export function lienDuFormulaire(porte: PorteDuFormulaire): string | null {
+function lienDuFormulaire(porte: PorteDuFormulaire): string | null {
     const gabarit = serviceEtablissement(porte.porte === 'campus' ? 'formulaire_campus' : 'formulaire') ?? serviceEtablissement('adaptation');
     if (gabarit === null) return null;
     return remplirGabarit(gabarit, {
@@ -45,13 +49,30 @@ export function lienDuFormulaire(porte: PorteDuFormulaire): string | null {
     });
 }
 
-/** Ce que les trois portes savent du navigateur : la route `WebBrowser` vit dans la pile racine. */
+/** Ce que les trois portes savent de la navigation : les routes `Retour` et `WebBrowser` vivent dans la pile racine. */
 export interface NavigateurDuFormulaire {
     navigate(name: string, params?: object): void;
 }
 
-/** Ouvre le formulaire dans le navigateur integre, avec la regle des domaines internes ; rien sans lien publie. */
+/** L'ecran natif existe-t-il ? Il ecrit par la base de publication : sans elle, non. */
+export function formulaireNatif(): boolean {
+    return getSupabase() !== null;
+}
+
+/** Une porte a-t-elle ou mener ? L'ecran natif des que la base existe, sinon le formulaire publie. */
+export function formulaireDisponible(porte: PorteDuFormulaire): boolean {
+    return formulaireNatif() || lienDuFormulaire(porte) !== null;
+}
+
+/**
+ * Ouvre le formulaire natif, la nature cochee d'avance et l'onglet joint ; sans base de publication, le
+ * formulaire Google dans le navigateur integre, avec la regle des domaines internes ; rien sans lien.
+ */
 export function ouvrirLeFormulaire(navigation: NavigateurDuFormulaire, porte: PorteDuFormulaire): void {
+    if (formulaireNatif()) {
+        navigation.navigate('Retour', porte.porte === 'campus' ? { nature: 'campus' } : { nature: 'bug', onglet: porte.onglet });
+        return;
+    }
     const lien = lienDuFormulaire(porte);
     if (lien === null) return;
     navigation.navigate('WebBrowser', parametresDuFormulaire(lien));

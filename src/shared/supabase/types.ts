@@ -296,7 +296,7 @@ export interface Database {
          * et les compteurs anonymes de la mesure (7-D). `mesures` n'est pas dans `Tables` : l'application
          * ne la lit pas, et les politiques le lui refusent. `contribuer` et `enregistrer_appareil` n'y
          * sont pas non plus : reservees au service_role, l'application les atteint par la fonction
-         * `communaute`, jamais en RPC (phase 8, lot 1).
+         * `communaute`, jamais en RPC (phase 8, lot 1), comme `deposer_retour` (lot 3).
          */
         Functions: {
             deposer_jeton: {
@@ -305,6 +305,8 @@ export interface Database {
             };
             retirer_jeton: { Args: { p_jeton: string }; Returns: undefined };
             compter: { Args: { p_lots: readonly LigneDeMesure[] }; Returns: { comptes: number; rejetes: number } };
+            /** La lecture d'un retour par sa cle secrete (lot 3) : une ligne par cle, ou `null`. */
+            lire_mes_retours: { Args: { p_cles: readonly string[] }; Returns: unknown[] };
         };
         Enums: Record<string, never>;
         CompositeTypes: Record<string, never>;

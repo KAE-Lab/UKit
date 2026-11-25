@@ -19,11 +19,12 @@ import { groupesRequis, planningDisponible, portailPublie } from '../etablisseme
 import { useCredentials } from '../../features/Scolarite/services/CredentialsContext';
 import { Dialogue } from '../ui/Dialogue';
 import { ModaleBientot } from '../ui/ModaleBientot';
-import { lienDuFormulaire, ouvrirLeFormulaire } from './formulaireDeRetours';
+import { formulaireDisponible, ouvrirLeFormulaire } from './formulaireDeRetours';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { GlissementDePage, useGlissementDeBarre } from './glissementDOnglets';
 import { compterOnglet } from '../mesure';
 import { Icon } from '../ui/Icon';
+import { IconeDesReglages } from './IconeDesReglages';
 
 export type MainTabParamList = {
     PlanningTab: undefined;
@@ -119,9 +120,8 @@ function TabBarRouteItem({ route, index, state, descriptors, navigation, theme }
 /**
  * La modale du campus non relie : le meme gabarit que « Bientot », un autre message.
  *
- * Le bouton principal ouvre la demande de campus, et son adresse vient du catalogue
- * (`services.formulaire_campus`, « Demander un campus » deja coche) — la meme que l'etat vide de
- * l'onglet : publier ou changer ce lien est une publication, pas une release. Sans lien publie, la
+ * Le bouton principal ouvre la demande de campus du formulaire natif (lot 3 de la 7.0), ou, sans base de
+ * publication, le formulaire du catalogue (`services.formulaire_campus`) ; sans l'un ni l'autre, la
  * modale garde sa seule sortie « Fermer ».
  */
 function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
@@ -130,7 +130,7 @@ function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
     fermer: () => void;
     ouvrirDemande: () => void;
 }) {
-    const demande = lienDuFormulaire({ porte: 'campus' });
+    const demande = formulaireDisponible({ porte: 'campus' });
     return (
         <Dialogue
             theme={theme}
@@ -140,7 +140,7 @@ function ModaleCampusNonRelie({ theme, visible, fermer, ouvrirDemande }: {
             corps={Translator.get('CAMPUS_NOT_SUPPORTED')}
             // La forme courte : dans une rangee a deux boutons, « Demander mon campus » se pliait
             // sur deux lignes. Le titre de la modale porte deja le contexte.
-            action={demande === null ? undefined : {
+            action={!demande ? undefined : {
                 libelle: Translator.get('CAMPUS_REQUEST_SHORT'),
                 onPress: ouvrirDemande,
             }}
@@ -415,7 +415,7 @@ export default function MainTabNavigator() {
                 component={SettingsScreen}
                 options={{
                     tabBarLabel: Translator.get('SETTINGS'),
-                    tabBarIcon: ({ color }) => <Icon icon={{ name: 'cog-outline' }} size={24} color={color} />
+                    tabBarIcon: ({ color }) => <IconeDesReglages color={color} theme={theme} />
                 }}
             />
         </Tab.Navigator>

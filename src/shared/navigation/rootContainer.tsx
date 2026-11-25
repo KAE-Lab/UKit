@@ -22,6 +22,11 @@ import Style from '../theme/Theme';
 import Translator from '../i18n/Translator';
 import { StatusBar } from '../ui/AppUI';
 import ModMenu from '../ui/ModMenu';
+import { noterEcran } from '../retours/journalDeSession';
+import { ecranCourant, navigationRacine } from '../retours/navigation';
+
+const noterLEcran = () => noterEcran(ecranCourant());
+import { RetoursHote } from '../../features/Retours/RetoursHote';
 
 export default function RootContainer() {
 	const [isFirstLoad, setFirstLoad] = useState(SettingsManager.isFirstLoad());
@@ -166,7 +171,8 @@ export default function RootContainer() {
                   */}
                 <CredentialsProvider>
                     {isFirstLoad ? <WelcomeScreen /> : (
-                        <NavigationContainer theme={customTheme}>
+                        // La reference sert l'hote des retours ; chaque ecran note son nom, rien d'autre (lot 3).
+                        <NavigationContainer theme={customTheme} ref={navigationRacine} onReady={noterLEcran} onStateChange={noterLEcran}>
                             <StackNavigator />
                         </NavigationContainer>
                     )}
@@ -184,9 +190,11 @@ export default function RootContainer() {
                   * Les messages de service (jalon 6.1-B), pour la meme raison que la modale
                   * ci-dessus : un bandeau ou une feuille doit pouvoir apparaitre au-dessus de
                   * n'importe quel ecran, au moment ou une lecture aboutit. Inactif pendant l'accueil,
-                  * qui ne doit pas etre interrompu et n'a pas encore d'etablissement.
+                  * qui ne doit pas etre interrompu et n'a pas encore d'etablissement. L'hote des
+                  * retours (lot 3) de meme : la reponse de l'equipe, la proposition apres une capture.
                   */}
                 <MessagesDeServiceHote actif={!isFirstLoad} />
+                <RetoursHote actif={!isFirstLoad} />
                 <ModMenu />
 
                 {/*

@@ -18,6 +18,7 @@ import {
 import RootContainer from './src/shared/navigation/rootContainer';
 import { SettingsManager } from './src/shared/services/AppCore'
 import { armerLEntretien } from './src/shared/services/entretien';
+import { brancherLesRetours } from './src/shared/retours';
 import { armerLaMesure } from './src/shared/mesure';
 import { armerLaReception } from './src/shared/push/reception';
 import { marquer } from './src/shared/services/Chrono';
@@ -101,6 +102,9 @@ function AnimatedAppLoader({ children }) {
 				armerLaMesure();
 				// Une notification push ouverte mene a la feuille de son message (shared/push/reception).
 				armerLaReception();
+				// Les retours (lot 3 de la 7.0) : le journal de la session — les ecrans parcourus, les
+				// echecs de source —, et la boite d'envoi qui repart au retour du reseau.
+				brancherLesRetours();
 
 				await Promise.all([...imageAssets, ...fontAssets]);
 				marquer('demarrage : managers et ressources prets');

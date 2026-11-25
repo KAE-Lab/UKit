@@ -72,6 +72,7 @@ import Hamburger from 'lucide-react-native/icons/hamburger';
 import HandHeart from 'lucide-react-native/icons/hand-heart';
 import Hash from 'lucide-react-native/icons/hash';
 import Hourglass from 'lucide-react-native/icons/hourglass';
+import ImagePlus from 'lucide-react-native/icons/image-plus';
 import Info from 'lucide-react-native/icons/info';
 import KeyRound from 'lucide-react-native/icons/key-round';
 import Leaf from 'lucide-react-native/icons/leaf';
@@ -86,6 +87,8 @@ import Map from 'lucide-react-native/icons/map';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import MapPinned from 'lucide-react-native/icons/map-pinned';
 import Megaphone from 'lucide-react-native/icons/megaphone';
+import MessageSquareReply from 'lucide-react-native/icons/message-square-reply';
+import MessageSquareText from 'lucide-react-native/icons/message-square-text';
 import Milk from 'lucide-react-native/icons/milk';
 import Minus from 'lucide-react-native/icons/minus';
 import PartyPopper from 'lucide-react-native/icons/party-popper';
@@ -99,6 +102,7 @@ import Sandwich from 'lucide-react-native/icons/sandwich';
 import School from 'lucide-react-native/icons/school';
 import Search from 'lucide-react-native/icons/search';
 import SearchX from 'lucide-react-native/icons/search-x';
+import Send from 'lucide-react-native/icons/send';
 import Settings from 'lucide-react-native/icons/settings';
 import Share from 'lucide-react-native/icons/share';
 import ShieldCheck from 'lucide-react-native/icons/shield-check';
@@ -106,6 +110,7 @@ import Sofa from 'lucide-react-native/icons/sofa';
 import Soup from 'lucide-react-native/icons/soup';
 import Star from 'lucide-react-native/icons/star';
 import SunMoon from 'lucide-react-native/icons/sun-moon';
+import ThumbsUp from 'lucide-react-native/icons/thumbs-up';
 import Trash2 from 'lucide-react-native/icons/trash';
 import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import Unlink from 'lucide-react-native/icons/unlink';
@@ -207,6 +212,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'french-fries': entree(Popcorn),
     'hamburger': entree(Hamburger),
     'hand-heart-outline': entree(HandHeart),
+    'image-plus': entree(ImagePlus),
     'information': entree(Info),
     'information-outline': entree(Info),
     'leaf': entree(Leaf),
@@ -221,6 +227,8 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'map-marker': entree(MapPin),
     'map-marker-radius': entree(MapPinned),
     'map-search-outline': entree(Map),
+    'message-reply-text-outline': entree(MessageSquareReply),
+    'message-text-outline': entree(MessageSquareText),
     'minus': entree(Minus),
     'party-popper': entree(PartyPopper),
     'pasta': entree(CookingPot),
@@ -229,6 +237,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'refresh': entree(RefreshCw),
     'school': entree(School),
     'school-outline': entree(School),
+    'send': entree(Send),
     'shield-check': entree(ShieldCheck),
     'shield-check-outline': entree(ShieldCheck),
     'silverware-spoon': entree(Utensils),
@@ -238,6 +247,7 @@ export const ICONES_COMMUNITY: Partial<Record<keyof typeof MaterialCommunityIcon
     'swap-horizontal': entree(ArrowLeftRight),
     'taco': entree(Sandwich),
     'theme-light-dark': entree(SunMoon),
+    'thumb-up-outline': entree(ThumbsUp),
     'timer-sand': entree(Hourglass),
     'toolbox-outline': entree(GraduationCap),
     'trash-can-outline': entree(Trash2),
