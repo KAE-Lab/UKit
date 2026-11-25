@@ -56,6 +56,16 @@ export default {
 		package: DEVELOPPEMENT ? 'com.bordeaux1.emplois.dev' : 'com.bordeaux1.emplois',
 		permissions: ['READ_CALENDAR', 'WRITE_CALENDAR', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 		/*
+		 * Aucune permission de galerie ni d'appareil photo (phase 8, lot 3, docs/phase-8/3-formulaire.md).
+		 * `expo-screen-capture` declare READ_MEDIA_IMAGES pour Android 13, dont il lit la galerie pour
+		 * detecter une capture ; UKit ne detecte qu'a partir d'Android 14, par le rappel du systeme
+		 * (DETECT_SCREEN_CAPTURE, accordee a l'installation), et refait sa propre capture. Google Play
+		 * demande de justifier toute permission photo : elle n'entre pas dans le manifeste. Le choix
+		 * d'une image passe par le selecteur du systeme, qui n'en demande aucune ; CAMERA et
+		 * RECORD_AUDIO, que le module de selection ajouterait, sont bloquees par son greffon plus bas.
+		 */
+		blockedPermissions: ['android.permission.READ_MEDIA_IMAGES'],
+		/*
 		 * Les identifiants Firebase, sans lesquels Android n'obtient aucun jeton de notification
 		 * distante (jalon 6.1.x-E). Le fichier n'est **pas dans le depot** : il porte l'identite d'un
 		 * projet Firebase, et ce depot est public. Il vit a la racine du poste (gitignore) et sur EAS
@@ -112,6 +122,17 @@ export default {
 		"./tools/expo/graisse-du-systeme",
 		"expo-background-task",
 		"expo-secure-store",
+		// Le selecteur d'image du formulaire de retour (lot 3) : PHPicker sur iOS, le selecteur photo
+		// d'Android, aucun des deux ne demande de permission. Le greffon ne pose donc aucune phrase
+		// d'usage, et bloque l'appareil photo et le micro qu'il ajouterait par defaut.
+		[
+			"expo-image-picker",
+			{
+				"photosPermission": false,
+				"cameraPermission": false,
+				"microphonePermission": false
+			}
+		],
 		[
 			"expo-local-authentication",
 			{
