@@ -28,6 +28,8 @@ export const TABLES_JOURNALISEES: readonly string[] = [
     // Depuis le lot 3 : les problemes connus publies, et les reponses d'un admin a un retour.
     'problemes_connus',
     'retours_reponses',
+    // Depuis le lot 4 : les idees de la boite a idees.
+    'idees',
 ];
 
 /** Les tables dont le journal ne se lit que par un admin : un retour y copie l'adresse laissee, l'equipe ses membres (7-H). */

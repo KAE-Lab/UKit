@@ -18,6 +18,7 @@ import { campusRetenu, retenirCampus } from './lib/preferences';
 import { Annonces } from './pages/Annonces';
 import { Equipe } from './pages/Equipe';
 import { Journal } from './pages/Journal';
+import { Idees } from './pages/Idees';
 import { Problemes } from './pages/Problemes';
 import { Ressource } from './pages/Ressource';
 import { Retours } from './pages/Retours';
@@ -39,6 +40,7 @@ function Page({ chemin, session }: { readonly chemin: string; readonly session: 
         case 'journal': return <Journal reste={segments.reste} />;
         case 'retours': return <Retours reste={segments.reste} />;
         case 'problemes': return <Problemes reste={segments.reste} />;
+        case 'idees': return <Idees reste={segments.reste} />;
         case 'signalements': return <Signalements />;
         case 'annonces': return <Annonces reste={segments.reste} />;
         case 'equipe': return <Equipe reste={segments.reste} />;
