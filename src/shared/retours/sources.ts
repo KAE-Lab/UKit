@@ -11,10 +11,7 @@ import { versionApplication } from '../ciblage/contexte';
 import { getEtablissementActif } from '../etablissements/catalogue';
 import { SettingsManager } from '../services/AppCore';
 import type { EchecJoint, Reseau, SourcesDuContexte } from './contexte';
-import { echecsRecents, parcoursRecent } from './journalDeSession';
-
-/** Les ecrans du formulaire lui-meme : ils ne disent rien de ce qui s'est passe avant. */
-const ECRANS_DU_FORMULAIRE = new Set(['Retour', 'MesRetours']);
+import { echecsRecents, parcoursAJoindre, parcoursRecent } from './journalDeSession';
 
 /** « iOS 18.5 », « Android 15 » ; `null` quand l'appareil ne se nomme pas. */
 function systemeDeLAppareil(): string | null {
@@ -46,9 +43,7 @@ export async function sourcesDuContexte(onglet: string | null, erreur: EchecJoin
         onglet,
         reseau: await reseau(),
         echecs: echecsRecents(),
-        // Sans les ecrans du formulaire, puis sans les repetitions que leur retrait rapproche.
-        parcours: parcoursRecent().filter((ecran) => !ECRANS_DU_FORMULAIRE.has(ecran))
-            .filter((ecran, i, tous) => i === 0 || tous[i - 1] !== ecran),
+        parcours: parcoursAJoindre(parcoursRecent()),
         erreur,
     };
 }

@@ -30,6 +30,15 @@ export function ajouterAuParcours(courant: readonly string[], ecran: string): st
     return [...courant, ecran].slice(-TAILLE_DU_PARCOURS);
 }
 
+/** Les ecrans du formulaire lui-meme : ils ne disent rien de ce qui s'est passe avant. */
+const ECRANS_DU_FORMULAIRE = new Set(['Retour', 'MesRetours']);
+
+/** Le parcours joint a un retour : sans les ecrans du formulaire, puis sans les repetitions que leur retrait rapproche. */
+export function parcoursAJoindre(courant: readonly string[]): string[] {
+    return courant.filter((ecran) => !ECRANS_DU_FORMULAIRE.has(ecran))
+        .filter((ecran, i, tous) => i === 0 || tous[i - 1] !== ecran);
+}
+
 /** Les echecs a joindre : les plus recents d'abord gardes, chacun une fois par hote et famille, en minutes. */
 export function echecsAJoindre(liste: readonly EchecDate[], maintenant: number): EchecJoint[] {
     const vus = new Set<string>();

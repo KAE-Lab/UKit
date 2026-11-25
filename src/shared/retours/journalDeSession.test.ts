@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { ajouterAuParcours, echecsAJoindre, FRAICHEUR_DES_ECHECS_MS, TAILLE_DES_ECHECS, TAILLE_DU_PARCOURS } from './journalDeSession';
+import { ajouterAuParcours, echecsAJoindre, FRAICHEUR_DES_ECHECS_MS, parcoursAJoindre, TAILLE_DES_ECHECS, TAILLE_DU_PARCOURS } from './journalDeSession';
 
 describe('le parcours de la session', () => {
     test('un ecran repete ne s\'ajoute pas, le plus ancien sort', () => {
@@ -10,6 +10,12 @@ describe('le parcours de la session', () => {
         for (let i = 0; i < TAILLE_DU_PARCOURS + 3; i++) parcours = ajouterAuParcours(parcours, `Ecran${i}`);
         expect(parcours).toHaveLength(TAILLE_DU_PARCOURS);
         expect(parcours[parcours.length - 1]).toBe(`Ecran${TAILLE_DU_PARCOURS + 2}`);
+    });
+
+    test('joint sans les ecrans du formulaire, ni les repetitions que leur retrait rapproche', () => {
+        expect(parcoursAJoindre(['CampusTab', 'Retour', 'CampusTab', 'MesRetours', 'Retour', 'SettingsTab', 'Crous']))
+            .toEqual(['CampusTab', 'SettingsTab', 'Crous']);
+        expect(parcoursAJoindre(['Retour', 'MesRetours'])).toEqual([]);
     });
 });
 
