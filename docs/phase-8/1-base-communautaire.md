@@ -1,10 +1,21 @@
 # Lot 1 — La base communautaire
 
-> **Ouvert le 2026-11-25**, sur `prochaine-version`, pour la **7.0**. Le socle de tout ce que les lots
-> 2 à 4 font écrire aux étudiants : l'identité d'un appareil attesté, une seule porte d'écriture, les
-> plafonds, la réputation, le modèle d'état d'un lieu, la lecture du jour. Aucun écran : les lots
-> suivants s'en chargent. Le cadre est celui du [plan de la phase](README.md#ce-que-les-spécifications-devront-tenir),
-> que cette spécification ne rouvre pas.
+> **Livré le 2026-11-25** (base, fonction, module, sans écran), sur `prochaine-version`, pour la 7.0.
+> La migration `20261125020000_communaute.sql` est **en production**, recettée d'abord en transaction
+> annulée sur la production (quatre-vingt-six vérifications), puis rejouée sans elle une fois appliquée ; la
+> production est identique à la vue lisible, empreinte comparée. La fonction `communaute` est
+> **déployée** et sondée par l'API publique ([plan de test](#plan-de-test)). Le build de
+> développement Android (`183d6bbb-edfc-42fb-934c-7039b2deba23`) porte `@expo/app-integrity` ; le banc
+> a joué le chemin dégradé. **Reste** : le chemin attesté sur un iPhone et sur la piste de test
+> interne ([le protocole](#le-protocole-sur-téléphone)), et Play Integrity, que Kylian configure
+> ([ce qu'il faut créer](#ce-que-kylian-doit-créer-pour-play-integrity)) — d'ici là, aucune
+> contribution Android ne compte.
+
+> **Ouvert le 2026-11-25.** Le socle de tout ce que les lots 2 à 4 font écrire aux étudiants :
+> l'identité d'un appareil attesté, une seule porte d'écriture, les plafonds, la réputation, le modèle
+> d'état d'un lieu, la lecture du jour. Aucun écran : les lots suivants s'en chargent. Le cadre est
+> celui du [plan de la phase](README.md#ce-que-les-spécifications-devront-tenir), que cette
+> spécification ne rouvre pas.
 
 ## La direction
 
@@ -208,6 +219,31 @@ le contenu publié par l'utilisateur et l'identifiant d'appareil propre à l'app
 - **Une seule voix vivante par appareil**, sujet et cible : la suivante remplace la précédente. C'est
   ce qui permet au modèle de compter des voix sans connaître les appareils.
 
+## Ce que les deux relectures ont corrigé
+
+Une relecture du diff entier avant toute application, puis une contre-relecture des corrections :
+aucun bloquant, sept défauts importants, tous corrigés avant la poussée.
+
+- **Le quota Play Integrity s'épuisait d'une adresse** : le jeton partait chez Google avant tout
+  plafond. `admettre` compte désormais l'adresse d'abord, et les verdicts à part.
+- **Le plafond du parc non attesté se vidait d'une adresse**, un secret neuf par requête : un plafond
+  par adresse passe avant, et un refus ne crée plus d'appareil.
+- **La réputation se gagnait en boucle**, chaque republication remettant une ligne neuve à confirmer :
+  un point par auteur et par jour au plus.
+- **Les votes portaient la clé de l'appareil**, contre le plan : un jeton HMAC la remplace.
+- **L'empreinte d'adresse survivait à une semaine sans écriture**, et la documentation disait une clé du
+  jour qui n'existait pas : la tâche horaire de pg_cron, et une vraie clé du jour.
+- **L'adresse venait peut-être d'un en-tête forgeable** : mesuré après le déploiement, un
+  `X-Forwarded-For` ou un `X-Real-IP` forgés tombent sur la même empreinte, qui n'est pas celle
+  d'« inconnue » — la plateforme pose l'adresse, le client ne la choisit pas. Les trois en-têtes de
+  Cloudflare forgés ensemble sont refusés en amont (403).
+- **Un vote se reliait à son appareil par l'heure** (introduit par la correction des votes) : les dates
+  d'un appareil et d'un vote ne disent plus que le jour.
+
+Et des mineurs : une garde qui laissait passer un champ absent, la pagination par décalage, le secret
+d'iOS qui survivait à la réinstallation, une demande de minuit qui échouait, un crédit doublé par une
+course, des commentaires et des phrases de documentation inexacts.
+
 ## Définition de « terminé »
 
 - la migration en production, recettée d'abord en transaction annulée sur la production ;
@@ -242,9 +278,23 @@ le contenu publié par l'utilisateur et l'identifiant d'appareil propre à l'app
    documentation ; le modèle d'état règle par règle ; le cache et le résultat.
 3. **Par l'API publique, après le déploiement** : un défi ; un essai non attesté (poids 0) ; un
    enregistrement à l'attestation fausse refusé ; une écriture directe d'`anon` dans les tables, et un
-   appel des deux portes en RPC, refusés ; la lecture publique sans `appareil`.
+   appel des portes en RPC, refusés ; la lecture publique sans `appareil` ; l'adresse forgée sans effet.
 4. **Sur le banc** (`ukit`, Android 15) : l'application démarre ; le menu de développement montre
    « aucune » attestation, l'essai rend « non attesté · poids 0 », la lecture du jour répond.
+
+*Joué le 2026-11-25.* La recette SQL, quatre-vingt-six vérifications conformes en transaction annulée avec la
+migration, puis sans elle une fois appliquée ; la vue lisible rejouée de même donne le même état (cent
+quarante éléments, même empreinte), et la production aussi. `npm test` : 1 503 tests. Par l'API : le
+défi, l'essai non attesté (200, poids 0), un sujet inconnu (422), le secret d'un autre appareil (401
+`cle`), un défi forgé (401), une attestation fausse (401 — la fonction déployée charge donc ses
+bibliothèques), une clé App Attest inconnue (409), les trois portes en RPC et les cinq tables en
+écriture refusées à la clé publiable (42501), `select=appareil` et `select=*` refusés, la lecture
+nommée rendant `[]`, `appareils` et `empreintes_ip` illisibles. Les sondes ont laissé en base un
+appareil à secret (le sujet inconnu, qui crée l'appareil avant de juger le vocabulaire) et trois
+empreintes du jour, effacées par la purge de la nuit suivante. Sur le banc, avec le build
+`183d6bbb` : avant le déploiement, l'essai rendait « echec · defi » et la lecture « cache » sans
+planter, le module natif absent d'un ancien build aussi ; après, « essai · non attesté · poids 0 » et
+« ok · 0 signalements » ; réseau coupé, « echec · defi » et « cache ».
 5. **Sur téléphone** : [le protocole](#le-protocole-sur-téléphone).
 
 ## Le protocole sur téléphone

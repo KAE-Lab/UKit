@@ -194,7 +194,7 @@ console qui lit les données d'un lot part sur `main` avec lui.
 
 | Lot de la 7.0 | Contenu | État |
 |---|---|---|
-| 1. La base communautaire | l'appareil attesté (App Attest, Play Integrity), la fonction `communaute`, les plafonds, la réputation, le modèle d'état d'un lieu, la lecture du jour ; aucun écran | ouvert le 2026-11-25 ([spécification](1-base-communautaire.md)) |
+| 1. La base communautaire | l'appareil attesté (App Attest, Play Integrity), la fonction `communaute`, les plafonds, la réputation, le modèle d'état d'un lieu, la lecture du jour ; aucun écran | **livré le 2026-11-25** : base en production, fonction déployée, banc joué ; reste le chemin attesté sur téléphone et la configuration de Play Integrity ([spécification](1-base-communautaire.md)) |
 | 2. Les signalements | restaurants, bibliothèques, bâtiments, l'attente au RU, le plat recommandé ; la modération dans la console | à ouvrir, après le lot 1 |
 | 3. Le formulaire natif | relié à `retours`, par la même porte attestée | à ouvrir |
 | 4. Sondages, boîte à idées et notation | les votes du lot 1, la fiche native du système | à ouvrir |
