@@ -196,7 +196,7 @@ console qui lit les données d'un lot part sur `main` avec lui.
 |---|---|---|
 | 1. La base communautaire | l'appareil attesté (App Attest, Play Integrity), la fonction `communaute`, les plafonds, la réputation, le modèle d'état d'un lieu, la lecture du jour ; aucun écran | **livré le 2026-11-25** : base en production, fonction déployée, banc joué ; reste le chemin attesté sur téléphone et la configuration de Play Integrity ([spécification](1-base-communautaire.md)) |
 | 2. Les signalements | restaurants, bibliothèques, bâtiments, l'attente au RU, le plat recommandé ; la modération dans la console | **livré le 2026-11-25** : base en production, page Signalements en ligne, « Sur place » sur les trois fiches, banc joué ; reste le chemin attesté (lot 1) et la page des règles (lot 7) ([spécification](2-signalements.md)) |
-| 3. Le formulaire natif | relié à `retours`, par la même porte attestée | à ouvrir |
+| 3. Le formulaire natif | relié à `retours`, par la même porte attestée | **ouvert le 2026-11-25** ([spécification](3-formulaire.md)) |
 | 4. Sondages, boîte à idées et notation | les votes du lot 1, la fiche native du système | à ouvrir |
 | 5. Les événements dans le Planning | l'annonce datée, « Ajouter à mon planning », l'abonnement | à ouvrir |
 | 6. L'intelligence | où manger, les changements détectés, la journée en une carte | à ouvrir |

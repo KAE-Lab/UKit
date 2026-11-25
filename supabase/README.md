@@ -192,6 +192,12 @@ seule adresse ne se fait pas en retouchant la cellule : la clé d'un retour est 
 cellules, adresse comprise, et la réponse reviendrait sous une autre clé. Effacer, donc, plutôt que
 retoucher.
 
+Un retour de l'application (`source = 'app'`, [lot 3](../docs/phase-8/3-formulaire.md)) n'a pas de
+feuille, mais il peut avoir des captures, et elles s'effacent **d'abord**, par l'API de stockage : une
+suppression dans `storage.objects` est refusée, et laisserait les fichiers. Depuis le Studio, *Storage
+→ retours → <id>*, tout sélectionner, supprimer ; puis les deux `delete` ci-dessus (ses réponses partent
+avec lui, en cascade) et les lignes du journal de `retours_reponses` qui le citent.
+
 ## Migrations
 
 Depuis le jalon [7-C](../docs/phase-7/7-c-economie-et-socle.md#5-le-socle-du-dépôt), le schéma évolue
@@ -436,6 +442,18 @@ lit ce qui vaut encore), et trois portes de la console — `signalements_a_moder
 clé d'un appareil. La fonction `communaute` ne change pas. Sa recette,
 [`recettes/signalements.sql`](recettes/signalements.sql), se joue comme celle de la communauté, et
 suppose un admin dans `editeurs`.
+
+**Le formulaire de retour natif**, du [lot 3](../docs/phase-8/3-formulaire.md), par la migration
+`20261125040000_retours_natifs.sql` : des colonnes neuves dans `retours` (les lignes importées gardent
+`source = 'formulaire'`), `problemes_connus`, `retours_reponses`, le sujet de vote `probleme.moi_aussi`,
+le compteur du jour `private.retours_par_appareil` et l'espace privé `retours` des captures. La fonction
+`communaute` gagne `deposer` et `purger` ; `deposer_retour` est réservée au `service_role`,
+`lire_mes_retours` se lit par la clé publiable, en POST seulement. Trois réglages de plus dans
+`private.reglages_communaute`, posés comme les autres : `plafond_retours_appareil`,
+`plafond_retours_non_atteste`, `plafond_retours_non_attestes_jour`. La tâche horaire `retours-purge`
+efface les jetons d'hier et, quand des captures sont dues, appelle `purger` par pg_net ; elle se lit
+comme `communaute-purge`. La recette, [`recettes/retours.sql`](recettes/retours.sql), suppose un admin
+dans `editeurs`.
 
 ## Ce qui n'a pas sa place ici
 

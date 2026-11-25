@@ -51,6 +51,14 @@ function direLIssue(issue: IssueDuDepot): boolean {
     return true;
 }
 
+/** Le paragraphe de tete et l'invite du texte, selon ce que l'etudiant ecrit. */
+function clesDuTexte(f: ReturnType<typeof useFormulaireDeRetour>, moiAussiVisible: boolean) {
+    return {
+        intro: f.nature === 'campus' ? 'RETOUR_INTRO_CAMPUS' : moiAussiVisible ? 'RETOUR_INTRO_BUG' : 'RETOUR_INTRO',
+        invite: f.probleme !== null ? 'RETOUR_TEXTE_DETAIL' : f.nature === 'bug' ? 'RETOUR_TEXTE_BUG' : 'RETOUR_TEXTE_IDEE',
+    } as const;
+}
+
 function BrancheDuCampus({ theme, f, ouvrirEngagement }: { theme: AppThemeType; f: ReturnType<typeof useFormulaireDeRetour>; ouvrirEngagement: () => void }) {
     return (
         <>
@@ -77,6 +85,9 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
     const parametres = route.params ?? {};
     const f = useFormulaireDeRetour(parametres);
     const deCampus = f.nature === 'campus';
+    // « Moi aussi » ne se montre qu'avec des problemes connus : le paragraphe n'en parle qu'alors.
+    const moiAussiVisible = f.nature === 'bug' && f.probleme === null && f.problemes.some((p) => p.statut === 'publie');
+    const cles = clesDuTexte(f, moiAussiVisible);
 
     const envoyer = async () => {
         const issue = await f.envoyer();
@@ -92,7 +103,7 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
-                <IntroDePage theme={theme}>{Translator.get(deCampus ? 'RETOUR_INTRO_CAMPUS' : f.nature === 'bug' ? 'RETOUR_INTRO_BUG' : 'RETOUR_INTRO')}</IntroDePage>
+                <IntroDePage theme={theme}>{Translator.get(cles.intro)}</IntroDePage>
 
                 {f.probleme !== null ? (
                     <Text style={[styles.detailPour, { color: theme.font }]}>{Translator.get('RETOUR_DETAIL_POUR', f.probleme.titre)}</Text>
@@ -125,7 +136,7 @@ export default function RetourScreen({ navigation, route, headerPadding, onAnima
                                 value={f.texte}
                                 onChangeText={f.setTexte}
                                 maxLength={TEXTE_MAX}
-                                placeholder={Translator.get(f.probleme !== null ? 'RETOUR_TEXTE_DETAIL' : f.nature === 'bug' ? 'RETOUR_TEXTE_BUG' : 'RETOUR_TEXTE_IDEE')}
+                                placeholder={Translator.get(cles.invite)}
                                 compte={f.texte.length > TEXTE_MAX * 0.8 ? `${f.texte.length} / ${TEXTE_MAX}` : undefined}
                             />
                         </GroupeDeReglages>
